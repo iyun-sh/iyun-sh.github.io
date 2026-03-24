@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生信开发模块文件与输出规范</title>
+    <style>
+        :root {
+            --bg: #f3f6fb;
+            --card: #ffffff;
+            --text: #223043;
+            --muted: #5b6b80;
+            --primary: #1d4ed8;
+            --primary-soft: #dbeafe;
+            --accent: #0f766e;
+            --accent-soft: #ccfbf1;
+            --warn: #b45309;
+            --warn-soft: #fef3c7;
+            --danger: #b91c1c;
+            --danger-soft: #fee2e2;
+            --border: #d9e2ef;
+            --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(29,78,216,0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(15,118,110,0.12), transparent 24%),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 32px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 55%, #ecfeff 100%);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.7);
+            margin-bottom: 24px;
+        }
+        .hero h1 { margin: 0 0 10px; font-size: clamp(2rem,4vw,3rem); line-height: 1.15; color: #0f172a; }
+        .hero p  { margin: 0; max-width: 920px; color: var(--muted); font-size: 1.05rem; }
+
+        .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .pill { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 999px; font-size: 0.92rem; font-weight: 600; }
+        .pill.primary { background: var(--primary-soft); color: var(--primary); }
+        .pill.accent  { background: var(--accent-soft);  color: var(--accent); }
+        .pill.warn    { background: var(--warn-soft);    color: var(--warn); }
+        .pill.danger  { background: var(--danger-soft);  color: var(--danger); }
+
+        /* Grid & Card */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0,1fr));
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+        .card {
+            grid-column: span 12;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 28px rgba(15,23,42,0.05);
+        }
+        .card.two-col { grid-column: span 6; }
+
+        .section-title { margin: 0 0 14px; font-size: 1.3rem; color: #0f172a; }
+
+        /* Boxes */
+        .lead-box, .warn-box, .danger-box { border-radius: 16px; padding: 16px 18px; margin: 14px 0 0; }
+        .lead-box   { background: #f8fafc; border: 1px solid #dbeafe; }
+        .warn-box   { background: var(--warn-soft); border: 1px solid #fcd34d; }
+        .danger-box { background: var(--danger-soft); border: 1px solid #fca5a5; }
+
+        /* Table (matrix) */
+        .matrix { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; }
+        .matrix th, .matrix td { border: 1px solid var(--border); padding: 12px 14px; text-align: left; vertical-align: top; }
+        .matrix th { background: #eff6ff; color: #1e3a8a; }
+
+        /* Code */
+        code, .code-block { font-family: Consolas, "Courier New", monospace; }
+        code { background: #eef2ff; color: #3730a3; padding: 2px 6px; border-radius: 6px; }
+        .code-block {
+            display: block; white-space: pre-wrap;
+            background: #0f172a; color: #e2e8f0;
+            border-radius: 16px; padding: 18px; margin: 14px 0 0; overflow-x: auto;
+        }
+
+        /* File Tree */
+        .file-tree {
+            display: block; white-space: pre; overflow-x: auto;
+            background: #0f172a; color: #d4d4d4;
+            border-radius: 16px; padding: 18px; margin: 14px 0 0;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 0.85em; line-height: 1.7;
+        }
+        .folder      { color: #4ec9b0; font-weight: bold; }
+        .file        { color: #d4d4d4; }
+        .hidden-file { color: #808080; font-style: italic; }
+        .config-file { color: #ce9178; }
+        .log-file    { color: #6a9955; }
+
+        /* Lists */
+        .rule-list, .check-list { margin: 0; padding-left: 20px; }
+        .rule-list li, .check-list li { margin-bottom: 10px; }
+
+        ul { padding-left: 22px; }
+        li { margin: 6px 0; }
+
+        /* Steps (numbered circles) */
+        .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+        .steps li { position: relative; padding-left: 54px; margin-bottom: 18px; min-height: 38px; }
+        .steps li::before {
+            counter-increment: step; content: counter(step);
+            position: absolute; left: 0; top: 0;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #0f766e);
+            color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+
+        /* Tabs */
+        .tabs-container { margin: 18px 0 0; }
+        .tabs {
+            display: flex; gap: 8px; flex-wrap: wrap;
+            border-bottom: 2px solid var(--primary);
+        }
+        .tab {
+            padding: 10px 16px;
+            background: var(--primary-soft);
+            border: none; border-radius: 12px 12px 0 0;
+            cursor: pointer; font-size: 0.95rem; font-weight: 600;
+            color: var(--primary);
+            transition: background .2s, color .2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .tab:hover { background: #bfdbfe; }
+        .tab.active { background: var(--primary); color: #fff; }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 16px 16px;
+        }
+        .tab-content.active { display: block; }
+        .tab-icon { font-size: 1.1em; }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.75em; font-weight: 700; margin-left: 6px; }
+        .badge-required { background: var(--danger-soft); color: var(--danger); }
+        .badge-recommended { background: var(--primary-soft); color: var(--primary); }
+
+        /* Emphasis utilities */
+        .text-red { color: var(--danger); font-weight: 700; }
+        .text-bold { font-weight: 700; }
+
+        /* Footer */
+        .footer-note { margin-top: 18px; color: var(--muted); font-size: 0.95rem; text-align: center; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .card.two-col { grid-column: span 12; }
+            .hero { padding: 24px; }
+        }
+        @media print {
+            body { background: #fff; }
+            .card { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Hero -->
+        <section class="hero">
+            <h1>📋 生信开发模块文件与输出规范</h1>
+            <p>本规范适用于生信分析模块开发（如 RawData 处理、差异分析、富集分析等），用于统一脚本组织、参数记录、结果追溯与报告产出。</p>
+            <div class="pill-row">
+                <span class="pill primary">⏰ 精确到秒的时间戳标识</span>
+                <span class="pill accent">📁 统一目录结构</span>
+                <span class="pill warn">📄 日志优先追溯</span>
+            </div>
+        </section>
+
+        <!-- ========== 模块目录结构 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">📁 模块目录结构</h2>
+
+                <div class="lead-box">
+                    <strong>📁 模块目录组织示例：</strong>
+                </div>
+
+                <pre class="file-tree"><span class="folder">module_name/</span>
+├── <span class="file">run.sh</span>                
+├── <span class="folder">scripts/</span>
+│   ├── <span class="file">RawData.R</span>
+│   ├── <span class="file">DEGs.py</span>
+│   └── <span class="file">scripts.sh</span>
+├── <span class="folder">config/</span>
+│   └── <span class="config-file">DEGs.config.example.ini/yaml</span>
+├── <span class="folder">logs/</span>
+│   ├── <span class="log-file">RawData.20260306_143022.log</span>
+│   └── <span class="log-file">RawData.20260306_161545.log</span>
+├── <span class="folder">result/</span>
+│   ├── <span class="folder">RawData/</span>
+│   │   ├── <span class="file">01.GSEXXX_count.csv</span>
+│   │   └── <span class="hidden-file">.20260306_161545</span>
+│   └── <span class="folder">DEGs/</span>
+│       ├── <span class="file">01.DEGs.csv</span>
+│       ├── <span class="file">02.heatmap.png</span>
+│       ├── <span class="file">02.heatmap.pdf</span>
+│       ├── <span class="file">03.volcano.png</span>
+│       ├── <span class="file">03.volcano.pdf</span>
+│       ├── <span class="config-file">DEGs.config.ini/yaml</span>
+│       └── <span class="hidden-file">.20260306_161545</span>
+└── <span class="folder">report/</span>
+    ├── <span class="folder">RawData/</span>
+    │   └── <span class="file">20260306_143022.docx</span>
+    └── <span class="folder">DEGs/</span>
+        └── <span class="file">20260306_161545.docx</span></pre>
+
+                <div class="lead-box" style="margin-top:18px;">
+                    <strong>📌 使用约定：</strong>
+                    模块对外统一由顶层 <code>run.sh</code> <span class="text-red">作为唯一主入口</span>；<code>scripts/</code> 用于存放内部实现脚本，后续如需保护处理（如加密、编译、二进制化等）也<span class="text-red">应只影响内部实现，不改变外部使用方式</span>。
+                    <br><br>
+                    <strong>🔐 相关说明：</strong>
+                    代码保护、对外暴露边界与交付限制请结合独立的《代码保护指南》一并维护。
+                </div>
+
+                <h3 style="margin-top:28px; color:#0f172a; font-size:1.15rem;">目录说明</h3>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('dir-scripts', event)">
+                            <span class="tab-icon">📂</span> scripts/
+                        </button>
+                        <button class="tab" onclick="showTab('dir-logs', event)">
+                            <span class="tab-icon">📄</span> logs/
+                            <span class="badge badge-required">核心</span>
+                        </button>
+                        <button class="tab" onclick="showTab('dir-result', event)">
+                            <span class="tab-icon">📊</span> result/
+                        </button>
+                        <button class="tab" onclick="showTab('dir-report', event)">
+                            <span class="tab-icon">📝</span> report/
+                        </button>
+                    </div>
+
+                    <div id="dir-scripts" class="tab-content active">
+                        <h4>📂 scripts/ - 内部实现脚本目录</h4>
+                        <ul>
+                            <li><strong>顶层入口固定</strong>：模块使用者统一执行顶层 <code>run.sh</code>，<span class="text-red">不直接面向 <code>scripts/</code> 内部脚本</span></li>
+                            <li>存放该模块的内部实现脚本（.R、.py、.sh 等），可由 <code>scripts.sh</code> 或其他调度脚本串联执行</li>
+                            <li><strong>内部实现可调整</strong>：<code>scripts/</code> 内部脚本后续可做保护处理（如加密、编译、二进制化等）、替换或重构，但应保持 <code>run.sh</code> 的对外调用方式稳定</li>
+                            <li>脚本命名使用驼峰命名法，清晰表明功能，建议按分析流程顺序命名</li>
+                            <li><strong>配置模板</strong>：在 <code>config/</code> 下保存示例配置（<code>*.config.example.ini/yaml</code>）</li>
+                            <li><strong>模板与运行配置分离</strong>：<code>config/</code> 保存模板，<code>result/分析点/</code> 保存运行时配置并可覆盖</li>
+                            <li><strong>读取文件推荐</strong>：R脚本推荐使用 <code>data.table</code> 包</li>
+                            <li>示例：
+                                <ul>
+                                    <li><code>run.sh</code> - 模块对外执行入口</li>
+                                    <li><code>scripts/RawData.R</code> - 原始数据处理内部脚本</li>
+                                    <li><code>scripts/DEGs.py</code> - 差异表达分析内部脚本</li>
+                                    <li><code>scripts/scripts.sh</code> - 内部流程调度脚本</li>
+                                    <li><code>config/DEGs.config.example.yaml</code> - 参数模板</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <div class="lead-box">
+                            <strong>💡 为什么推荐 data.table？</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li><strong>高性能</strong>：比 base R 快得多，处理大数据集更高效</li>
+                                <li><strong>内存友好</strong>：内存占用更少，可处理超过内存大小的数据集</li>
+                                <li><strong>语法简洁</strong>：语法一致性好，学习曲线平缓</li>
+                                <li><strong>功能丰富</strong>：类似 SQL 的语法，操作直观</li>
+                                <li><strong>并行处理</strong>：支持多线程并行计算</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="dir-logs" class="tab-content">
+                        <h4>📄 logs/ - 日志文件夹 <span class="badge badge-required">核心</span></h4>
+                        <ul>
+                            <li>存放各分析点或模块入口的运行日志</li>
+                            <li>日志文件命名格式：<code>分析点名.YYYYMMDD_HHMMSS.log</code></li>
+                            <li><strong>时间戳精确到秒</strong>：格式为 <code>YYYYMMDD_HHMMSS</code>（如 20260306_143022），<span class="text-red">即可同时满足唯一标识与自然排序</span></li>
+                            <li><strong>快速定位</strong>：无需打开文件即可知道分析运行时间</li>
+                            <li><strong>支持中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
+                        </ul>
+                    </div>
+
+                    <div id="dir-result" class="tab-content">
+                        <h4>📊 result/ - 结果文件夹</h4>
+                        <ul>
+                            <li>按分析点创建子文件夹（如 RawData/, DEGs/）</li>
+                            <li>每个分析点文件夹内存放该分析的所有结果文件</li>
+                            <li>结果文件使用数字前缀排序（01., 02., 03.）</li>
+                            <li>包含隐藏文件 <code>.YYYYMMDD_HHMMSS</code> 用于追踪对应的日志</li>
+                            <li><strong>配置文件</strong>：使用 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code> 格式</li>
+                            <li>配置文件会被每次运行覆盖，记录最新参数</li>
+                            <li><strong>图表文件</strong>：<span class="text-red">每个图表必须同时保存 .png 和 .pdf 格式</span></li>
+                            <li>示例：
+                                <ul>
+                                    <li><code>01.DEGs.csv</code> - 差异基因列表</li>
+                                    <li><code>02.heatmap.png</code> + <code>02.heatmap.pdf</code> - 热图（双格式）</li>
+                                    <li><code>DEGs.config.ini</code> - 配置文件</li>
+                                    <li><code>.20260306_161545</code> - 追踪文件</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div id="dir-report" class="tab-content">
+                        <h4>📝 report/ - 报告文件夹</h4>
+                        <ul>
+                            <li>按分析点创建子文件夹</li>
+                            <li>每个分析点的报告以 <code>YYYYMMDD_HHMMSS.docx</code> 格式命名</li>
+                            <li>报告文件名与日志文件名的时间戳对应</li>
+                            <li>便于追溯某次分析的具体结果和参数</li>
+                            <li><strong>查找最新版本</strong>：文件按时间排序，最后一个即为最新</li>
+                            <li><strong>默认格式</strong>：报告默认使用 .docx 格式</li>
+                            <li><strong>推荐工具</strong>：推荐使用 <code>Quarto</code> 生成报告</li>
+                            <li>示例：
+                                <ul>
+                                    <li><code>20260306_143022.docx</code> - 14:30的分析报告（默认）</li>
+                                    <li><code>20260306_161545.docx</code> - 16:15的分析报告</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <div class="lead-box">
+                            <strong>💡 为什么推荐 Quarto？</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li><strong>代码与报告一体</strong>：代码和报告在同一个文档中，便于同步更新</li>
+                                <li><strong>多语言支持</strong>：支持 Python、R、Julia 等多种语言</li>
+                                <li><strong>多种输出格式</strong>：可输出 HTML、PDF、Word、PPT；默认输出 .docx</li>
+                                <li><strong>可复现性</strong>：包含完整代码，确保分析可复现</li>
+                                <li><strong>版本控制</strong>：Markdown格式便于 Git 管理</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 文件命名规范 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">📝 文件命名规范</h2>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('name-timestamp', event)">
+                            <span class="tab-icon">⏰</span> 时间戳格式
+                        </button>
+                        <button class="tab" onclick="showTab('name-formats', event)">
+                            <span class="tab-icon">📝</span> 命名格式
+                        </button>
+                        <button class="tab" onclick="showTab('name-config', event)">
+                            <span class="tab-icon">⚙️</span> 配置文件
+                        </button>
+                        <button class="tab" onclick="showTab('name-example', event)">
+                            <span class="tab-icon">📋</span> 示例对比
+                        </button>
+                        <button class="tab" onclick="showTab('name-sorting', event)">
+                            <span class="tab-icon">🔢</span> 文件排序
+                        </button>
+                    </div>
+
+                    <div id="name-timestamp" class="tab-content active">
+                        <h4>⏰ 时间戳格式</h4>
+                        <table class="matrix">
+                            <thead><tr><th>格式</th><th>示例</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>YYYYMMDD_HHMMSS</code></td><td><code>20260306_143022</code></td><td>2026年3月6日 14:30:22</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="lead-box">
+                            <strong>💡 使用时间戳作为唯一ID的优势：</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li><strong>一码多用</strong>：同时承担唯一标识、时间表达和版本排序</li>
+                                <li><strong>精确到秒</strong>：在常规分析场景下足以避免重名冲突</li>
+                                <li><strong>便于追溯</strong>：可快速串联日志、结果和报告</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="name-formats" class="tab-content">
+                        <h4>📝 各类文件命名格式</h4>
+                        <table class="matrix">
+                            <thead><tr><th>文件类型</th><th>命名格式</th><th>示例</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>入口与内部脚本</td><td><code>功能名.扩展名</code></td><td><code>run.sh</code>, <code>scripts/RawData.R</code>, <code>scripts/DEGs.py</code></td><td>顶层入口固定为 <code>run.sh</code>，内部脚本放在 <code>scripts/</code> 下并使用驼峰命名</td></tr>
+                                <tr><td>日志文件</td><td><code>分析点名.时间戳.log</code></td><td><code>RawData.20260306_143022.log</code></td><td>带时间戳</td></tr>
+                                <tr><td>结果文件</td><td><code>序号.描述.扩展名</code></td><td><code>01.DEGs.csv</code>, <code>02.heatmap.png</code></td><td>数字前缀排序</td></tr>
+                                <tr><td>配置文件</td><td><code>分析点.config.ini</code> 或 <code>.yaml</code></td><td><code>DEGs.config.ini</code>, <code>DEGs.config.yaml</code></td><td>每次运行覆盖</td></tr>
+                                <tr><td>追踪文件</td><td><code>.时间戳</code></td><td><code>.20260306_143022</code></td><td>隐藏文件，标识本次运行</td></tr>
+                                <tr><td>报告文件</td><td><code>时间戳.docx</code></td><td><code>20260306_143022.docx</code></td><td>带时间戳</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="name-config" class="tab-content">
+                        <h4>⚙️ 配置文件格式选择</h4>
+                        <table class="matrix">
+                            <thead><tr><th>格式</th><th>优点</th><th>适用场景</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>.ini</code></td><td>简单直观，Windows原生支持</td><td>简单的键值对配置</td></tr>
+                                <tr><td><code>.yaml</code></td><td>支持层级结构，更易读，支持注释</td><td>复杂的嵌套配置</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="warn-box">
+                            <strong>💡 选择建议：</strong> 根据项目需求选择。配置简单用 .ini，配置复杂用 .yaml。两种格式都是可选的，日志文件才是参数记录的核心。
+                        </div>
+                        <div class="lead-box" style="margin-top:12px;">
+                            <strong>📌 设计原则：</strong> 配置文件保持"单份最新"，追溯历史以日志为准（通过 <code>.时间戳</code> 关联）。
+                        </div>
+                    </div>
+
+                    <div id="name-example" class="tab-content">
+                        <h4>📋 时间戳示例对比</h4>
+                        <table class="matrix">
+                            <thead><tr><th>场景</th><th>仅日期（不推荐）</th><th>精确到秒（推荐）</th></tr></thead>
+                            <tbody>
+                                <tr><td>第一次运行</td><td><code>20260306</code> ⚠️ 不够精确</td><td><code>20260306_143022</code> ✅ 14:30:22运行</td></tr>
+                                <tr><td>第二次运行（下午）</td><td><code>20260306</code> ⚠️ 文件名重复！</td><td><code>20260306_161545</code> ✅ 16:15:45运行</td></tr>
+                                <tr><td>第三次运行（晚上）</td><td><code>20260306</code> ⚠️ 无法区分</td><td><code>20260306_213810</code> ✅ 21:38:10运行</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="name-sorting" class="tab-content">
+                        <h4>🔢 结果文件排序</h4>
+                        <ul>
+                            <li>使用两位数字前缀：<code>01.</code>, <code>02.</code>, <code>03.</code> 等</li>
+                            <li>按分析流程排序</li>
+                            <li>便于快速定位和查看结果</li>
+                        </ul>
+                        <div class="lead-box">
+                            <strong>📌 排序示例：</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li><code>01.raw_count.csv</code> - 原始计数</li>
+                                <li><code>02.normalized_count.csv</code> - 标准化数据</li>
+                                <li><code>03.differential_expression.csv</code> - 差异分析结果</li>
+                                <li><code>04.volcano_plot.pdf</code> - 火山图</li>
+                                <li><code>05.heatmap.pdf</code> - 热图</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 日志文件规范 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">📄 日志文件规范</h2>
+
+                <div class="danger-box">
+                    <strong>⚠️ 核心原则：</strong>
+                    <span class="text-red">日志文件是追溯分析过程的第一手资料</span>，必须详细记录所有重要的分析参数和运行信息。
+                    <strong class="text-red">无论是否使用配置文件，日志中都必须详细记录所有重要参数！</strong>
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('log-requirements', event)">
+                            <span class="tab-icon">📋</span> 内容要求
+                        </button>
+                        <button class="tab" onclick="showTab('log-example', event)">
+                            <span class="tab-icon">📄</span> 日志示例
+                        </button>
+                        <button class="tab" onclick="showTab('log-comparison', event)">
+                            <span class="tab-icon">⚖️</span> 日志vs配置
+                        </button>
+                    </div>
+
+                    <div id="log-requirements" class="tab-content active">
+                        <h4>📋 日志内容要求</h4>
+                        <table class="matrix">
+                            <thead><tr><th>内容类别</th><th>必须包含的信息</th><th>示例</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>运行信息</strong></td><td>时间戳、入口脚本、版本、运行环境</td><td><code>2026-03-06 14:30:22 | run.sh v1.2 | Python 3.9</code></td></tr>
+                                <tr><td><strong>输入参数</strong></td><td>所有分析参数（阈值、方法、条件等）</td><td><code>p_value_cutoff=0.05, log2fc_cutoff=1, method=DESeq2</code></td></tr>
+                                <tr><td><strong>输入文件</strong></td><td>数据来源、文件路径、样本信息</td><td><code>Input: ../RawData/01.GSEXXX_count.csv (150 samples)</code></td></tr>
+                                <tr><td><strong>输出文件</strong></td><td>生成的结果文件路径和名称</td><td><code>Output: 01.DEGs.csv, 02.heatmap.png, 02.heatmap.pdf</code></td></tr>
+                                <tr><td><strong>统计信息</strong></td><td>样本数、基因数、筛选后的数量等</td><td><code>Total genes: 25000 | After filtering: 18500 | DEGs: 1234</code></td></tr>
+                                <tr><td><strong>运行过程</strong></td><td>关键步骤、警告、错误</td><td><code>[WARN] 50 samples have low counts | [ERROR] Sample S99 missing</code></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="log-example" class="tab-content">
+                        <h4>📄 日志文件示例（中文版）</h4>
+                        <pre class="code-block">================================================================================
+差异分析日志 - Differential Expression Analysis
+================================================================================
+时间戳: 2026-03-06 14:30:22
+运行ID: 20260306_143022
+入口脚本: run.sh v1.2
+内部分析点: DEGs.py
+运行环境: Python 3.9.7, R 4.1.2
+
+----------------------------------------
+输入参数
+----------------------------------------
+p值阈值: 0.05
+log2倍数变化阈值: 1.0
+分析方法: DESeq2
+独立过滤: 是
+Cook距离过滤: 是
+
+----------------------------------------
+输入文件
+----------------------------------------
+计数矩阵: ../RawData/01.GSEXXX_count.csv
+样本元数据: ../RawData/samples.txt
+样本总数: 150
+基因总数: 25000
+
+----------------------------------------
+分析步骤
+----------------------------------------
+[14:30:23] 加载计数矩阵... 完成
+[14:30:25] 标准化处理... 完成
+[14:30:28] 运行DESeq2... 完成
+[14:30:45] 提取差异基因... 完成
+[14:30:47] 生成热图... 完成
+
+----------------------------------------
+统计信息
+----------------------------------------
+检测基因总数: 25000
+上调基因 (log2FC&gt;1): 756
+下调基因 (log2FC&lt;-1): 478
+差异基因总数 (p&lt;0.05): 1234
+
+----------------------------------------
+警告信息
+----------------------------------------
+[警告] 50个样本reads数较低 (&lt;10)
+[警告] 检测到异常样本: S99
+
+----------------------------------------
+输出文件
+----------------------------------------
+01.DEGs.csv - 1234个差异表达基因
+02.heatmap.png / 02.heatmap.pdf - Top 100基因热图
+03.volcano.png / 03.volcano.pdf - 火山图
+
+----------------------------------------
+追溯信息
+----------------------------------------
+日志文件: RawData.20260306_143022.log
+配置文件: DEGs.config.ini
+报告文件: 20260306_143022.docx
+
+================================================================================
+分析成功完成
+================================================================================</pre>
+                    </div>
+
+                    <div id="log-comparison" class="tab-content">
+                        <h4>⚖️ 日志 vs 配置文件</h4>
+                        <table class="matrix">
+                            <thead><tr><th>对比项</th><th>日志文件</th><th>配置文件</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>文件名</strong></td><td><code>分析点名.时间戳.log</code></td><td><code>分析点.config.ini/yaml</code></td></tr>
+                                <tr><td><strong>是否覆盖</strong></td><td>每次运行创建新文件</td><td>每次运行覆盖旧文件</td></tr>
+                                <tr><td><strong>内容</strong></td><td>参数 + 过程 + 统计 + 警告</td><td>主要是参数和路径</td></tr>
+                                <tr><td><strong>可读性</strong></td><td>文本格式，易于人工阅读</td><td>结构化格式，便于程序解析</td></tr>
+                                <tr><td><strong>语言支持</strong></td><td>支持中文</td><td>建议使用英文（键名）</td></tr>
+                                <tr><td><strong>优先级</strong></td><td>⭐⭐⭐ 必须</td><td>⭐ 可选</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 结果追踪机制 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">🔗 结果追踪机制</h2>
+
+                <div class="lead-box" style="background:#ecfdf5; border-color:#6ee7b7;">
+                    <strong>✨ 核心设计：</strong> 程序开始时生成时间戳，日志和报告使用时间戳命名，结果文件夹使用隐藏文件标识时间戳，配置文件保持简洁。
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('track-flow', event)">
+                            <span class="tab-icon">🔄</span> 生成流程
+                        </button>
+                        <button class="tab" onclick="showTab('track-relations', event)">
+                            <span class="tab-icon">🔗</span> 追溯关系
+                        </button>
+                        <button class="tab" onclick="showTab('track-examples', event)">
+                            <span class="tab-icon">📄</span> 配置示例
+                        </button>
+                    </div>
+
+                    <div id="track-flow" class="tab-content active">
+                        <h4>🔄 时间戳生成和使用流程</h4>
+                        <ol class="steps">
+                            <li><strong>程序启动</strong>：生成时间戳 <code>YYYYMMDD_HHMMSS</code>（精确到秒）</li>
+                            <li><strong>记录日志</strong>：由 <code>run.sh</code> 驱动分析并创建 <code>分析点名.时间戳.log</code>，在日志开头记录该时间戳</li>
+                            <li><strong>保存结果</strong>：在结果文件夹创建 <code>.时间戳</code> 隐藏文件，同时保存图表的 .png 和 .pdf 格式</li>
+                            <li><strong>更新配置</strong>（可选）：覆盖 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code></li>
+                            <li><strong>生成报告</strong>：创建 <code>时间戳.docx</code> 报告文件（默认使用 Quarto 生成）</li>
+                        </ol>
+                    </div>
+
+                    <div id="track-relations" class="tab-content">
+                        <h4>🔗 追溯关系</h4>
+                        <ul>
+                            <li><strong>结果 → 日志</strong>：通过隐藏文件 <code>.时间戳</code> 找到对应的日志文件</li>
+                            <li><strong>结果 → 参数</strong>：通过日志文件（首选）或配置文件查看分析参数</li>
+                            <li><strong>日志 → 报告</strong>：通过时间戳匹配找到对应的分析报告</li>
+                            <li><strong>完整链条</strong>：run.sh → 内部脚本/配置 → 日志 → 结果（.png+.pdf） → 报告</li>
+                            <li><strong>查找最新版本</strong>：在 logs 文件夹按名称排序，最后一个即为最新运行</li>
+                        </ul>
+                    </div>
+
+                    <div id="track-examples" class="tab-content">
+                        <h4>📄 配置文件示例（两种格式）</h4>
+
+                        <strong>INI 格式示例：</strong>
+                        <pre class="code-block">[Analysis]
+timestamp=20260306_143022
+script=run.sh
+analysis_point=DEGs
+version=1.2
+
+[Parameters]
+p_value_cutoff=0.05
+log2fc_cutoff=1
+method=DESeq2
+independent_filtering=true
+cooks_cutoff=true
+
+[Input]
+count_file=../RawData/01.GSEXXX_count.csv
+sample_file=../RawData/samples.txt
+total_samples=150
+total_genes=25000
+
+[Output]
+deg_file=01.DEGs.csv
+heatmap_png=02.heatmap.png
+heatmap_pdf=02.heatmap.pdf
+volcano_png=03.volcano.png
+volcano_pdf=03.volcano.pdf
+total_degs=1234</pre>
+
+                        <strong style="display:block; margin-top:18px;">YAML 格式示例：</strong>
+                        <pre class="code-block">Analysis:
+  timestamp: 20260306_143022
+  script: run.sh
+  analysis_point: DEGs
+  version: 1.2
+
+Parameters:
+  p_value_cutoff: 0.05
+  log2fc_cutoff: 1
+  method: DESeq2
+  independent_filtering: true
+  cooks_cutoff: true
+
+Input:
+  count_file: ../RawData/01.GSEXXX_count.csv
+  sample_file: ../RawData/samples.txt
+  total_samples: 150
+  total_genes: 25000
+
+Output:
+  deg_file: 01.DEGs.csv
+  heatmap_png: 02.heatmap.png
+  heatmap_pdf: 02.heatmap.pdf
+  volcano_png: 03.volcano.png
+  volcano_pdf: 03.volcano.pdf
+  total_degs: 1234</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 最佳实践 ========== -->
+        <div class="grid">
+            <div class="card two-col">
+                <h2 class="section-title">✅ 推荐做法</h2>
+                <ul class="rule-list">
+                    <li><strong>统一时间戳</strong>：程序开始时生成时间戳，所有输出文件统一使用</li>
+                    <li><strong>日志优先</strong>：<span class="text-red">无论是否有配置文件，日志中必须详细记录所有参数</span></li>
+                    <li><strong>配置文件简洁</strong>：使用 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code>，每次运行覆盖</li>
+                    <li><strong>日志使用中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
+                    <li><strong>双格式图表</strong>：<span class="text-red">每个图表必须同时保存 .png 和 .pdf 格式</span>（特殊情况除外）</li>
+                    <li><strong>图表字体统一</strong>：图片中的英文<span class="text-red">统一使用 <code>Arial</code></span></li>
+                    <li><strong>使用 .q2</strong>：<span class="text-red">R数据使用 .q2 格式保存</span>（替代 .rds/.RData）</li>
+                    <li><strong>使用 data.table</strong>：读取文件推荐使用 data.table 包</li>
+                    <li><strong>使用 Quarto</strong>：生成报告推荐使用 Quarto，默认输出 .docx 格式</li>
+                    <li>定期清理过期的日志文件和临时结果（保留最近N天的版本）</li>
+                    <li>使用版本控制系统（Git）管理scripts文件夹中的脚本</li>
+                    <li>为重要分析结果创建README.md说明文件内容</li>
+                    <li>定期备份result和report文件夹到云端或外部存储</li>
+                    <li>日志文件使用结构化格式，便于后续检索和分析</li>
+                    <li>在日志开头添加摘要部分，包含关键统计信息</li>
+                </ul>
+            </div>
+            <div class="card two-col">
+                <h2 class="section-title">❌ 避免做法</h2>
+                <ul class="check-list">
+                    <li>使用无意义的文件名（如 result1.csv, final.pdf）</li>
+                    <li>时间戳只精确到日期，导致同一天多次运行无法区分</li>
+                    <li>日志只记录运行成功/失败，不记录具体参数</li>
+                    <li>依赖配置文件而忽略日志的参数记录功能</li>
+                    <li>不保留日志文件，导致无法追溯分析过程</li>
+                    <li>结果文件与日志文件无法对应</li>
+                    <li>不同输出文件使用不同的时间戳</li>
+                    <li>配置文件使用时间戳命名，导致文件夹碎片化</li>
+                    <li><span class="text-red"><strong>只保存单一图表格式</strong>：只保存 .png 或只保存 .pdf</span></li>
+                    <li><strong>图表字体混用</strong>：同一项目中混用 Arial、Times New Roman、宋体等</li>
+                    <li><span class="text-red"><strong>使用 .rds/.RData</strong></span>：推荐使用更现代的 .q2 格式</li>
+                    <li><strong>使用 base R</strong>：推荐使用更高效的 data.table</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ========== 生信开发补充规范 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">🧬 生信开发补充规范</h2>
+                <table class="matrix">
+                    <thead><tr><th>规范项</th><th>建议要求</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>物种与注释版本</strong></td><td>日志必须记录物种、参考基因组版本、注释版本</td><td>示例：<code>human | GRCh38 | GENCODE v46</code></td></tr>
+                        <tr><td><strong>基因ID体系</strong></td><td>明确使用 Ensembl ID 或 Gene Symbol，<span class="text-red">不混用</span></td><td>跨步骤转换时记录映射方法和丢失数量</td></tr>
+                        <tr><td><strong>样本信息一致性</strong></td><td><span class="text-red">样本表与计数矩阵样本名必须 1:1 对齐</span></td><td>运行前进行一致性校验并写入日志</td></tr>
+                        <tr><td><strong>随机性控制</strong></td><td><span class="text-red">所有含随机过程的步骤固定随机种子</span></td><td>示例：<code>seed=20260306</code></td></tr>
+                        <tr><td><strong>差异分析阈值</strong></td><td><span class="text-red">统一记录 <code>p/FDR</code> 与 <code>|log2FC|</code> 阈值</span></td><td>避免仅写“默认参数”导致不可复现</td></tr>
+                        <tr><td><strong>图表视觉标准</strong></td><td>图片字体<span class="text-red">统一 <code>Arial</code></span>，并固定最小字号</td><td>建议轴标题 >= 10 pt，刻度 >= 8 pt</td></tr>
+                        <tr><td><strong>软件环境记录</strong></td><td>记录 Python/R 版本和关键包版本</td><td>建议输出 <code>sessionInfo()</code> 或 <code>pip freeze</code> 摘要</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 文件格式建议 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">📊 文件格式建议</h2>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('format-data', event)">
+                            <span class="tab-icon">📊</span> 数据文件
+                        </button>
+                        <button class="tab" onclick="showTab('format-chart', event)">
+                            <span class="tab-icon">📈</span> 图表文件
+                        </button>
+                        <button class="tab" onclick="showTab('format-report', event)">
+                            <span class="tab-icon">📝</span> 报告文件
+                        </button>
+                    </div>
+
+                    <div id="format-data" class="tab-content active">
+                        <h4>📊 数据文件格式</h4>
+                        <ul>
+                            <li><strong>表格数据</strong>：优先使用 <span class="text-red">.csv</span>（通用、兼容性好）</li>
+                            <li><strong>R数据</strong>：使用 <span class="text-red">.q2 保存</span>（替代 .rds/.RData）</li>
+                        </ul>
+                        <div class="lead-box">
+                            <strong>💡 为什么使用 .q2 而不是 .rds/.RData？</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li>.q2 是更现代的二进制格式，性能更好</li>
+                                <li>跨平台兼容性更好，不受R版本限制</li>
+                                <li>压缩比更高，文件更小</li>
+                                <li>读写速度更快</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="format-chart" class="tab-content">
+                        <h4>📈 图表文件格式</h4>
+                        <ul>
+                            <li><strong>必须同时保存</strong>：<span class="text-red">.png（位图）+ .pdf（矢量图）</span></li>
+                            <li><strong>字体要求</strong>：图中英文统一使用 <code>Arial</code></li>
+                            <li><strong>PNG</strong>：300 dpi，用于一般用途、PPT、Word</li>
+                            <li><strong>PDF</strong>：矢量格式，可编辑、可缩放，用于发表</li>
+                            <li><strong>特殊情况</strong>：交互图表使用 .html（Plotly等）</li>
+                        </ul>
+                        <div class="warn-box">
+                            <strong>⚠️ 必须同时保存 PNG 和 PDF</strong>
+                            <p style="margin-top:8px;">除非是交互式图表（如 Plotly），每个静态图表都应同时保存 .png 和 .pdf。</p>
+                            <p style="margin-top:6px;">PNG 适合演示与办公文档，PDF 适合发表与后续编辑。</p>
+                        </div>
+                    </div>
+
+                    <div id="format-report" class="tab-content">
+                        <h4>📝 报告文件格式</h4>
+                        <ul>
+                            <li><strong>默认格式</strong>：使用 .docx（Word）</li>
+                            <li><strong>其他格式</strong>：
+                                <ul>
+                                    <li>.pdf（最终版本，不可编辑）</li>
+                                    <li>.pptx（演示文稿）</li>
+                                    <li>.html（网页版本）</li>
+                                </ul>
+                            </li>
+                            <li><strong>推荐工具</strong>：使用 Quarto 生成报告</li>
+                        </ul>
+                        <div class="lead-box">
+                            <strong>💡 Quarto 补充说明（避免重复）</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li>核心优势见上文 <strong>report/ - 为什么推荐 Quarto</strong></li>
+                                <li><strong>补充</strong>：支持跨平台（Windows、Mac、Linux）与团队协作流程</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 输入文件与结构化校验规范 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">🔍 输入文件与结构化校验规范</h2>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('ml-files', event)">
+                            <span class="tab-icon">📁</span> 输入文件清单
+                        </button>
+                        <button class="tab" onclick="showTab('ml-rules', event)">
+                            <span class="tab-icon">✅</span> 字段与取值规则
+                        </button>
+                    </div>
+
+                    <div id="ml-files" class="tab-content active">
+                        <h4>📁 输入文件清单（CSV）</h4>
+                        <table class="matrix">
+                            <thead><tr><th>文件名（推荐）</th><th>关键要求</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>group.csv</code></td><td>两列：<code>sample</code>、<code>group</code></td><td><code>group</code> 内容可变，但字段名固定</td></tr>
+                                <tr><td><code>expression.csv</code></td><td>行为基因，列为样本，首列必须为 <code>SYMBOL</code></td><td><span class="text-red"><code>SYMBOL</code> 必须大写</span></td></tr>
+                                <tr><td><code>gene.csv</code></td><td>列名必须为 <code>SYMBOL</code></td><td>基因列表输入</td></tr>
+                                <tr><td><code>riskscore.csv</code></td><td>需包含样本与风险评分字段</td><td>风险分值必须为数值型</td></tr>
+                                <tr><td><code>survival.csv</code></td><td>必须包含 <code>OS</code> 与 <code>OS.time</code></td><td><span class="text-red"><code>OS</code> 仅允许 0/1</span>；<span class="text-red"><code>OS.time</code> 必须 &gt; 0</span></td></tr>
+                            </tbody>
+                        </table>
+                        <div class="lead-box">
+                            <strong>命名补充：</strong>
+                            允许扩展命名（如 <code>gene_v1_human.csv</code>），但推荐优先使用标准文件名以减少解析歧义。
+                        </div>
+                    </div>
+
+                    <div id="ml-rules" class="tab-content">
+                        <h4>✅ 字段类型与取值约束</h4>
+                        <table class="matrix">
+                            <thead><tr><th>字段</th><th>类型要求</th><th>取值/约束</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>sample</code></td><td>字符型（chr）</td><td>不能为空，建议全局唯一</td></tr>
+                                <tr><td><code>group</code></td><td>字符型（chr）</td><td>允许业务自定义分组标签</td></tr>
+                                <tr><td><code>OS</code></td><td>整数型（int）</td><td>仅允许 <code>0</code> 或 <code>1</code></td></tr>
+                                <tr><td><code>OS.time</code></td><td>数值或整数型（num/int）</td><td>必须 <code>&gt; 0</code></td></tr>
+                                <tr><td><code>RS</code> / 风险评分列</td><td>数值型（num）</td><td>允许负值，不允许 NA</td></tr>
+                                <tr><td><code>riskgroup</code></td><td>字符型（chr）</td><td>仅允许 <code>High</code> 或 <code>low</code></td></tr>
+                                <tr><td><code>SYMBOL</code></td><td>字符型（chr）</td><td>列名必须大写 <code>SYMBOL</code></td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="danger-box">
+                            <strong>硬性规则：</strong>
+                            <span class="text-red">全部输入文件必须为 <code>.csv</code></span>；<span class="text-red">数据中不允许出现 NA</span>；<span class="text-red">数值字段必须可解析为 <code>num/int</code></span>。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <p class="footer-note"><strong>版本:</strong> v1.0 | <strong>创建日期:</strong> 2026-03-06</p>
+
+    </div>
+
+    <script>
+        function showTab(tabName, event) {
+            var currentContainer = event.currentTarget.closest('.tabs-container');
+            var tabContents = currentContainer.querySelectorAll('.tab-content');
+            tabContents.forEach(function(content) {
+                content.classList.remove('active');
+            });
+            var tabs = currentContainer.querySelectorAll('.tab');
+            tabs.forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码生成与验证流程图</title>
+    <style>
+        :root {
+            --bg: #f3f6fb;
+            --card: #ffffff;
+            --text: #223043;
+            --muted: #5b6b80;
+            --primary: #1d4ed8;
+            --primary-soft: #dbeafe;
+            --accent: #0f766e;
+            --accent-soft: #ccfbf1;
+            --warn: #b45309;
+            --warn-soft: #fef3c7;
+            --danger: #b91c1c;
+            --danger-soft: #fee2e2;
+            --border: #d9e2ef;
+            --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+            /* 角色色 */
+            --ai: #0f766e;
+            --ai-soft: #ccfbf1;
+            --jinjie: #7c3aed;
+            --jinjie-soft: #ede9fe;
+            --linyu: #1d4ed8;
+            --linyu-soft: #dbeafe;
+            --decision: #b45309;
+            --decision-soft: #fef3c7;
+            --success: #16a34a;
+            --success-soft: #dcfce7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(29,78,216,0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(15,118,110,0.12), transparent 24%),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 32px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 55%, #ecfeff 100%);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.7);
+            margin-bottom: 24px;
+        }
+        .hero h1 { margin: 0 0 10px; font-size: clamp(2rem,4vw,3rem); line-height: 1.15; color: #0f172a; }
+        .hero p  { margin: 0; max-width: 920px; color: var(--muted); font-size: 1.05rem; }
+
+        .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .pill { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 999px; font-size: 0.92rem; font-weight: 600; gap: 6px; }
+        .pill.primary { background: var(--primary-soft); color: var(--primary); }
+        .pill.accent  { background: var(--accent-soft);  color: var(--accent); }
+        .pill.warn    { background: var(--warn-soft);    color: var(--warn); }
+        .pill.danger  { background: var(--danger-soft);  color: var(--danger); }
+
+        /* Grid & Card */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0,1fr));
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+        .card {
+            grid-column: span 12;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 28px rgba(15,23,42,0.05);
+        }
+        .card.two-col { grid-column: span 6; }
+        .card.three-col { grid-column: span 4; }
+
+        .section-title { margin: 0 0 14px; font-size: 1.3rem; color: #0f172a; }
+
+        /* Boxes */
+        .lead-box, .warn-box, .danger-box { border-radius: 16px; padding: 16px 18px; margin: 14px 0 0; }
+        .lead-box   { background: #f8fafc; border: 1px solid #dbeafe; }
+        .warn-box   { background: var(--warn-soft); border: 1px solid #fcd34d; }
+        .danger-box { background: var(--danger-soft); border: 1px solid #fca5a5; }
+
+        /* Legend */
+        .legend { display: flex; gap: 10px; flex-wrap: wrap; }
+        .legend-item {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #f8fafc; border: 1px solid var(--border);
+            border-radius: 999px; padding: 8px 14px; font-size: 0.92rem; font-weight: 600;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.ai       { background: var(--ai); }
+        .dot.jinjie   { background: var(--jinjie); }
+        .dot.linyu    { background: var(--linyu); }
+        .dot.decision { background: var(--decision); }
+
+        /* Summary Grid (循环规则) */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
+        }
+        .summary-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border-left: 4px solid var(--decision);
+            border-radius: 16px;
+            padding: 16px 18px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--decision);
+        }
+        .summary-card h3 { color: #0f172a; font-size: 1.1rem; margin-bottom: 6px; }
+        .summary-card p  { color: var(--muted); font-size: 0.95rem; margin: 0; }
+
+        /* Accordion (collapsible phases) */
+        .accordion { display: grid; gap: 14px; }
+
+        details.phase {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--card);
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(15,23,42,0.04);
+        }
+
+        details.phase summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 16px 20px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            border-left: 4px solid var(--primary);
+            transition: background .2s, color .2s;
+        }
+
+        details.phase summary:hover { background: #f1f5f9; }
+        details.phase summary::-webkit-details-marker { display: none; }
+
+        details.phase summary::after {
+            content: "展开";
+            float: right;
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+        details.phase[open] summary::after { content: "收起"; }
+
+        .phase-1 summary { background: var(--jinjie-soft); border-left-color: var(--jinjie); color: #5b21b6; }
+        .phase-2 summary { background: var(--ai-soft); border-left-color: var(--ai); color: #065f46; }
+        .phase-3 summary { background: var(--linyu-soft); border-left-color: var(--linyu); color: #1e3a8a; }
+
+        .phase-body { padding: 18px 20px; }
+
+        /* Timeline */
+        .timeline { list-style: none; }
+
+        .step {
+            position: relative;
+            padding-left: 28px;
+            margin-bottom: 14px;
+        }
+
+        .step::before {
+            content: "";
+            position: absolute;
+            left: 6px; top: 14px;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px var(--border);
+        }
+
+        .step::after {
+            content: "";
+            position: absolute;
+            left: 11px; top: 27px;
+            width: 2px;
+            height: calc(100% + 2px);
+            background: var(--border);
+        }
+        .step:last-child::after { display: none; }
+
+        .node {
+            border: 1px solid var(--border);
+            background: var(--card);
+            border-radius: 16px;
+            padding: 14px 16px;
+        }
+        .node h4 { color: #0f172a; font-size: 1.05em; margin-bottom: 4px; }
+        .node p  { color: var(--muted); font-size: 0.95rem; margin: 0; }
+
+        .meta {
+            margin-top: 8px;
+            display: inline-block;
+            font-size: 0.8rem;
+            color: #1f2937;
+            background: #f3f4f6;
+            border-radius: 999px;
+            padding: 3px 10px;
+        }
+
+        /* Role border-left colors */
+        .ai .node       { border-left: 4px solid var(--ai); }
+        .jinjie .node   { border-left: 4px solid var(--jinjie); }
+        .linyu .node    { border-left: 4px solid var(--linyu); }
+        .decision .node { border-color: var(--decision-soft); background: #fffbeb; border-left: 4px solid var(--decision); }
+        .start .node    { border-color: var(--success-soft); background: #f0fdf4; border-left: 4px solid var(--success); }
+        .end .node      { border-color: var(--success-soft); background: #f0fdf4; border-left: 4px solid var(--success); text-align: center; }
+
+        /* Decision branches */
+        .branches {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .branch {
+            border: 1px dashed var(--border);
+            background: #fafbfc;
+            border-radius: 14px;
+            padding: 10px 12px;
+        }
+        .branch .label {
+            display: inline-block;
+            font-size: 0.78rem;
+            border-radius: 999px;
+            padding: 2px 10px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .branch.pass .label { background: var(--success-soft); color: #166534; }
+        .branch.fail .label { background: var(--danger-soft);  color: var(--danger); }
+        .branch p { margin: 0; font-size: 0.92rem; color: var(--muted); }
+
+        .badge-loop {
+            display: inline-block;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: var(--warn);
+            background: var(--warn-soft);
+            border: 1px solid #fdba74;
+            border-radius: 999px;
+            padding: 2px 10px;
+            font-weight: 600;
+        }
+
+        /* Rule / Criteria / Deliverable grids */
+        .rule-grid,
+        .criteria-grid,
+        .deliverable-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
+        }
+
+        .rule-card,
+        .criteria-card,
+        .deliverable-card {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border-radius: 16px;
+            padding: 16px 18px;
+            border: 1px solid var(--border);
+            border-left: 4px solid #94a3b8;
+        }
+        .rule-card h4, .criteria-card h4, .deliverable-card h4 {
+            color: #0f172a; font-size: 1.05em; margin-bottom: 6px;
+        }
+        .rule-card p, .criteria-card p, .deliverable-card p {
+            color: var(--muted); font-size: 0.95rem; margin-bottom: 6px;
+        }
+
+        .rule-card.ai,       .criteria-card.ai,       .deliverable-card.ai       { border-left-color: var(--ai); }
+        .rule-card.jinjie,   .criteria-card.jinjie,   .deliverable-card.jinjie   { border-left-color: var(--jinjie); }
+        .rule-card.linyu,    .criteria-card.linyu,    .deliverable-card.linyu    { border-left-color: var(--linyu); }
+        .rule-card.check,    .criteria-card.check,    .deliverable-card.check    { border-left-color: var(--decision); }
+
+        .inline-note {
+            font-size: 0.82rem;
+            color: #475569;
+            background: #eef2f7;
+            border-radius: 999px;
+            padding: 4px 10px;
+            display: inline-block;
+        }
+
+        /* Emphasis utilities */
+        .text-red { color: var(--danger); font-weight: 700; }
+
+        /* Footer */
+        .footer-note { margin-top: 18px; color: var(--muted); font-size: 0.95rem; text-align: center; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .card.two-col, .card.three-col { grid-column: span 12; }
+            .hero { padding: 24px; }
+            .branches { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            body { background: #fff; }
+            .card { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Hero -->
+        <section class="hero">
+            <h1>📋 代码生成与验证流程图</h1>
+            <p>统一协作角色、决策节点与回环机制，保障代码交付可验证、可追溯。</p>
+            <div class="pill-row">
+                <span class="pill primary">准备定范围 → 开发主测试 → 新数据验证与终审</span>
+                <span class="pill warn">失败<span class="text-red">统一回到 Step 4</span></span>
+            </div>
+        </section>
+
+        <!-- 使用说明 -->
+        <div class="grid">
+            <div class="card">
+                <div class="lead-box" style="margin-top:0;">
+                    <strong>💡 使用说明：</strong>
+                    本流程按"准备定范围 → 开发主测试 → 新数据验证与终审"三阶段执行。
+                    任意检查点失败，<span class="text-red">统一回到 Step 4 修正后再验证</span>，避免流程分叉失控。
+                </div>
+            </div>
+        </div>
+
+        <!-- 角色图例 -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">角色图例</h2>
+                <div class="legend">
+                    <span class="legend-item"><span class="dot ai"></span>AI + 执行者</span>
+                    <span class="legend-item"><span class="dot jinjie"></span>金杰</span>
+                    <span class="legend-item"><span class="dot linyu"></span>林煜林</span>
+                    <span class="legend-item"><span class="dot decision"></span>决策点</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 循环规则速览 -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">循环规则速览</h2>
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h3>循环 1: 功能测试未通过</h3>
+                        <p>触发点: 检查 1 失败。处理: 修改代码并回到 Step 4 复测。</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>循环 2: 新数据测试需改码</h3>
+                        <p>触发点: 检查 2 失败。处理: 回到 Step 4 调整后再跑新数据。</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>循环 3: 最终审核不通过</h3>
+                        <p>触发点: 检查 3 失败。处理: 回到 Step 4 修正并重新提交审核。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 可折叠主流程 -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">可折叠主流程</h2>
+                <div class="accordion">
+                    <details class="phase phase-1" open>
+                        <summary>阶段 1: 准备与定范围 (Step 0 - Step 2)</summary>
+                        <div class="phase-body">
+                            <ol class="timeline">
+                                <li class="step start">
+                                    <div class="node">
+                                        <h4>开始</h4>
+                                        <p>进入 AI 与人工协作流程。</p>
+                                    </div>
+                                </li>
+                                <li class="step jinjie">
+                                    <div class="node">
+                                        <h4>Step 0 - 汇总资料</h4>
+                                        <p>整理样例输入、期望输出与代码模板，作为开发基线。</p>
+                                        <span class="meta">执行人: 金杰</span>
+                                    </div>
+                                </li>
+                                <li class="step ai">
+                                    <div class="node">
+                                        <h4>Step 1 - AI 汇总分析</h4>
+                                        <p>提炼业务规则和边界条件，输出可执行实现思路。</p>
+                                        <span class="meta">执行人: AI + 执行者</span>
+                                    </div>
+                                </li>
+                                <li class="step linyu">
+                                    <div class="node">
+                                        <h4>Step 2 - 功能决策</h4>
+                                        <p>确定保留/新增/剔除项，<span class="text-red">冻结本轮开发范围</span>。</p>
+                                        <span class="meta">执行人: 林煜林</span>
+                                    </div>
+                                </li>
+                            </ol>
+                        </div>
+                    </details>
+
+                    <details class="phase phase-2" open>
+                        <summary>阶段 2: 开发与主测试 (Step 3 - Step 5)</summary>
+                        <div class="phase-body">
+                            <ol class="timeline">
+                                <li class="step ai">
+                                    <div class="node">
+                                        <h4>Step 3 - 生成代码</h4>
+                                        <p>按决策范围实现代码，确保可运行且结构清晰。</p>
+                                        <span class="meta">执行人: AI + 执行者</span>
+                                    </div>
+                                </li>
+                                <li class="step ai">
+                                    <div class="node">
+                                        <h4>Step 4 - 测试验证</h4>
+                                        <p>用基线样例做功能与结果校验，人工复核关键结果。</p>
+                                        <span class="meta">执行人: AI + 执行者</span>
+                                    </div>
+                                </li>
+                                <li class="step decision">
+                                    <div class="node">
+                                        <h4>检查 1 - 基线测试是否通过?</h4>
+                                        <div class="branches">
+                                            <div class="branch fail">
+                                                <span class="label">不通过</span>
+                                                <p>定位问题并修正代码，<span class="text-red">返回 Step 4</span>。</p>
+                                                <span class="badge-loop">循环 1</span>
+                                            </div>
+                                            <div class="branch pass">
+                                                <span class="label">通过</span>
+                                                <p>进入 Step 5 记录结果。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="step ai">
+                                    <div class="node">
+                                        <h4>Step 5 - 生成测试报告</h4>
+                                        <p>记录测试输入、输出、异常与结论，形成可追溯报告。</p>
+                                        <span class="meta">执行人: AI + 执行者</span>
+                                    </div>
+                                </li>
+                            </ol>
+                        </div>
+                    </details>
+
+                    <details class="phase phase-3" open>
+                        <summary>阶段 3: 新数据验证与终审 (Step 6 - 完成)</summary>
+                        <div class="phase-body">
+                            <ol class="timeline">
+                                <li class="step jinjie">
+                                    <div class="node">
+                                        <h4>Step 6 - 新数据测试</h4>
+                                        <p>使用未参与开发的新样例，验证泛化能力。</p>
+                                        <span class="meta">执行人: 金杰</span>
+                                    </div>
+                                </li>
+                                <li class="step decision">
+                                    <div class="node">
+                                        <h4>检查 2 - 新数据测试是否通过?</h4>
+                                        <div class="branches">
+                                            <div class="branch fail">
+                                                <span class="label">需改代码</span>
+                                                <p><span class="text-red">回到 Step 4</span> 调整后再测新数据。</p>
+                                                <span class="badge-loop">循环 2</span>
+                                            </div>
+                                            <div class="branch pass">
+                                                <span class="label">通过</span>
+                                                <p>进入 Step 7 最终审核。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="step linyu">
+                                    <div class="node">
+                                        <h4>Step 7 - 最终审核</h4>
+                                        <p>审核代码质量、可维护性和交付完整性。</p>
+                                        <span class="meta">执行人: 林煜林</span>
+                                    </div>
+                                </li>
+                                <li class="step decision">
+                                    <div class="node">
+                                        <h4>检查 3 - 审核是否通过?</h4>
+                                        <div class="branches">
+                                            <div class="branch fail">
+                                                <span class="label">不通过</span>
+                                                <p><span class="text-red">返回 Step 4</span> 修正并重新走测试链路。</p>
+                                                <span class="badge-loop">循环 3</span>
+                                            </div>
+                                            <div class="branch pass">
+                                                <span class="label">通过</span>
+                                                <p>进入交付。</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="step end">
+                                    <div class="node">
+                                        <h4>完成</h4>
+                                        <p>输出最终代码与报告，流程闭环。</p>
+                                    </div>
+                                </li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关键执行规则 -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">关键执行规则</h2>
+                <div class="rule-grid">
+                    <div class="rule-card ai">
+                        <h4>默认执行模式</h4>
+                        <p>未单独标注角色的步骤，由 AI + 执行者负责。</p>
+                    </div>
+                    <div class="rule-card jinjie">
+                        <h4>金杰职责边界</h4>
+                        <p>负责 Step 0 与 Step 6。Step 6 发现需改码时<span class="text-red">必须回到 Step 4</span>。</p>
+                    </div>
+                    <div class="rule-card linyu">
+                        <h4>林煜林审核规则</h4>
+                        <p>负责范围决策与终审；<span class="text-red">终审不通过时必须回到 Step 4 重新验证</span>。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 阶段退出标准 -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">阶段退出标准</h2>
+                <div class="criteria-grid">
+                    <div class="criteria-card jinjie">
+                        <h4>阶段 1 退出标准</h4>
+                        <p>Step 0-2 完成后，<span class="text-red">需求范围必须明确且无歧义</span>。</p>
+                        <span class="inline-note">必须产出: 输入输出样例 + 决策范围清单</span>
+                    </div>
+                    <div class="criteria-card ai">
+                        <h4>阶段 2 退出标准</h4>
+                        <p>Step 3-5 完成后，基线样例通过，且报告可复现实验结果。</p>
+                        <span class="inline-note">必须产出: 可运行代码 + 基线测试报告</span>
+                    </div>
+                    <div class="criteria-card linyu">
+                        <h4>阶段 3 退出标准</h4>
+                        <p>Step 6-7 完成后，<span class="text-red">新数据测试通过且终审通过，才可交付</span>。</p>
+                        <span class="inline-note">必须产出: 审核结论 + 交付版本标识</span>
+                    </div>
+                    <div class="criteria-card check">
+                        <h4>统一回环原则</h4>
+                        <p>任一检查点失败，<span class="text-red">统一回到 Step 4 修正并重新验证</span>，避免分叉流程失控。</p>
+                        <span class="inline-note"><span class="text-red">回环入口唯一: Step 4</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最终交付清单 -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">最终交付清单</h2>
+                <div class="deliverable-grid">
+                    <div class="deliverable-card ai">
+                        <h4>代码交付</h4>
+                        <p>最终可运行代码，包含关键注释、版本号和必要配置说明。</p>
+                    </div>
+                    <div class="deliverable-card check">
+                        <h4>测试交付</h4>
+                        <p>基线测试 + 新数据测试结果，需记录输入、输出、异常处理和结论。</p>
+                    </div>
+                    <div class="deliverable-card linyu">
+                        <h4>审核交付</h4>
+                        <p>最终审核结论与修改记录，确保本次发布可追溯。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <p class="footer-note"><strong>版本:</strong> v1.0 | <strong>创建日期:</strong> 2026-03-06</p>
+
+    </div>
+</body>
+</html>

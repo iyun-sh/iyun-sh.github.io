@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生信模块代码保护指南</title>
+    <style>
+        :root {
+            --bg: #f3f6fb;
+            --card: #ffffff;
+            --text: #223043;
+            --muted: #5b6b80;
+            --primary: #1d4ed8;
+            --primary-soft: #dbeafe;
+            --accent: #0f766e;
+            --accent-soft: #ccfbf1;
+            --warn: #b45309;
+            --warn-soft: #fef3c7;
+            --danger: #b91c1c;
+            --danger-soft: #fee2e2;
+            --border: #d9e2ef;
+            --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(29, 78, 216, 0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 24%),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+
+        .hero {
+            padding: 32px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 55%, #ecfeff 100%);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 4vw, 3rem);
+            line-height: 1.15;
+            color: #0f172a;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 920px;
+            color: var(--muted);
+            font-size: 1.05rem;
+        }
+
+        .pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.92rem;
+            font-weight: 600;
+        }
+
+        .pill.primary { background: var(--primary-soft); color: var(--primary); }
+        .pill.accent { background: var(--accent-soft); color: var(--accent); }
+        .pill.warn { background: var(--warn-soft); color: var(--warn); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .card {
+            grid-column: span 12;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+        }
+
+        .card.two-col { grid-column: span 6; }
+
+        .section-title {
+            margin: 0 0 14px;
+            font-size: 1.3rem;
+            color: #0f172a;
+        }
+
+        .lead-box,
+        .warn-box,
+        .danger-box {
+            border-radius: 16px;
+            padding: 16px 18px;
+            margin: 14px 0 0;
+        }
+
+        .lead-box {
+            background: #f8fafc;
+            border: 1px solid #dbeafe;
+        }
+
+        .warn-box {
+            background: var(--warn-soft);
+            border: 1px solid #fcd34d;
+        }
+
+        .danger-box {
+            background: var(--danger-soft);
+            border: 1px solid #fca5a5;
+        }
+
+        .rule-list,
+        .check-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .rule-list li,
+        .check-list li {
+            margin-bottom: 10px;
+        }
+
+        .matrix {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 14px;
+        }
+
+        .matrix th,
+        .matrix td {
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .matrix th {
+            background: #eff6ff;
+            color: #1e3a8a;
+        }
+
+        code,
+        .code-block {
+            font-family: Consolas, "Courier New", monospace;
+        }
+
+        code {
+            background: #eef2ff;
+            color: #3730a3;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
+        .code-block {
+            display: block;
+            white-space: pre-wrap;
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 16px;
+            padding: 18px;
+            margin: 0;
+            overflow-x: auto;
+        }
+
+        .steps {
+            counter-reset: step;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .steps li {
+            position: relative;
+            padding-left: 54px;
+            margin-bottom: 18px;
+            min-height: 38px;
+        }
+
+        .steps li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #0f766e);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .footer-note {
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        /* Emphasis utilities */
+        .text-red { color: var(--danger); font-weight: 700; }
+
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 8px;
+        }
+
+        .flow-step {
+            position: relative;
+            padding: 18px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+
+        .flow-step::after {
+            content: "→";
+            position: absolute;
+            right: -11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .flow-step strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #0f172a;
+            font-size: 1rem;
+        }
+
+        .flow-step p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.94rem;
+        }
+
+        @media (max-width: 900px) {
+            .card.two-col { grid-column: span 12; }
+            .hero { padding: 24px; }
+            .flow-grid { grid-template-columns: 1fr; }
+            .flow-step::after { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="hero">
+            <h1>生信模块代码保护指南</h1>
+            <p>本指南用于约束模块对外交付时的源码暴露边界、入口脚本设计、配置模板留存策略以及保护实现原则，确保模块可用、可维护、可保护。</p>
+            <div class="pill-row">
+                <span class="pill primary">主入口固定为 run.sh</span>
+                <span class="pill accent">内部实现集中在 scripts/</span>
+                <span class="pill warn">保护实现不改变外部调用方式</span>
+            </div>
+        </section>
+
+        <div class="grid">
+            <section class="card two-col">
+                <h2 class="section-title">核心原则</h2>
+                <ol class="steps">
+                    <li><strong>对外只暴露稳定入口</strong>：使用者统一通过 <code>run.sh</code> 调用模块，不应直接依赖 <code>scripts/</code> 内部脚本路径。</li>
+                    <li><strong>内部实现与外部接口解耦</strong>：即使后续对 <code>scripts/</code> 做保护处理（如加密、编译、二进制化等），<code>run.sh</code> 的参数约定也应保持稳定。</li>
+                    <li><strong>可公开的只有必要内容</strong>：保留运行所需说明、参数模板、结果结构说明；不公开不必要的中间脚本、调试脚本和历史实验代码。</li>
+                </ol>
+            </section>
+
+            <section class="card two-col">
+                <h2 class="section-title">推荐目录边界</h2>
+                <pre class="code-block">module_name/
+├── run.sh
+├── scripts/
+│   ├── scripts.sh
+│   ├── RawData.R
+│   └── DEGs.py
+├── config/
+│   └── DEGs.config.example.ini/yaml
+├── logs/
+├── result/
+└── report/</pre>
+                <div class="lead-box">
+                    <strong>推荐做法：</strong> 对外文档只讲清楚 <code>run.sh</code> 的用法、输入、输出和错误定位方式；<code>scripts/</code> 仅作为内部实现目录维护。
+                </div>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">哪些内容可以公开，哪些应受保护</h2>
+                <table class="matrix">
+                    <thead>
+                        <tr>
+                            <th>内容</th>
+                            <th>建议状态</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>run.sh</code></td>
+                            <td>公开</td>
+                            <td>这是模块稳定入口，应明确参数、帮助信息、退出码和日志位置。</td>
+                        </tr>
+                        <tr>
+                            <td><code>config/*.example.ini/yaml</code></td>
+                            <td>公开</td>
+                            <td>参数模板应保留，便于使用者理解输入要求和默认值。</td>
+                        </tr>
+                        <tr>
+                            <td><code>scripts/*.R</code>、<code>scripts/*.py</code></td>
+                            <td>可保护</td>
+                            <td>属于内部实现，可根据交付策略做保护处理（如加密、编译、二进制化、打包等）或受控发布。</td>
+                        </tr>
+                        <tr>
+                            <td>临时调试脚本、试验代码</td>
+                            <td><span class="text-red">禁止交付</span></td>
+                            <td>这类文件不稳定、不可追溯，也容易暴露无关实现细节。</td>
+                        </tr>
+                        <tr>
+                            <td>历史结果、缓存、中间文件</td>
+                            <td><span class="text-red">禁止交付</span></td>
+                            <td>交付包中只保留必要模板与正式输出结构，不夹带开发过程残留。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="card two-col">
+                <h2 class="section-title">run.sh 的保护要求</h2>
+                <ul class="rule-list">
+                    <li><span class="text-red">必须提供清晰的参数入口</span>，优先支持配置文件路径、输入数据路径、输出目录等核心参数。</li>
+                    <li><span class="text-red">必须输出可定位问题的日志路径</span>，不把错误完全吞掉。</li>
+                    <li>内部脚本名可以变化，但 <code>run.sh</code> 的调用方式<span class="text-red">不能随保护策略频繁变化</span>。</li>
+                    <li>如果内部脚本经过保护处理（如加密、编译等），<code>run.sh</code> 仍应保持原有帮助信息和返回行为。</li>
+                </ul>
+                <div class="warn-box">
+                    <strong>不推荐：</strong> 让使用者直接运行 <code>python scripts/DEGs.py</code> 或 <code>Rscript scripts/RawData.R</code>。这会让外部调用与内部实现强绑定，后续一旦做保护处理就会破坏兼容性。
+                </div>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">run.sh 参数与退出码规范</h2>
+                <table class="matrix">
+                    <thead>
+                        <tr>
+                            <th>接口项</th>
+                            <th>建议要求</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>帮助信息</td>
+                            <td>必须支持 <code>-h</code> 或 <code>--help</code></td>
+                            <td>帮助信息至少说明用途、必填参数、可选参数、示例命令和输出位置。</td>
+                        </tr>
+                        <tr>
+                            <td>配置入口</td>
+                            <td>优先支持 <code>-c</code> 或 <code>--config</code></td>
+                            <td>配置文件路径应是最稳定的接口之一，便于保护内部实现时保持兼容。</td>
+                        </tr>
+                        <tr>
+                            <td>输入输出参数</td>
+                            <td>建议显式支持输入、输出目录、线程数等关键参数</td>
+                            <td>不要让使用者依赖内部默认路径或脚本内硬编码路径。</td>
+                        </tr>
+                        <tr>
+                            <td>日志输出</td>
+                            <td>必须打印日志文件位置</td>
+                            <td>运行开始、失败退出和成功结束时都应能快速定位日志。</td>
+                        </tr>
+                        <tr>
+                            <td>退出码</td>
+                            <td>成功返回 0，失败返回非 0</td>
+                            <td>不同类型错误可进一步细分退出码，但至少保证成功与失败可被外部脚本识别。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <pre class="code-block" style="margin-top: 16px;">示例：
+./run.sh --config config/DEGs.config.example.ini --input ./input --output ./result
+
+推荐退出码约定：
+0   运行成功
+1   参数错误
+2   输入文件缺失或格式错误
+3   运行环境异常
+4   内部分析流程执行失败</pre>
+                <div class="lead-box">
+                    <strong>接口稳定原则：</strong> 就算内部从明文脚本切到受保护形式（如加密、编译、二进制化等），<span class="text-red"><code>run.sh</code> 的主要参数名称和退出码语义也不要轻易变化</span>。
+                </div>
+            </section>
+
+            <section class="card two-col">
+                <h2 class="section-title">scripts/ 的保护要求</h2>
+                <ul class="rule-list">
+                    <li><code>scripts/</code> 视为内部实现目录，可按需要做保护处理（如加密、编译、二进制化、压缩等）或限制访问。</li>
+                    <li>保护后仍需保留稳定的日志输出、结果目录结构和配置映射关系。</li>
+                    <li>若使用中间调度脚本，如 <code>scripts.sh</code>，应由 <code>run.sh</code> 统一调用，不单独对外宣讲。</li>
+                    <li>调试用开关、测试参数和临时路径不应在对外交付版本中保留。</li>
+                </ul>
+                <div class="danger-box">
+                    <strong>禁止事项：</strong> <span class="text-red">不要把密钥、临时账号、内网路径、调试数据源、测试样本或历史分析结果一并打包到交付目录中。</span>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">保护策略分级建议</h2>
+                <table class="matrix">
+                    <thead>
+                        <tr>
+                            <th>级别</th>
+                            <th>适用场景</th>
+                            <th>建议做法</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>基础保护</td>
+                            <td>内部协作、受控团队共享</td>
+                            <td>保留源码目录结构，但移除调试脚本、测试数据和无关历史文件，只保留 <code>run.sh</code>、内部脚本、模板配置和必要说明。</td>
+                        </tr>
+                        <tr>
+                            <td>中等保护</td>
+                            <td>外部合作、需要限制实现细节暴露</td>
+                            <td>对 <code>scripts/</code> 中核心脚本做保护处理（如加密、编译、二进制化等），保留明文 <code>run.sh</code> 与配置模板，并确保日志与错误信息可读。</td>
+                        </tr>
+                        <tr>
+                            <td>强化保护</td>
+                            <td>正式交付、商业化或需严格控制源码访问</td>
+                            <td>仅公开稳定入口、模板配置和结果约定；内部脚本使用受保护方式（如加密、编译、二进制化等）或受控分发，并配套交付检查记录。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="lead-box">
+                    <strong>选择原则：</strong> 保护级别越高，<span class="text-red">越要重视外部兼容性</span>。无论采用哪种保护方式，都不应让使用者承担额外的内部实现知识。
+                </div>
+            </section>
+
+            <section class="card two-col">
+                <h2 class="section-title">推荐交付包结构</h2>
+                <pre class="code-block">deliverable/
+├── run.sh
+├── README.md
+├── scripts/
+│   └── protected_runtime/
+├── config/
+│   └── DEGs.config.example.ini/yaml
+├── logs/
+├── result/
+└── report/</pre>
+                <ul class="rule-list" style="margin-top: 14px;">
+                    <li><code>README.md</code> 只说明运行方式、输入输出要求和常见错误定位。</li>
+                    <li><code>scripts/protected_runtime/</code> 可以是受保护产物（如加密脚本、编译产物、二进制文件等）目录。</li>
+                    <li>如果不需要对外暴露源码，避免把原始 <code>.R</code>、<code>.py</code> 文件直接放入交付包。</li>
+                </ul>
+            </section>
+
+            <section class="card two-col">
+                <h2 class="section-title">常见问题</h2>
+                <ul class="rule-list">
+                    <li><strong>Q：配置模板要不要一起交付？</strong><br> A：要。模板配置属于外部使用接口的一部分，不应因代码保护而缺失。</li>
+                    <li><strong>Q：保护处理（如加密、编译等）后报错看不懂怎么办？</strong><br> A：需要在 <code>run.sh</code> 和日志中保留清晰的错误提示，不要把内部异常全部变成无意义的返回码。</li>
+                    <li><strong>Q：可以只交付内部脚本，让用户自己写入口吗？</strong><br> A：不建议。这样会把外部接口设计责任转嫁给使用者，也不利于后续兼容与保护。</li>
+                    <li><strong>Q：流程调度脚本要不要对外说明？</strong><br> A：通常不需要。对外只说明主入口和必要参数，内部调度细节留在保护域内即可。</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">交付红线清单</h2>
+                <table class="matrix">
+                    <thead>
+                        <tr>
+                            <th>红线项</th>
+                            <th>禁止原因</th>
+                            <th>处理方式</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="text-red">内网地址、账号、密钥、令牌</span></td>
+                            <td>直接构成安全风险，可能导致环境或数据被非授权访问。</td>
+                            <td>交付前全部清理；如必须配置，改为模板占位符并由外部注入。</td>
+                        </tr>
+                        <tr>
+                            <td>调试脚本、测试脚本、临时 notebook</td>
+                            <td>内容不稳定，容易泄露实现细节，也会混淆正式入口。</td>
+                            <td>从交付包移除，仅在内部仓库保留。</td>
+                        </tr>
+                        <tr>
+                            <td>历史结果、中间缓存、测试样本</td>
+                            <td>容易泄露业务数据或误导用户将旧结果当成正式输出。</td>
+                            <td>交付前清空，只保留目录结构和必要示例模板。</td>
+                        </tr>
+                        <tr>
+                            <td><span class="text-red">要求用户直接调用内部脚本的说明</span></td>
+                            <td>破坏对外接口稳定性，后续一旦做保护处理就会导致兼容性问题。</td>
+                            <td>统一改为通过 <code>run.sh</code> 调用，并删除对内部路径的直接说明。</td>
+                        </tr>
+                        <tr>
+                            <td>与当前版本不一致的配置模板或帮助文档</td>
+                            <td>会导致使用者按旧参数运行，产生错误或结果偏差。</td>
+                            <td>交付前逐项核对模板、README、日志说明与当前版本是否一致。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="danger-box">
+                    <strong>执行原则：</strong> <span class="text-red">只要某项内容不属于“外部使用所必需”，默认不进入交付包</span>；拿不准时，先放入内部保留区，再评估是否需要公开。
+                </div>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">保护指南总览流程</h2>
+                <div class="flow-grid">
+                    <div class="flow-step">
+                        <strong>1. 定义外部接口</strong>
+                        <p>先固定 <code>run.sh</code> 的参数、帮助信息、日志定位方式和输出约定。</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>2. 划分保护边界</strong>
+                        <p>明确哪些内容公开、哪些放在 <code>scripts/</code> 内部保护区、哪些禁止交付。</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>3. 执行打包检查</strong>
+                        <p>清理调试脚本、旧结果、密钥与缓存，核对模板配置和说明文档是否与当前版本一致。</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>4. 验证交付可用性</strong>
+                        <p>以外部使用者视角运行 <code>run.sh</code>，确认日志、结果、报告与错误提示都能正常工作。</p>
+                    </div>
+                </div>
+                <div class="lead-box">
+                    <strong>推荐顺序：</strong> 先设计接口，再做保护；先完成保护，再做打包；<span class="text-red">最后必须按交付视角做一次完整验证</span>。
+                </div>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">交付前检查清单</h2>
+                <ul class="check-list">
+                    <li>确认对外文档只描述 <code>run.sh</code> 的用法，不要求用户直接调用内部脚本。</li>
+                    <li>确认 <code>config/</code> 中保留了可读的参数模板，且与当前版本一致。</li>
+                    <li>确认交付包中不包含调试脚本、旧结果、测试数据和无关缓存。</li>
+                    <li>确认日志、结果、报告目录结构仍符合规范页要求。</li>
+                    <li>确认保护处理（如加密、编译、二进制化等）后，仍可通过日志追溯到分析点和运行时间。</li>
+                </ul>
+            </section>
+
+            <section class="card">
+                <h2 class="section-title">建议的文档分工</h2>
+                <ul class="rule-list">
+                    <li><strong>规范页</strong>：讲模块目录、输出命名、日志与追踪关系。</li>
+                    <li><strong>保护指南</strong>：讲对外暴露边界、保护策略、禁止事项和交付检查。</li>
+                    <li><strong>流程页</strong>：讲代码生成、验证、审核和交付流程。</li>
+                </ul>
+                <p class="footer-note">这样拆分后，三个页面分别负责“怎么组织”“怎么保护”“怎么执行流程”，职责清晰，后续维护成本最低。</p>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
