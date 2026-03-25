@@ -422,14 +422,14 @@
                                 <li class="step ai">
                                     <div class="node">
                                         <h4>Step 3 - 生成代码</h4>
-                                        <p>按决策范围实现代码，确保可运行且结构清晰。</p>
+                                        <p>按决策范围实现代码，确保可运行且结构清晰。代码须遵循《生信开发模块文件与输出规范》的目录结构、命名、日志与路径标准化要求，涉及文件读写时需先做 normalizePath 或等价处理。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
                                 <li class="step ai">
                                     <div class="node">
                                         <h4>Step 4 - 测试验证</h4>
-                                        <p>用基线样例做功能与结果校验，人工复核关键结果。</p>
+                                        <p>用基线样例做功能与结果校验，人工复核关键结果。<strong>建议配套自动化测试脚本</strong>（输入→运行→对比预期输出）以减少人工负担。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
@@ -452,7 +452,7 @@
                                 <li class="step ai">
                                     <div class="node">
                                         <h4>Step 5 - 生成测试报告</h4>
-                                        <p>记录测试输入、输出、异常与结论，形成可追溯报告。</p>
+                                        <p>记录测试输入、输出、异常与结论，形成可追溯报告。报告至少包含：测试日期、输入文件清单、输出文件清单、异常记录、通过/失败结论。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
@@ -467,7 +467,7 @@
                                 <li class="step jinjie">
                                     <div class="node">
                                         <h4>Step 6 - 新数据测试</h4>
-                                        <p>使用未参与开发的新样例，验证泛化能力。</p>
+                                        <p>使用未参与开发的新样例，验证泛化能力。至少使用 1 组与开发数据不同来源/不同组别的测试样例。</p>
                                         <span class="meta">执行人: 金杰</span>
                                     </div>
                                 </li>
@@ -490,7 +490,7 @@
                                 <li class="step linyu">
                                     <div class="node">
                                         <h4>Step 7 - 最终审核</h4>
-                                        <p>审核代码质量、可维护性和交付完整性。</p>
+                                        <p>审核代码质量、可维护性和交付完整性。审核须依据《代码保护指南》交付前检查清单。</p>
                                         <span class="meta">执行人: 林煜林</span>
                                     </div>
                                 </li>
@@ -568,6 +568,7 @@
                         <h4>统一回环原则</h4>
                         <p>任一检查点失败，<span class="text-red">统一回到 Step 4 修正并重新验证</span>，避免分叉流程失控。</p>
                         <span class="inline-note"><span class="text-red">回环入口唯一: Step 4</span></span>
+                        <span class="inline-note">迭代上限：单个检查点累计回环不得超过 <strong>3 次</strong>；超过后必须升级至林煜林重新定范围</span>
                     </div>
                 </div>
             </div>

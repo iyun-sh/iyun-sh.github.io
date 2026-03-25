@@ -206,6 +206,7 @@
 
                 <pre class="file-tree"><span class="folder">module_name/</span>
 ├── <span class="file">run.sh</span>                
+├── <span class="file">README.md</span>
 ├── <span class="folder">scripts/</span>
 │   ├── <span class="file">RawData.R</span>
 │   ├── <span class="file">DEGs.py</span>
@@ -266,6 +267,7 @@
                             <li><strong>顶层入口固定</strong>：模块使用者统一执行顶层 <code>run.sh</code>，<span class="text-red">不直接面向 <code>scripts/</code> 内部脚本</span></li>
                             <li>存放该模块的内部实现脚本（.R、.py、.sh 等），可由 <code>scripts.sh</code> 或其他调度脚本串联执行</li>
                             <li><strong>内部实现可调整</strong>：<code>scripts/</code> 内部脚本后续可做保护处理（如加密、编译、二进制化等）、替换或重构，但应保持 <code>run.sh</code> 的对外调用方式稳定</li>
+                            <li><strong>路径处理统一</strong>：所有输入、输出、配置、日志路径在使用前都应先做 <code>normalizePath</code> 或等价标准化处理，<span class="text-red">禁止直接拼接原始路径字符串后立即读写文件</span></li>
                             <li>脚本命名使用驼峰命名法，清晰表明功能，建议按分析流程顺序命名</li>
                             <li><strong>配置模板</strong>：在 <code>config/</code> 下保存示例配置（<code>*.config.example.ini/yaml</code>）</li>
                             <li><strong>模板与运行配置分离</strong>：<code>config/</code> 保存模板，<code>result/分析点/</code> 保存运行时配置并可覆盖</li>
@@ -698,6 +700,93 @@ Output:
             </div>
         </div>
 
+        <!-- ========== 路径规范与 normalizePath 要求 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">🛣️ 路径规范与 normalizePath 要求</h2>
+
+                <div class="danger-box">
+                    <strong>⚠️ 核心原则：</strong>
+                    <span class="text-red">凡是进入分析流程的文件路径、目录路径、配置路径、日志路径和输出路径，都必须先经过 <code>normalizePath</code> 或等价标准化处理。</span>
+                    目标是避免 Windows/Linux/macOS 下因分隔符、相对路径、冗余层级或软链接差异导致的读取失败、重复输出和日志不可追溯。
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('path-rules', event)">
+                            <span class="tab-icon">📏</span> 规则要求
+                        </button>
+                        <button class="tab" onclick="showTab('path-scenarios', event)">
+                            <span class="tab-icon">🧪</span> 适用场景
+                        </button>
+                        <button class="tab" onclick="showTab('path-examples', event)">
+                            <span class="tab-icon">💻</span> 实现示例
+                        </button>
+                    </div>
+
+                    <div id="path-rules" class="tab-content active">
+                        <h4>📏 标准化规则</h4>
+                        <table class="matrix">
+                            <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>统一预处理</strong></td><td>路径在存在性校验、读写、复制、移动、日志记录前必须先标准化</td><td>不得一部分用原始路径、一部分用标准化路径</td></tr>
+                                <tr><td><strong>消除冗余层级</strong></td><td>自动折叠 <code>.</code>、<code>..</code>、重复分隔符等冗余片段</td><td>避免相同文件被当成不同路径</td></tr>
+                                <tr><td><strong>分隔符一致</strong></td><td>内部处理推荐统一为标准化后的系统合法路径；日志展示建议统一为可读性更高的单一风格</td><td>避免同一日志中同时出现 <code>\\</code> 与 <code>/</code> 混用</td></tr>
+                                <tr><td><strong>绝对路径优先</strong></td><td><span class="text-red">进入核心分析步骤前</span>，关键输入输出路径应转换为绝对路径或可唯一定位的规范路径</td><td>便于跨目录调用和问题追踪</td></tr>
+                                <tr><td><strong>软链接与真实路径</strong></td><td>如语言/平台支持，应尽量解析到真实路径并在日志中记录</td><td>避免链接路径与真实路径混淆</td></tr>
+                                <tr><td><strong>日志一致性</strong></td><td>日志、配置、报告中引用的同一文件路径应保持一致</td><td>禁止日志写相对路径、报告写另一套绝对路径</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="path-scenarios" class="tab-content">
+                        <h4>🧪 必须使用 normalizePath 的场景</h4>
+                        <ul>
+                            <li><strong>读取输入文件</strong>：如 <code>group.csv</code>、<code>expression.csv</code>、<code>gene.csv</code>、<code>survival.csv</code>、参考注释文件等</li>
+                            <li><strong>写出结果文件</strong>：如 <code>result/</code>、<code>report/</code>、<code>logs/</code> 下的所有输出</li>
+                            <li><strong>读取配置参数</strong>：配置文件中的路径字段读取后必须立即标准化，不能原样透传到后续流程</li>
+                            <li><strong>跨语言调用</strong>：<code>run.sh</code> 调用 R/Python/其他脚本时，传递前先做标准化，避免脚本间路径口径不一致</li>
+                            <li><strong>文件关联追溯</strong>：隐藏追踪文件、日志文件、报告文件之间的路径引用必须基于同一套标准化结果</li>
+                            <li><strong>存在性与权限校验</strong>：<span class="text-red">先 normalizePath，后 file.exists/access</span>，避免校验对象与实际读写对象不是同一路径</li>
+                        </ul>
+                        <div class="warn-box">
+                            <strong>补充要求：</strong> 用户输入路径、配置路径、命令行参数路径都视为不可信原始值，必须先标准化再参与拼接、判断和输出。
+                        </div>
+                    </div>
+
+                    <div id="path-examples" class="tab-content">
+                        <h4>💻 推荐实现方式</h4>
+
+                        <strong>R 示例：</strong>
+                        <pre class="code-block">input_file &lt;- normalizePath(input_file, winslash = "/", mustWork = FALSE)
+output_dir &lt;- normalizePath(output_dir, winslash = "/", mustWork = FALSE)
+
+if (!file.exists(input_file)) {
+    stop("输入文件不存在: ", input_file)
+}</pre>
+
+                        <strong style="display:block; margin-top:18px;">Python 示例：</strong>
+                        <pre class="code-block">from pathlib import Path
+
+input_file = Path(input_file).expanduser().resolve()
+output_dir = Path(output_dir).expanduser().resolve()
+
+if not input_file.exists():
+    raise FileNotFoundError(f"输入文件不存在: {input_file}")</pre>
+
+                        <strong style="display:block; margin-top:18px;">Shell 示例：</strong>
+                        <pre class="code-block">INPUT_FILE="$(python -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).expanduser().resolve())' "$INPUT_FILE")"
+OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).expanduser().resolve())' "$OUTPUT_DIR")"</pre>
+
+                        <div class="lead-box">
+                            <strong>落地建议：</strong>
+                            每个模块应封装统一的路径标准化函数或公共工具，<span class="text-red">不要在多个脚本中各自手写不同口径的路径处理逻辑</span>。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ========== 最佳实践 ========== -->
         <div class="grid">
             <div class="card two-col">
@@ -708,8 +797,10 @@ Output:
                     <li><strong>配置文件简洁</strong>：使用 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code>，每次运行覆盖</li>
                     <li><strong>日志使用中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
                     <li><strong>双格式图表</strong>：<span class="text-red">每个图表必须同时保存 .png 和 .pdf 格式</span>（特殊情况除外）</li>
+                    <li><strong>统一路径标准化</strong>：所有路径在校验、读写、记录前先做 <code>normalizePath</code> 或等价处理，并在日志中保持一致口径</li>
                     <li><strong>图表字体统一</strong>：图片中的英文<span class="text-red">统一使用 <code>Arial</code></span></li>
-                    <li><strong>使用 .q2</strong>：<span class="text-red">R数据使用 .q2 格式保存</span>（替代 .rds/.RData）</li>
+                    <li><strong>色板标准</strong>：推荐使用 <code>ggsci::npg</code>、<code>RColorBrewer</code> 等学术配色方案；<span class="text-red">图表必须对色盲友好</span>，避免仅靠红/绿区分数据</li>
+                    <li><strong>使用 .qs2</strong>：<span class="text-red">R数据使用 .qs2 格式保存</span>（<code>qs2</code> R 包，替代 .rds/.RData）</li>
                     <li><strong>使用 data.table</strong>：读取文件推荐使用 data.table 包</li>
                     <li><strong>使用 Quarto</strong>：生成报告推荐使用 Quarto，默认输出 .docx 格式</li>
                     <li>定期清理过期的日志文件和临时结果（保留最近N天的版本）</li>
@@ -730,10 +821,11 @@ Output:
                     <li>不保留日志文件，导致无法追溯分析过程</li>
                     <li>结果文件与日志文件无法对应</li>
                     <li>不同输出文件使用不同的时间戳</li>
+                    <li><span class="text-red"><strong>跳过路径标准化</strong></span>：直接用命令行输入、配置值或字符串拼接后的路径做存在性校验和文件读写</li>
                     <li>配置文件使用时间戳命名，导致文件夹碎片化</li>
                     <li><span class="text-red"><strong>只保存单一图表格式</strong>：只保存 .png 或只保存 .pdf</span></li>
                     <li><strong>图表字体混用</strong>：同一项目中混用 Arial、Times New Roman、宋体等</li>
-                    <li><span class="text-red"><strong>使用 .rds/.RData</strong></span>：推荐使用更现代的 .q2 格式</li>
+                    <li><span class="text-red"><strong>使用 .rds/.RData</strong></span>：推荐使用更现代的 .qs2 格式（<code>qs2</code> R 包）</li>
                     <li><strong>使用 base R</strong>：推荐使用更高效的 data.table</li>
                 </ul>
             </div>
@@ -753,6 +845,8 @@ Output:
                         <tr><td><strong>差异分析阈值</strong></td><td><span class="text-red">统一记录 <code>p/FDR</code> 与 <code>|log2FC|</code> 阈值</span></td><td>避免仅写“默认参数”导致不可复现</td></tr>
                         <tr><td><strong>图表视觉标准</strong></td><td>图片字体<span class="text-red">统一 <code>Arial</code></span>，并固定最小字号</td><td>建议轴标题 >= 10 pt，刻度 >= 8 pt</td></tr>
                         <tr><td><strong>软件环境记录</strong></td><td>记录 Python/R 版本和关键包版本</td><td>建议输出 <code>sessionInfo()</code> 或 <code>pip freeze</code> 摘要</td></tr>
+                        <tr><td><strong>依赖锁定文件</strong></td><td><span class="text-red">每个模块必须包含可复现的依赖锁定文件</span></td><td>R 项目：<code>renv.lock</code>；Python 项目：<code>requirements.txt</code> 或 <code>environment.yml</code></td></tr>
+                        <tr><td><strong>最低版本约束</strong></td><td>在 <code>README.md</code> 或 <code>config/</code> 中标注最低 R/Python 版本</td><td>示例：<code>Requires: R >= 4.2, Python >= 3.9</code></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -780,12 +874,12 @@ Output:
                         <h4>📊 数据文件格式</h4>
                         <ul>
                             <li><strong>表格数据</strong>：优先使用 <span class="text-red">.csv</span>（通用、兼容性好）</li>
-                            <li><strong>R数据</strong>：使用 <span class="text-red">.q2 保存</span>（替代 .rds/.RData）</li>
+                            <li><strong>R数据</strong>：使用 <span class="text-red">.qs2 保存</span>（<code>qs2</code> R 包，替代 .rds/.RData）</li>
                         </ul>
                         <div class="lead-box">
-                            <strong>💡 为什么使用 .q2 而不是 .rds/.RData？</strong>
+                            <strong>💡 为什么使用 .qs2 而不是 .rds/.RData？</strong>
                             <ul style="margin-top:8px; padding-left:20px;">
-                                <li>.q2 是更现代的二进制格式，性能更好</li>
+                                <li>.qs2（<code>qs2</code> R 包）是更现代的二进制格式，性能更好</li>
                                 <li>跨平台兼容性更好，不受R版本限制</li>
                                 <li>压缩比更高，文件更小</li>
                                 <li>读写速度更快</li>
@@ -800,6 +894,7 @@ Output:
                             <li><strong>字体要求</strong>：图中英文统一使用 <code>Arial</code></li>
                             <li><strong>PNG</strong>：300 dpi，用于一般用途、PPT、Word</li>
                             <li><strong>PDF</strong>：矢量格式，可编辑、可缩放，用于发表</li>
+                            <li><strong>默认尺寸</strong>：单面板图 6×4 in，多面板按比例缩放；发表级图表建议 7×5 in</li>
                             <li><strong>特殊情况</strong>：交互图表使用 .html（Plotly等）</li>
                         </ul>
                         <div class="warn-box">
@@ -854,11 +949,11 @@ Output:
                         <table class="matrix">
                             <thead><tr><th>文件名（推荐）</th><th>关键要求</th><th>说明</th></tr></thead>
                             <tbody>
-                                <tr><td><code>group.csv</code></td><td>两列：<code>sample</code>、<code>group</code></td><td><code>group</code> 内容可变，但字段名固定</td></tr>
-                                <tr><td><code>expression.csv</code></td><td>行为基因，列为样本，首列必须为 <code>SYMBOL</code></td><td><span class="text-red"><code>SYMBOL</code> 必须大写</span></td></tr>
+                                <tr><td><code>group.csv</code></td><td>两列：<code>sample</code>、<code>group</code></td><td><code>group</code> 内容可变，但字段名固定；<span class="text-red">每组建议至少 3 个样本</span></td></tr>
+                                <tr><td><code>expression.csv</code></td><td>行为基因，列为样本，首列必须为 <code>SYMBOL</code></td><td><span class="text-red"><code>SYMBOL</code> 必须大写</span>；<span class="text-red">列名（除 SYMBOL 外）必须与 <code>group.csv</code> 的 <code>sample</code> 列完全一致</span>；需在日志中注明数据类型（如原始计数 counts / TPM / FPKM）</td></tr>
                                 <tr><td><code>gene.csv</code></td><td>列名必须为 <code>SYMBOL</code></td><td>基因列表输入</td></tr>
                                 <tr><td><code>riskscore.csv</code></td><td>需包含样本与风险评分字段</td><td>风险分值必须为数值型</td></tr>
-                                <tr><td><code>survival.csv</code></td><td>必须包含 <code>OS</code> 与 <code>OS.time</code></td><td><span class="text-red"><code>OS</code> 仅允许 0/1</span>；<span class="text-red"><code>OS.time</code> 必须 &gt; 0</span></td></tr>
+                                <tr><td><code>survival.csv</code></td><td>必须包含 <code>OS</code> 与 <code>OS.time</code></td><td><span class="text-red"><code>OS</code> 仅允许 0/1</span>；<span class="text-red"><code>OS.time</code> 必须 &gt; 0</span>；如有其他终点，字段命名统一为 <code>&lt;终点&gt;</code> + <code>&lt;终点&gt;.time</code>（如 <code>PFS</code>/<code>PFS.time</code>、<code>DFS</code>/<code>DFS.time</code>）</td></tr>
                             </tbody>
                         </table>
                         <div class="lead-box">
@@ -877,14 +972,14 @@ Output:
                                 <tr><td><code>OS</code></td><td>整数型（int）</td><td>仅允许 <code>0</code> 或 <code>1</code></td></tr>
                                 <tr><td><code>OS.time</code></td><td>数值或整数型（num/int）</td><td>必须 <code>&gt; 0</code></td></tr>
                                 <tr><td><code>RS</code> / 风险评分列</td><td>数值型（num）</td><td>允许负值，不允许 NA</td></tr>
-                                <tr><td><code>riskgroup</code></td><td>字符型（chr）</td><td>仅允许 <code>High</code> 或 <code>low</code></td></tr>
+                                <tr><td><code>riskgroup</code></td><td>字符型（chr）</td><td>仅允许 <code>High</code> 或 <code>Low</code>（注意首字母均大写）</td></tr>
                                 <tr><td><code>SYMBOL</code></td><td>字符型（chr）</td><td>列名必须大写 <code>SYMBOL</code></td></tr>
                             </tbody>
                         </table>
 
                         <div class="danger-box">
                             <strong>硬性规则：</strong>
-                            <span class="text-red">全部输入文件必须为 <code>.csv</code></span>；<span class="text-red">数据中不允许出现 NA</span>；<span class="text-red">数值字段必须可解析为 <code>num/int</code></span>。
+                            <span class="text-red">全部输入文件必须为 <code>.csv</code></span>；<span class="text-red">文件编码必须为 UTF-8（推荐无 BOM）</span>；<span class="text-red">行尾符建议统一为 LF（<code>\n</code>）</span>；<span class="text-red">数据中不允许出现 NA</span>；<span class="text-red">数值字段必须可解析为 <code>num/int</code></span>。
                         </div>
                     </div>
                 </div>
@@ -892,7 +987,7 @@ Output:
         </div>
 
         <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.0 | <strong>创建日期:</strong> 2026-03-06</p>
+        <p class="footer-note"><strong>版本:</strong> v1.1 | <strong>更新日期:</strong> 2026-03-25</p>
 
     </div>
 
