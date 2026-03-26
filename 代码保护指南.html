@@ -509,6 +509,140 @@
             </section>
 
             <section class="card two-col">
+                <h2 class="section-title">具体保护实施方法</h2>
+
+                <h3 style="margin:18px 0 8px;color:#0f172a;">1. 文件权限控制（基础保护 — 所有语言通用）</h3>
+                <pre class="code-block"># 目录：仅所有者和同组可进入
+chmod 770 scripts/
+
+# 脚本文件：所有者可读写执行，同组可读执行，其他人无权限
+chmod 750 scripts/*.R scripts/*.py scripts/*.sh
+
+# run.sh 保持所有人可执行（对外入口）
+chmod 755 run.sh
+
+# 配置模板和 README：所有人可读
+chmod 644 config/*.example.* README.md CHANGELOG.md</pre>
+                <div class="lead-box">
+                    <strong>说明：</strong> <code>chmod 770</code> 让 <code>scripts/</code> 目录仅所有者和同组用户可访问；<code>chmod 750</code> 让脚本对组外用户不可读。适合<strong>内部团队协作</strong>场景，Linux/macOS 下有效。
+                </div>
+
+                <h3 style="margin:18px 0 8px;color:#0f172a;">2. R 脚本保护</h3>
+                <table class="matrix">
+                    <thead>
+                        <tr><th>方法</th><th>命令 / 步骤</th><th>保护强度</th><th>注意事项</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>字节码编译</td>
+                            <td><pre class="code-block" style="margin:0;padding:8px;">library(compiler)
+cmpfile("scripts/DEGs_analysis.R",
+        "scripts/DEGs_analysis.Rc")
+# 运行：loadcmp("scripts/DEGs_analysis.Rc")</pre></td>
+                            <td>中等</td>
+                            <td>可加速执行；<code>.Rc</code> 文件不可直接阅读，但有反编译风险。</td>
+                        </tr>
+                        <tr>
+                            <td>打包为 R 包</td>
+                            <td><pre class="code-block" style="margin:0;padding:8px;"># 1. 创建包骨架
+usethis::create_package("MyModule")
+# 2. 将核心函数放入 R/ 目录
+# 3. 编译安装（生成二进制包）
+R CMD INSTALL --build MyModule
+# 4. run.sh 中调用：
+#    Rscript -e "library(MyModule); main()"</pre></td>
+                            <td>中-强</td>
+                            <td>编译安装后源码不在包内；run.sh 调用方式不变。</td>
+                        </tr>
+                        <tr>
+                            <td>Docker 镜像封装</td>
+                            <td><pre class="code-block" style="margin:0;padding:8px;"># Dockerfile（R 环境）
+FROM rocker/r-ver:4.3.2
+COPY scripts/ /app/scripts/
+COPY run.sh /app/
+WORKDIR /app
+ENTRYPOINT ["bash", "run.sh"]
+# 构建：docker build -t mymodule:v1 .
+# 运行：docker run -v $(pwd)/input:/data mymodule:v1 \
+#        --config /data/config.yaml</pre></td>
+                            <td>强</td>
+                            <td>源码封装在镜像层内；用户只能通过 run.sh 入口调用。</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin:18px 0 8px;color:#0f172a;">3. Python 脚本保护</h3>
+                <table class="matrix">
+                    <thead>
+                        <tr><th>方法</th><th>命令 / 步骤</th><th>保护强度</th><th>注意事项</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>字节码编译 (.pyc)</td>
+                            <td><pre class="code-block" style="margin:0;padding:8px;"># 编译所有 .py → .pyc
+python -m compileall scripts/
+# 删除源码，只保留 __pycache__/*.pyc
+# run.sh 中调用：python scripts/__pycache__/DEGs.cpython-311.pyc</pre></td>
+                            <td>低</td>
+                            <td>可被 uncompyle6 反编译；仅防止随意阅读。</td>
+                        </tr>
+                        <tr>
+                            <td>PyInstaller 打包</td>
+                            <td><pre class="code-block" style="margin:0;padding:8px;"># 打包成单文件可执行
+pyinstaller --onefile scripts/DEGs.py \
+  -n DEGs_runner --distpath scripts/protected_runtime/
+# run.sh 中调用：
+#   ./scripts/protected_runtime/DEGs_runner --config ...</pre></td>
+                            <td>中-强</td>
+                            <td>生成平台相关二进制；需在目标平台编译。</td>
+                        </tr>
+                        <tr>
+                            <td>Cython 编译</td>
+                            <td><pre class="code-block" style="margin:0;padding:8px;"># 1. 将 .py 重命名为 .pyx（或直接编译）
+# 2. 创建 setup.py：
+from setuptools import setup
+from Cython.Build import cythonize
+setup(ext_modules=cythonize("scripts/DEGs.pyx"))
+# 3. 编译：python setup.py build_ext --inplace
+# 生成 .so/.pyd 二进制文件</pre></td>
+                            <td>强</td>
+                            <td>编译为 C 扩展；难以逆向；需安装 Cython。</td>
+                        </tr>
+                        <tr>
+                            <td>PyArmor 加密</td>
+                            <td><pre class="code-block" style="margin:0;padding:8px;"># 加密整个 scripts 目录
+pyarmor gen -O scripts/protected_runtime/ scripts/*.py
+# 运行（需 pyarmor 运行时）：
+#   python scripts/protected_runtime/DEGs.py</pre></td>
+                            <td>强</td>
+                            <td>运行时解密；可设过期时间和机器绑定；商业版功能更多。</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin:18px 0 8px;color:#0f172a;">4. Shell 脚本保护</h3>
+                <pre class="code-block"># 使用 shc（Shell Script Compiler）
+# 安装：apt-get install shc  或  brew install shc
+shc -f scripts/scripts.sh -o scripts/protected_runtime/scripts
+# 生成二进制可执行文件；删除中间 .x.c 文件
+rm -f scripts/scripts.sh.x.c
+
+# run.sh 中改为调用编译后的二进制：
+# ./scripts/protected_runtime/scripts "$@"</pre>
+
+                <div class="warn-box">
+                    <strong>保护后验证清单：</strong>
+                    <ul style="margin:8px 0 0;padding-left:20px;">
+                        <li>保护后 <code>run.sh</code> 仍可正常运行且参数不变</li>
+                        <li>日志输出完整，错误信息可读</li>
+                        <li>结果目录结构与保护前一致</li>
+                        <li>路径使用 <code>normalizePath()</code> 确保跨平台兼容</li>
+                        <li>外部用户无需安装保护工具即可使用（PyArmor 除外，需运行时）</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="card two-col">
                 <h2 class="section-title">推荐交付包结构</h2>
                 <pre class="code-block">deliverable/
 ├── run.sh
