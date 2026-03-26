@@ -222,6 +222,25 @@
             font-size: 0.95rem;
         }
 
+        /* Check list */
+        .check-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        .check-list li {
+            position: relative;
+            padding: 8px 0 8px 32px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .check-list li::before {
+            content: "☐";
+            position: absolute;
+            left: 4px;
+            top: 8px;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
         /* Emphasis utilities */
         .text-red { color: var(--danger); font-weight: 700; }
 
@@ -310,7 +329,12 @@
 │   └── DEGs.config.example.ini/yaml
 ├── logs/
 ├── result/
-└── report/</pre>
+├── report/
+├── tests/              # 冒烟/回归测试（参见《规范》质量保证章节）
+├── CHANGELOG.md        # 版本变更记录
+├── cleanup.sh          # 临时文件清理脚本
+├── requirements.txt    # Python 依赖锁定
+└── renv.lock           # R 依赖锁定（二选一或同时保有）</pre>
                 <div class="lead-box">
                     <strong>推荐做法：</strong> 对外文档只讲清楚 <code>run.sh</code> 的用法、输入、输出和错误定位方式；<code>scripts/</code> 仅作为内部实现目录维护。
                 </div>
@@ -351,6 +375,16 @@
                             <td>历史结果、缓存、中间文件</td>
                             <td><span class="text-red">禁止交付</span></td>
                             <td>交付包中只保留必要模板与正式输出结构，不夹带开发过程残留。</td>
+                        </tr>
+                        <tr>
+                            <td><code>requirements.txt</code> / <code>renv.lock</code></td>
+                            <td>公开</td>
+                            <td>环境依赖锁定文件属于可复现运行的必要条件，应随交付包一并提供。</td>
+                        </tr>
+                        <tr>
+                            <td><code>CHANGELOG.md</code></td>
+                            <td>公开</td>
+                            <td>版本变更记录便于使用者了解各版本差异，推荐保留。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -428,6 +462,7 @@
                     <li>保护后仍需保留稳定的日志输出、结果目录结构和配置映射关系。</li>
                     <li>若使用中间调度脚本，如 <code>scripts.sh</code>，应由 <code>run.sh</code> 统一调用，不单独对外宣讲。</li>
                     <li>调试用开关、测试参数和临时路径不应在对外交付版本中保留。</li>
+                    <li>保护后路径可能发生变化，仍须遵循 <code>normalizePath()</code> 规范（详见《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》路径规范章节），确保跨平台兼容。</li>
                 </ul>
                 <div class="danger-box">
                     <strong>禁止事项：</strong> <span class="text-red">不要把密钥、临时账号、内网路径、调试数据源、测试样本或历史分析结果一并打包到交付目录中。</span>
@@ -453,12 +488,12 @@
                         <tr>
                             <td>中等保护</td>
                             <td>外部合作、需要限制实现细节暴露</td>
-                            <td>对 <code>scripts/</code> 中核心脚本做保护处理（如加密、编译、二进制化等），保留明文 <code>run.sh</code> 与配置模板，并确保日志与错误信息可读。</td>
+                            <td>对 <code>scripts/</code> 中核心脚本做保护处理，保留明文 <code>run.sh</code> 与配置模板，并确保日志与错误信息可读。<br><strong>工具参考：</strong>R — <code>compile()</code> 字节码编译；Python — <code>pyinstaller</code>、<code>cython</code> 编译为二进制。</td>
                         </tr>
                         <tr>
                             <td>强化保护</td>
                             <td>正式交付、商业化或需严格控制源码访问</td>
-                            <td>仅公开稳定入口、模板配置和结果约定；内部脚本使用受保护方式（如加密、编译、二进制化等）或受控分发，并配套交付检查记录。</td>
+                            <td>仅公开稳定入口、模板配置和结果约定；内部脚本使用受保护方式或受控分发，并配套交付检查记录。<br><strong>工具参考：</strong>R — <code>encryptedRmd</code> 加密、Docker 镜像封装；Python — <code>nuitka</code> 全编译、<code>pyarmor</code> 加密混淆。</td>
                         </tr>
                     </tbody>
                 </table>
@@ -471,14 +506,18 @@
                 <h2 class="section-title">推荐交付包结构</h2>
                 <pre class="code-block">deliverable/
 ├── run.sh
-├── README.md
+├── README.md               # 必备（参见《规范》README 必备内容章节）
+├── CHANGELOG.md            # 版本变更记录
 ├── scripts/
 │   └── protected_runtime/
 ├── config/
 │   └── DEGs.config.example.ini/yaml
+├── tests/                  # 冒烟测试用例
 ├── logs/
 ├── result/
-└── report/</pre>
+├── report/
+├── requirements.txt        # Python 依赖（如适用）
+└── renv.lock               # R 依赖（如适用）</pre>
                 <ul class="rule-list" style="margin-top: 14px;">
                     <li><code>README.md</code> 只说明运行方式、输入输出要求和常见错误定位。</li>
                     <li><code>scripts/protected_runtime/</code> 可以是受保护产物（如加密脚本、编译产物、二进制文件等）目录。</li>
@@ -572,7 +611,13 @@
                     <li>确认交付包中不包含调试脚本、旧结果、测试数据和无关缓存。</li>
                     <li>确认日志、结果、报告目录结构仍符合规范页要求。</li>
                     <li>确认保护处理（如加密、编译、二进制化等）后，仍可通过日志追溯到分析点和运行时间。</li>
+                    <li>确认 <code>requirements.txt</code> 或 <code>renv.lock</code> 已包含在交付包中，且依赖版本可复现。</li>
+                    <li>确认路径使用 <code>normalizePath()</code> 或等价处理，保护后路径仍然跨平台兼容。</li>
+                    <li>确认 <code>README.md</code> 和 <code>CHANGELOG.md</code> 与当前交付版本一致。</li>
                 </ul>
+                <div class="lead-box">
+                    <strong>交叉引用：</strong> 本检查清单与《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》中的输出校验规范、README 必备内容、版本管理细则章节配套使用。
+                </div>
             </section>
 
             <section class="card">
@@ -585,6 +630,6 @@
                 <p class="footer-note">这样拆分后，三个页面分别负责“怎么组织”“怎么保护”“怎么执行流程”，职责清晰，后续维护成本最低。</p>
             </section>
         </div>
-    </div>
+        <p class="footer-note"><strong>版本:</strong> v1.1 | <strong>更新日期:</strong> 2026-03-27 | 与《生信开发模块文件与输出规范 v1.3》配套</p>    </div>
 </body>
 </html>

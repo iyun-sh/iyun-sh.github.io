@@ -325,7 +325,7 @@
             <h1>📋 代码生成与验证流程图</h1>
             <p>统一协作角色、决策节点与回环机制，保障代码交付可验证、可追溯。</p>
             <div class="pill-row">
-                <span class="pill primary">准备定范围 → 开发主测试 → 新数据验证与终审</span>
+                <span class="pill primary">准备定范围 → 开发主测试 → 新数据验证与终审 → 版本锁定</span>
                 <span class="pill warn">失败<span class="text-red">统一回到 Step 4</span></span>
             </div>
         </section>
@@ -335,7 +335,7 @@
             <div class="card">
                 <div class="lead-box" style="margin-top:0;">
                     <strong>💡 使用说明：</strong>
-                    本流程按"准备定范围 → 开发主测试 → 新数据验证与终审"三阶段执行。
+                    本流程按"准备定范围 → 开发主测试 → 新数据验证与终审 → 版本锁定"四阶段执行。
                     任意检查点失败，<span class="text-red">统一回到 Step 4 修正后再验证</span>，避免流程分叉失控。
                 </div>
             </div>
@@ -422,14 +422,14 @@
                                 <li class="step ai">
                                     <div class="node">
                                         <h4>Step 3 - 生成代码</h4>
-                                        <p>按决策范围实现代码，确保可运行且结构清晰。代码须遵循《生信开发模块文件与输出规范》的目录结构、命名、日志与路径标准化要求，涉及文件读写时需先做 normalizePath 或等价处理。</p>
+                                        <p>按决策范围实现代码，确保可运行且结构清晰。代码须遵循《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》的全部要求，包括但不限于：目录结构、命名、日志、路径 normalizePath 标准化、<strong>脚本开发规范</strong>（错误处理与退出码、编码风格）、<strong>计算与作图代码分离</strong>、<strong>模块协作与版本管理</strong>约定。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
                                 <li class="step ai">
                                     <div class="node">
                                         <h4>Step 4 - 测试验证</h4>
-                                        <p>用基线样例做功能与结果校验，人工复核关键结果。<strong>建议配套自动化测试脚本</strong>（输入→运行→对比预期输出）以减少人工负担。</p>
+                                        <p>用基线样例做功能与结果校验，人工复核关键结果。<strong>须按《规范》质量保证章节的输出校验规范和测试要求执行</strong>，配套自动化测试脚本（输入→运行→对比预期输出）以减少人工负担。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
@@ -452,7 +452,7 @@
                                 <li class="step ai">
                                     <div class="node">
                                         <h4>Step 5 - 生成测试报告</h4>
-                                        <p>记录测试输入、输出、异常与结论，形成可追溯报告。报告至少包含：测试日期、输入文件清单、输出文件清单、异常记录、通过/失败结论。</p>
+                                        <p>记录测试输入、输出、异常与结论，形成可追溯报告。报告须遵循《规范》报告文件标准章节结构（标题页、分析方法、主要结果、结论）。至少包含：测试日期、输入文件清单、输出文件清单、异常记录、通过/失败结论。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
@@ -490,7 +490,7 @@
                                 <li class="step linyu">
                                     <div class="node">
                                         <h4>Step 7 - 最终审核</h4>
-                                        <p>审核代码质量、可维护性和交付完整性。审核须依据《代码保护指南》交付前检查清单。</p>
+                                        <p>审核代码质量、可维护性和交付完整性。审核须依据《<a href="代码保护指南.html">代码保护指南</a>》交付前检查清单，并核对《<a href="生信开发模块文件与输出规范.html">规范</a>》中的 README 必备内容、版本管理细则、环境依赖声明是否齐备。</p>
                                         <span class="meta">执行人: 林煜林</span>
                                     </div>
                                 </li>
@@ -508,6 +508,13 @@
                                                 <p>进入交付。</p>
                                             </div>
                                         </div>
+                                    </div>
+                                </li>
+                                <li class="step end">
+                                    <div class="node">
+                                        <h4>Step 8 - 版本标记与环境锁定</h4>
+                                        <p>更新 <code>CHANGELOG.md</code>、打版本标签（如 v1.0.0），确认 <code>requirements.txt</code>/<code>renv.lock</code> 环境依赖已锁定且可复现。</p>
+                                        <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
                                 <li class="step end">
@@ -591,12 +598,16 @@
                         <h4>审核交付</h4>
                         <p>最终审核结论与修改记录，确保本次发布可追溯。</p>
                     </div>
+                    <div class="deliverable-card ai">
+                        <h4>文档交付</h4>
+                        <p><code>README.md</code>（必备内容齐全）+ <code>CHANGELOG.md</code>（版本变更记录）+ 环境依赖文件（<code>requirements.txt</code> / <code>renv.lock</code>）。</p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.0 | <strong>创建日期:</strong> 2026-03-06</p>
+        <p class="footer-note"><strong>版本:</strong> v1.1 | <strong>更新日期:</strong> 2026-03-27 | 与《生信开发模块文件与输出规范 v1.3》配套</p>
 
     </div>
 </body>
