@@ -365,14 +365,14 @@ p_volcano &lt;- ggplot(as.data.frame(res), aes(x = log2FoldChange, y = -log10(pv
     theme_pub
 
 ggsave(file.path(output_dir, "03.volcano.png"), p_volcano, width = 6, height = 4, dpi = 300)
-ggsave(file.path(output_dir, "03.volcano.pdf"), p_volcano, width = 6, height = 4)
+ggsave(file.path(output_dir, "03.volcano.pdf"), p_volcano, width = 6, height = 4, device = cairo_pdf)
 
 # ---- 热图 ----
-png(file.path(output_dir, "02.heatmap.png"), width = 6, height = 4, units = "in", res = 300)
+png(file.path(output_dir, "02.heatmap.png"), width = 6, height = 4, units = "in", res = 300, type = "cairo")
 pheatmap(top_genes_mat)
 dev.off()
 
-pdf(file.path(output_dir, "02.heatmap.pdf"), width = 6, height = 4)
+cairo_pdf(file.path(output_dir, "02.heatmap.pdf"), width = 6, height = 4)
 pheatmap(top_genes_mat)
 dev.off()</pre>
 
@@ -1504,8 +1504,8 @@ bash run.sh --plot-only
                         <ul>
                             <li><strong>必须同时保存</strong>：<span class="text-red">.png（位图）+ .pdf（矢量图）</span></li>
                             <li><strong>字体要求</strong>：使用默认字体（sans-serif 无衬线族）即可；<span class="text-red">禁止使用 Times New Roman 等衬线字体</span></li>
-                            <li><strong>PNG</strong>：300 dpi，用于一般用途、PPT、Word</li>
-                            <li><strong>PDF</strong>：矢量格式，可编辑、可缩放，用于发表</li>
+                            <li><strong>PNG</strong>：300 dpi；R 中推荐使用 <code>png(type = "cairo")</code> 保证无头服务器兼容</li>
+                            <li><strong>PDF</strong>：矢量格式，可编辑、可缩放；R 中推荐使用 <code>cairo_pdf()</code> 或 <code>ggsave(device = cairo_pdf)</code>，确保字体嵌入和中文支持</li>
                             <li><strong>默认尺寸</strong>：单面板图 6×4 in，多面板按比例缩放；发表级图表建议 7×5 in</li>
                             <li><strong>特殊情况</strong>：交互图表使用 .html（Plotly等）</li>
                         </ul>
