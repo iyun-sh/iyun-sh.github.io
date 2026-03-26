@@ -209,7 +209,8 @@
 ├── <span class="file">README.md</span>
 ├── <span class="folder">scripts/</span>
 │   ├── <span class="file">RawData.R</span>
-│   ├── <span class="file">DEGs.py</span>
+│   ├── <span class="file">DEGs_analysis.R</span>
+│   ├── <span class="file">DEGs_plot.R</span>
 │   └── <span class="file">scripts.sh</span>
 ├── <span class="folder">config/</span>
 │   └── <span class="config-file">DEGs.config.example.ini/yaml</span>
@@ -268,6 +269,7 @@
                             <li>存放该模块的内部实现脚本（.R、.py、.sh 等），可由 <code>scripts.sh</code> 或其他调度脚本串联执行</li>
                             <li><strong>内部实现可调整</strong>：<code>scripts/</code> 内部脚本后续可做保护处理（如加密、编译、二进制化等）、替换或重构，但应保持 <code>run.sh</code> 的对外调用方式稳定</li>
                             <li><strong>路径处理统一</strong>：所有输入、输出、配置、日志路径在使用前都应先做 <code>normalizePath</code> 或等价标准化处理，<span class="text-red">禁止直接拼接原始路径字符串后立即读写文件</span></li>
+                            <li><strong>计算与作图分离</strong>：<span class="text-red">同一分析点的计算逻辑和可视化逻辑应拆分为独立脚本</span>，如 <code>DEGs_analysis.R</code>（差异计算）与 <code>DEGs_plot.R</code>（热图/火山图等），便于只改图时不必重跑计算、提高复用性和调试效率</li>
                             <li>脚本命名使用驼峰命名法，清晰表明功能，建议按分析流程顺序命名</li>
                             <li><strong>配置模板</strong>：在 <code>config/</code> 下保存示例配置（<code>*.config.example.ini/yaml</code>）</li>
                             <li><strong>模板与运行配置分离</strong>：<code>config/</code> 保存模板，<code>result/分析点/</code> 保存运行时配置并可覆盖</li>
@@ -276,12 +278,108 @@
                                 <ul>
                                     <li><code>run.sh</code> - 模块对外执行入口</li>
                                     <li><code>scripts/RawData.R</code> - 原始数据处理内部脚本</li>
-                                    <li><code>scripts/DEGs.py</code> - 差异表达分析内部脚本</li>
+                                    <li><code>scripts/DEGs_analysis.R</code> - 差异表达计算脚本</li>
+                                    <li><code>scripts/DEGs_plot.R</code> - 差异表达可视化脚本</li>
                                     <li><code>scripts/scripts.sh</code> - 内部流程调度脚本</li>
                                     <li><code>config/DEGs.config.example.yaml</code> - 参数模板</li>
                                 </ul>
                             </li>
                         </ul>
+                        <div class="lead-box">
+                            <strong>💡 计算与作图分离 — 实施约定</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li><strong>中间结果格式</strong>：计算脚本将分析结果保存为 <code>.qs2</code>（R）或 <code>.csv</code>（通用），<span class="text-red">作图脚本直接读取中间结果文件，不重复执行计算逻辑</span></li>
+                                <li><strong>中间结果位置</strong>：中间结果统一输出到 <code>result/分析点/</code>，与最终结果同目录，命名建议加 <code>_intermediate</code> 后缀或放入 <code>_tmp/</code> 子目录以便区分</li>
+                                <li><strong>命名规范</strong>：计算脚本以 <code>_analysis</code> 结尾，作图脚本以 <code>_plot</code> 结尾，如 <code>DEGs_analysis.R</code> / <code>DEGs_plot.R</code>、<code>GSEA_analysis.R</code> / <code>GSEA_plot.R</code></li>
+                                <li><strong>调度串联</strong>：<code>scripts.sh</code> 或 <code>run.sh</code> 中先调用计算脚本再调用作图脚本，<span class="text-red">支持通过参数单独运行作图脚本而不触发计算</span>（如 <code>run.sh --plot-only</code>）</li>
+                                <li><strong>参数传递</strong>：作图脚本的可视化参数（色板、字号、图幅尺寸等）应独立于分析参数，可在配置文件中设专用 <code>[Plot]</code> 段</li>
+                                <li><strong>日志独立</strong>：如计算和作图分开运行，各自的日志应能独立追溯；若串联运行，可合并到同一份日志中按步骤分段记录</li>
+                            </ul>
+                        </div>
+
+                        <strong style="display:block; margin-top:18px;">📝 计算脚本示例（DEGs_analysis.R）：</strong>
+                        <pre class="code-block"># DEGs_analysis.R — 差异表达计算脚本
+# 输入：表达矩阵 + 分组信息
+# 输出：中间结果 .qs2 + 最终 CSV
+
+library(data.table)
+library(DESeq2)
+library(qs2)
+
+# ---- 路径标准化 ----
+input_expr   &lt;- normalizePath(input_expr, winslash = "/", mustWork = FALSE)
+input_group  &lt;- normalizePath(input_group, winslash = "/", mustWork = FALSE)
+output_dir   &lt;- normalizePath(output_dir, winslash = "/", mustWork = FALSE)
+
+# ---- 读取数据 ----
+expr_mat  &lt;- fread(input_expr, data.table = FALSE)
+group_info &lt;- fread(input_group, data.table = FALSE)
+
+# ---- DESeq2 分析 ----
+dds &lt;- DESeqDataSetFromMatrix(countData = expr_mat, colData = group_info, design = ~group)
+dds &lt;- DESeq(dds)
+res &lt;- results(dds, alpha = p_cutoff)
+
+# ---- 保存中间结果（供作图脚本直接读取） ----
+qs2::qs_save(res, file.path(output_dir, "DEGs_intermediate.qs2"))
+
+# ---- 保存最终 CSV ----
+fwrite(as.data.frame(res), file.path(output_dir, "01.DEGs.csv"))</pre>
+
+                        <strong style="display:block; margin-top:18px;">🎨 作图脚本示例（DEGs_plot.R）：</strong>
+                        <pre class="code-block"># DEGs_plot.R — 差异表达可视化脚本
+# 输入：DEGs_analysis.R 产出的中间结果
+# 输出：热图 + 火山图（png + pdf）
+
+library(qs2)
+library(ggplot2)
+library(pheatmap)
+
+# ---- 路径标准化 ----
+output_dir &lt;- normalizePath(output_dir, winslash = "/", mustWork = FALSE)
+
+# ---- 直接读取中间结果，不重复计算 ----
+res &lt;- qs2::qs_read(file.path(output_dir, "DEGs_intermediate.qs2"))
+
+# ---- 统一图表主题 ----
+theme_pub &lt;- theme_classic(base_family = "Arial") +
+    theme(text = element_text(size = 10))
+
+# ---- 火山图 ----
+p_volcano &lt;- ggplot(as.data.frame(res), aes(x = log2FoldChange, y = -log10(pvalue))) +
+    geom_point(aes(color = significance), size = 1) +
+    scale_color_manual(values = ggsci::pal_npg()(3)) +
+    theme_pub
+
+ggsave(file.path(output_dir, "03.volcano.png"), p_volcano, width = 6, height = 4, dpi = 300)
+ggsave(file.path(output_dir, "03.volcano.pdf"), p_volcano, width = 6, height = 4)
+
+# ---- 热图 ----
+png(file.path(output_dir, "02.heatmap.png"), width = 6, height = 4, units = "in", res = 300)
+pheatmap(top_genes_mat, fontfamily = "Arial")
+dev.off()
+
+pdf(file.path(output_dir, "02.heatmap.pdf"), width = 6, height = 4)
+pheatmap(top_genes_mat, fontfamily = "Arial")
+dev.off()</pre>
+
+                        <strong style="display:block; margin-top:18px;">⚙️ 调度入口示例（run.sh 片段）：</strong>
+                        <pre class="code-block">#!/usr/bin/env bash
+# run.sh — 支持 --plot-only 跳过计算
+
+PLOT_ONLY=false
+for arg in "$@"; do
+    case "$arg" in --plot-only) PLOT_ONLY=true ;; esac
+done
+
+if [ "$PLOT_ONLY" = false ]; then
+    echo "[$(date)] 开始计算..."
+    Rscript scripts/DEGs_analysis.R --config config/DEGs.config.yaml
+fi
+
+echo "[$(date)] 开始作图..."
+Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
+
                         <div class="lead-box">
                             <strong>💡 为什么推荐 data.table？</strong>
                             <ul style="margin-top:8px; padding-left:20px;">
@@ -796,6 +894,7 @@ OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.ar
                     <li><strong>日志优先</strong>：<span class="text-red">无论是否有配置文件，日志中必须详细记录所有参数</span></li>
                     <li><strong>配置文件简洁</strong>：使用 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code>，每次运行覆盖</li>
                     <li><strong>日志使用中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
+                    <li><strong>计算与作图分离</strong>：同一分析点的计算脚本和作图脚本拆成独立文件，改图时无需重跑计算</li>
                     <li><strong>双格式图表</strong>：<span class="text-red">每个图表必须同时保存 .png 和 .pdf 格式</span>（特殊情况除外）</li>
                     <li><strong>统一路径标准化</strong>：所有路径在校验、读写、记录前先做 <code>normalizePath</code> 或等价处理，并在日志中保持一致口径</li>
                     <li><strong>图表字体统一</strong>：图片中的英文<span class="text-red">统一使用 <code>Arial</code></span></li>
@@ -823,6 +922,7 @@ OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.ar
                     <li>不同输出文件使用不同的时间戳</li>
                     <li><span class="text-red"><strong>跳过路径标准化</strong></span>：直接用命令行输入、配置值或字符串拼接后的路径做存在性校验和文件读写</li>
                     <li>配置文件使用时间戳命名，导致文件夹碎片化</li>
+                    <li><span class="text-red"><strong>计算与作图混写</strong></span>：把数据计算和可视化代码写在同一个脚本中，导致改图必须重跑全部计算</li>
                     <li><span class="text-red"><strong>只保存单一图表格式</strong>：只保存 .png 或只保存 .pdf</span></li>
                     <li><strong>图表字体混用</strong>：同一项目中混用 Arial、Times New Roman、宋体等</li>
                     <li><span class="text-red"><strong>使用 .rds/.RData</strong></span>：推荐使用更现代的 .qs2 格式（<code>qs2</code> R 包）</li>
@@ -987,7 +1087,7 @@ OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.ar
         </div>
 
         <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.1 | <strong>更新日期:</strong> 2026-03-25</p>
+        <p class="footer-note"><strong>版本:</strong> v1.2 | <strong>更新日期:</strong> 2026-03-26</p>
 
     </div>
 
