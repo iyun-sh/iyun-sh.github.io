@@ -1091,7 +1091,7 @@ echo "[$(date)] 分析完成"</pre>
                     <li><strong>计算与作图分离</strong>：同一分析点的计算脚本和作图脚本拆成独立文件，改图时无需重跑计算</li>
                     <li><strong>双格式图表</strong>：<span class="text-red">每个图表必须同时保存 .png 和 .pdf 格式</span>（特殊情况除外）</li>
                     <li><strong>统一路径标准化</strong>：所有路径在校验、读写、记录前先做 <code>normalizePath</code> 或等价处理，并在日志中保持一致口径</li>
-                    <li><strong>图表字体统一</strong>：图片中的英文<span class="text-red">统一使用 <code>Arial</code></span></li>
+                    <li><strong>图表字体统一</strong>：使用默认字体（sans-serif 无衬线族）；<span class="text-red">禁止使用 Times New Roman 等衬线字体</span></li>
                     <li><strong>色板标准</strong>：推荐使用 <code>ggsci::npg</code>、<code>RColorBrewer</code> 等学术配色方案；<span class="text-red">图表必须对色盲友好</span>，避免仅靠红/绿区分数据</li>
                     <li><strong>使用 .qs2</strong>：<span class="text-red">R数据使用 .qs2 格式保存</span>（<code>qs2</code> R 包，替代 .rds/.RData）</li>
                     <li><strong>使用 data.table</strong>：读取文件推荐使用 data.table 包</li>
@@ -1123,7 +1123,7 @@ echo "[$(date)] 分析完成"</pre>
                     <li>配置文件使用时间戳命名，导致文件夹碎片化</li>
                     <li><span class="text-red"><strong>计算与作图混写</strong></span>：把数据计算和可视化代码写在同一个脚本中，导致改图必须重跑全部计算</li>
                     <li><span class="text-red"><strong>只保存单一图表格式</strong>：只保存 .png 或只保存 .pdf</span></li>
-                    <li><strong>图表字体混用</strong>：同一项目中混用 Arial、Times New Roman、宋体等</li>
+                    <li><strong>图表字体混用</strong>：同一项目中混用不同字体族（如无衬线 + 衬线混搭）；禁止使用 Times New Roman</li>
                     <li><span class="text-red"><strong>使用 .rds/.RData</strong></span>：推荐使用更现代的 .qs2 格式（<code>qs2</code> R 包）</li>
                     <li><strong>使用 base R</strong>：推荐使用更高效的 data.table</li>
                     <li><span class="text-red"><strong>静默吞异常</strong></span>：<code>except: pass</code> 或裸 <code>tryCatch</code> 不记录错误信息</li>
@@ -1452,7 +1452,7 @@ bash run.sh --plot-only
                         <tr><td><strong>样本信息一致性</strong></td><td><span class="text-red">样本表与计数矩阵样本名必须 1:1 对齐</span></td><td>运行前进行一致性校验并写入日志</td></tr>
                         <tr><td><strong>随机性控制</strong></td><td><span class="text-red">所有含随机过程的步骤固定随机种子</span></td><td>示例：<code>seed=20260306</code></td></tr>
                         <tr><td><strong>差异分析阈值</strong></td><td><span class="text-red">统一记录 <code>p/FDR</code> 与 <code>|log2FC|</code> 阈值</span></td><td>避免仅写“默认参数”导致不可复现</td></tr>
-                        <tr><td><strong>图表视觉标准</strong></td><td>图片字体<span class="text-red">统一 <code>Arial</code></span>，并固定最小字号</td><td>建议轴标题 >= 10 pt，刻度 >= 8 pt</td></tr>
+                        <tr><td><strong>图表视觉标准</strong></td><td>使用默认 sans-serif 字体；<span class="text-red">禁止衬线字体（如 Times New Roman）</span>；固定最小字号</td><td>建议轴标题 >= 10 pt，刻度 >= 8 pt</td></tr>
                         <tr><td><strong>软件环境记录</strong></td><td>记录 Python/R 版本和关键包版本</td><td>建议输出 <code>sessionInfo()</code> 或 <code>pip freeze</code> 摘要</td></tr>
                         <tr><td><strong>依赖锁定文件</strong></td><td><span class="text-red">每个模块必须包含可复现的依赖锁定文件</span></td><td>R 项目：<code>renv.lock</code>；Python 项目：<code>requirements.txt</code> 或 <code>environment.yml</code></td></tr>
                         <tr><td><strong>最低版本约束</strong></td><td>在 <code>README.md</code> 或 <code>config/</code> 中标注最低 R/Python 版本</td><td>示例：<code>Requires: R >= 4.2, Python >= 3.9</code></td></tr>
