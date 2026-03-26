@@ -210,13 +210,23 @@
                 <pre class="file-tree"><span class="folder">module_name/</span>
 ├── <span class="file">run.sh</span>                
 ├── <span class="file">README.md</span>
+├── <span class="file">CHANGELOG.md</span>
 ├── <span class="folder">scripts/</span>
 │   ├── <span class="file">RawData.R</span>
 │   ├── <span class="file">DEGs_analysis.R</span>
 │   ├── <span class="file">DEGs_plot.R</span>
-│   └── <span class="file">scripts.sh</span>
+│   ├── <span class="file">scripts.sh</span>
+│   └── <span class="file">cleanup.sh</span>
 ├── <span class="folder">config/</span>
 │   └── <span class="config-file">DEGs.config.example.ini/yaml</span>
+├── <span class="folder">tests/</span>
+│   ├── <span class="file">smoke_test.sh</span>
+│   ├── <span class="folder">data/</span>
+│   │   ├── <span class="file">expression.csv</span>
+│   │   ├── <span class="file">group.csv</span>
+│   │   └── <span class="config-file">test_config.yaml</span>
+│   └── <span class="folder">golden/</span>
+│       └── <span class="file">01.DEGs.csv</span>
 ├── <span class="folder">logs/</span>
 │   ├── <span class="log-file">RawData.20260306_143022.log</span>
 │   └── <span class="log-file">RawData.20260306_161545.log</span>
