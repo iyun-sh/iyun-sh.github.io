@@ -192,6 +192,9 @@
                 <span class="pill primary">⏰ 精确到秒的时间戳标识</span>
                 <span class="pill accent">📁 统一目录结构</span>
                 <span class="pill warn">📄 日志优先追溯</span>
+                <span class="pill danger">🛠️ 脚本开发规范</span>
+                <span class="pill primary">🔄 模块协作与版本管理</span>
+                <span class="pill accent">🧪 质量保证</span>
             </div>
         </section>
 
@@ -885,6 +888,187 @@ OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.ar
             </div>
         </div>
 
+        <!-- ========== 脚本开发规范 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">🛠️ 脚本开发规范</h2>
+
+                <div class="danger-box">
+                    <strong>⚠️ 核心原则：</strong>
+                    <span class="text-red">脚本必须具备清晰的错误处理、一致的命名风格和可维护的编码规范。</span>
+                    不允许"静默失败"——任何异常都应被捕获、记录并以非零退出码终止。
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('script-error', event)">
+                            <span class="tab-icon">🚨</span> 错误处理与退出码
+                        </button>
+                        <button class="tab" onclick="showTab('script-shell', event)">
+                            <span class="tab-icon">🐚</span> Shell 脚本规范
+                        </button>
+                        <button class="tab" onclick="showTab('script-naming', event)">
+                            <span class="tab-icon">📛</span> 函数/变量命名
+                        </button>
+                        <button class="tab" onclick="showTab('script-style', event)">
+                            <span class="tab-icon">🎨</span> 编码风格指南
+                        </button>
+                    </div>
+
+                    <div id="script-error" class="tab-content active">
+                        <h4>🚨 错误处理与退出码规范</h4>
+                        <table class="matrix">
+                            <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>退出码约定</strong></td><td><code>0</code> = 成功；<code>1</code> = 一般错误；<code>2</code> = 输入校验失败；<code>3</code> = 依赖/环境异常</td><td>上游调度脚本根据退出码判断是否继续</td></tr>
+                                <tr><td><strong>Shell 错误传播</strong></td><td><span class="text-red"><code>set -euo pipefail</code></span> 必须写在 <code>run.sh</code> 和所有 <code>.sh</code> 脚本头部</td><td>任何命令失败立即终止，未定义变量报错，管道中任一环节失败即失败</td></tr>
+                                <tr><td><strong>R 错误捕获</strong></td><td>关键分析步骤使用 <code>tryCatch</code> 包裹，失败时写日志并 <code>quit(status = 1)</code></td><td>禁止裸 <code>stop()</code> 后不做日志记录</td></tr>
+                                <tr><td><strong>Python 错误捕获</strong></td><td>入口函数使用 <code>try/except</code>，异常写入日志后 <code>sys.exit(1)</code></td><td>禁止 <code>except: pass</code> 或静默吞异常</td></tr>
+                                <tr><td><strong>日志联动</strong></td><td>错误信息必须同时输出到 stderr 和日志文件</td><td>便于交互式调试和离线追溯</td></tr>
+                                <tr><td><strong>清理机制</strong></td><td>Shell 使用 <code>trap cleanup EXIT</code>；R/Python 使用 <code>on.exit</code> / <code>finally</code></td><td>确保异常退出时临时文件被清理、日志被刷盘</td></tr>
+                            </tbody>
+                        </table>
+
+                        <strong style="display:block; margin-top:18px;">R 错误处理示例：</strong>
+                        <pre class="code-block">tryCatch({
+    dds &lt;- DESeq(dds)
+}, error = function(e) {
+    log_error(paste0("DESeq2 分析失败: ", conditionMessage(e)))
+    quit(status = 1)
+})</pre>
+
+                        <strong style="display:block; margin-top:18px;">Python 错误处理示例：</strong>
+                        <pre class="code-block">try:
+    result = run_analysis(config)
+except Exception as e:
+    logger.error(f"分析失败: {e}")
+    sys.exit(1)</pre>
+                    </div>
+
+                    <div id="script-shell" class="tab-content">
+                        <h4>🐚 Shell 脚本硬性规范</h4>
+                        <table class="matrix">
+                            <thead><tr><th>规范项</th><th>要求</th><th>示例</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>Shebang</strong></td><td><span class="text-red">必须使用 <code>#!/usr/bin/env bash</code></span></td><td>确保跨环境可移植</td></tr>
+                                <tr><td><strong>安全模式</strong></td><td><span class="text-red">第二行固定 <code>set -euo pipefail</code></span></td><td>任何错误立即终止</td></tr>
+                                <tr><td><strong>参数解析</strong></td><td>使用 <code>getopts</code> 或 <code>case</code> 循环解析命令行参数</td><td><code>--config</code>, <code>--plot-only</code>, <code>--help</code></td></tr>
+                                <tr><td><strong>帮助信息</strong></td><td><span class="text-red">必须实现 <code>--help / -h</code></span>，输出用途、参数说明和示例</td><td><code>run.sh --help</code></td></tr>
+                                <tr><td><strong>变量引用</strong></td><td>变量必须用双引号包裹：<code>"$VAR"</code></td><td>防止空格/特殊字符引发错误</td></tr>
+                                <tr><td><strong>临时文件</strong></td><td>使用 <code>mktemp</code> 创建，配合 <code>trap</code> 在退出时清理</td><td><code>TMP=$(mktemp); trap "rm -f $TMP" EXIT</code></td></tr>
+                                <tr><td><strong>日志重定向</strong></td><td>stdout/stderr 分别重定向到日志文件</td><td><code>exec &gt; &gt;(tee -a "$LOG") 2&gt;&amp;1</code></td></tr>
+                            </tbody>
+                        </table>
+
+                        <strong style="display:block; margin-top:18px;">run.sh 模板：</strong>
+                        <pre class="code-block">#!/usr/bin/env bash
+set -euo pipefail
+
+# ---- 帮助信息 ----
+usage() {
+    cat &lt;&lt;EOF
+用法: $(basename "$0") [选项]
+
+选项:
+  --config FILE   指定配置文件（默认: config/DEGs.config.yaml）
+  --plot-only     仅运行作图脚本，跳过计算
+  -h, --help      显示此帮助信息
+
+示例:
+  $(basename "$0") --config config/DEGs.config.yaml
+  $(basename "$0") --plot-only
+EOF
+    exit 0
+}
+
+# ---- 默认参数 ----
+CONFIG="config/DEGs.config.yaml"
+PLOT_ONLY=false
+
+# ---- 参数解析 ----
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --config)    CONFIG="$2"; shift 2 ;;
+        --plot-only) PLOT_ONLY=true; shift ;;
+        -h|--help)   usage ;;
+        *)           echo "未知参数: $1" &gt;&amp;2; exit 1 ;;
+    esac
+done
+
+# ---- 时间戳与日志 ----
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG_FILE="logs/DEGs.${TIMESTAMP}.log"
+mkdir -p logs
+exec &gt; &gt;(tee -a "$LOG_FILE") 2&gt;&amp;1
+
+# ---- 清理函数 ----
+cleanup() { echo "[$(date)] 脚本退出"; }
+trap cleanup EXIT
+
+# ---- 执行分析 ----
+if [ "$PLOT_ONLY" = false ]; then
+    echo "[$(date)] 开始计算..."
+    Rscript scripts/DEGs_analysis.R --config "$CONFIG"
+fi
+
+echo "[$(date)] 开始作图..."
+Rscript scripts/DEGs_plot.R --config "$CONFIG"
+
+echo "[$(date)] 分析完成"</pre>
+                    </div>
+
+                    <div id="script-naming" class="tab-content">
+                        <h4>📛 函数 / 变量 / 常量命名规范</h4>
+                        <table class="matrix">
+                            <thead><tr><th>语言</th><th>对象</th><th>风格</th><th>示例</th></tr></thead>
+                            <tbody>
+                                <tr><td rowspan="3"><strong>R</strong></td><td>函数名</td><td>snake_case</td><td><code>run_deseq2()</code>, <code>plot_volcano()</code></td></tr>
+                                <tr><td>变量名</td><td>snake_case</td><td><code>count_matrix</code>, <code>p_cutoff</code></td></tr>
+                                <tr><td>常量</td><td>UPPER_SNAKE_CASE</td><td><code>DEFAULT_P_CUTOFF</code>, <code>MAX_THREADS</code></td></tr>
+                                <tr><td rowspan="4"><strong>Python</strong></td><td>函数名</td><td>snake_case</td><td><code>run_analysis()</code>, <code>load_config()</code></td></tr>
+                                <tr><td>变量名</td><td>snake_case</td><td><code>sample_count</code>, <code>output_dir</code></td></tr>
+                                <tr><td>类名</td><td>PascalCase</td><td><code>AnalysisConfig</code>, <code>GeneFilter</code></td></tr>
+                                <tr><td>常量</td><td>UPPER_SNAKE_CASE</td><td><code>DEFAULT_SEED</code>, <code>MIN_SAMPLES</code></td></tr>
+                                <tr><td rowspan="2"><strong>Shell</strong></td><td>变量名</td><td>UPPER_SNAKE_CASE</td><td><code>CONFIG_FILE</code>, <code>TIMESTAMP</code></td></tr>
+                                <tr><td>函数名</td><td>snake_case</td><td><code>log_info()</code>, <code>cleanup()</code></td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="warn-box">
+                            <strong>⚠️ 禁止做法：</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li>使用单字母变量名（循环索引 <code>i</code>, <code>j</code> 除外）</li>
+                                <li>R 中混用 <code>camelCase</code> 和 <code>snake_case</code>（统一用 snake_case）</li>
+                                <li>使用拼音缩写或无意义缩写（如 <code>sjcl</code>、<code>tmp2</code>）</li>
+                                <li>变量名与 R/Python 内置函数同名（如 <code>data</code>、<code>list</code>、<code>df</code>）</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="script-style" class="tab-content">
+                        <h4>🎨 编码风格指南</h4>
+                        <table class="matrix">
+                            <thead><tr><th>语言</th><th>推荐 Style Guide</th><th>Linter / Formatter</th><th>关键要求</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>R</strong></td><td><a href="https://style.tidyverse.org/" target="_blank">Tidyverse Style Guide</a></td><td><code>lintr</code> + <code>styler</code></td><td>缩进 2 空格；行宽 ≤ 120 字符；赋值用 <code>&lt;-</code> 不用 <code>=</code></td></tr>
+                                <tr><td><strong>Python</strong></td><td><a href="https://peps.python.org/pep-0008/" target="_blank">PEP 8</a></td><td><code>ruff</code> 或 <code>flake8</code> + <code>black</code></td><td>缩进 4 空格；行宽 ≤ 120 字符；type hints 推荐</td></tr>
+                                <tr><td><strong>Shell</strong></td><td><a href="https://google.github.io/styleguide/shellguide.html" target="_blank">Google Shell Style Guide</a></td><td><code>shellcheck</code></td><td>缩进 2 空格；函数用 <code>snake_case</code>；所有脚本过 shellcheck</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="lead-box">
+                            <strong>💡 落地建议：</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li>在项目根目录保存 <code>.lintr</code>（R）、<code>pyproject.toml</code>（Python）、<code>.shellcheckrc</code>（Shell）配置文件</li>
+                                <li>CI/CD 中加入 lint 检查步骤，不通过则阻止合并</li>
+                                <li>新脚本提交前必须通过对应 linter 无 error</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ========== 最佳实践 ========== -->
         <div class="grid">
             <div class="card two-col">
@@ -902,7 +1086,12 @@ OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.ar
                     <li><strong>使用 .qs2</strong>：<span class="text-red">R数据使用 .qs2 格式保存</span>（<code>qs2</code> R 包，替代 .rds/.RData）</li>
                     <li><strong>使用 data.table</strong>：读取文件推荐使用 data.table 包</li>
                     <li><strong>使用 Quarto</strong>：生成报告推荐使用 Quarto，默认输出 .docx 格式</li>
-                    <li>定期清理过期的日志文件和临时结果（保留最近N天的版本）</li>
+                    <li><strong>错误即终止</strong>：Shell 脚本固定 <code>set -euo pipefail</code>；R/Python 必须 <code>tryCatch</code>/<code>try-except</code> 并以非零退出码终止</li>
+                    <li><strong>输出自检</strong>：脚本结束前自动校验输出文件存在性、非空、关键列完整</li>
+                    <li><strong>README.md 完备</strong>：每个模块必须包含标准 README（用途、依赖、输入输出、运行示例）</li>
+                    <li><strong>CHANGELOG.md</strong>：语义化版本号 + 每次变更记录</li>
+                    <li><strong>冒烟测试</strong>：提供示例数据和 <code>tests/smoke_test.sh</code>，一键验证核心流程</li>
+                    <li>定期清理过期的日志文件和临时结果（默认保留最近 30 天）</li>
                     <li>使用版本控制系统（Git）管理scripts文件夹中的脚本</li>
                     <li>为重要分析结果创建README.md说明文件内容</li>
                     <li>定期备份result和report文件夹到云端或外部存储</li>
@@ -927,7 +1116,317 @@ OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.ar
                     <li><strong>图表字体混用</strong>：同一项目中混用 Arial、Times New Roman、宋体等</li>
                     <li><span class="text-red"><strong>使用 .rds/.RData</strong></span>：推荐使用更现代的 .qs2 格式（<code>qs2</code> R 包）</li>
                     <li><strong>使用 base R</strong>：推荐使用更高效的 data.table</li>
+                    <li><span class="text-red"><strong>静默吞异常</strong></span>：<code>except: pass</code> 或裸 <code>tryCatch</code> 不记录错误信息</li>
+                    <li><span class="text-red"><strong>缺少 shebang/安全模式</strong></span>：Shell 脚本不写 <code>#!/usr/bin/env bash</code> 和 <code>set -euo pipefail</code></li>
+                    <li><strong>模块间内存传递</strong>：通过全局变量或共享内存传递数据，不走文件接口</li>
+                    <li><strong>输出不校验</strong>：脚本执行完不检查输出文件是否完整和正确</li>
+                    <li><strong>无 README / 无版本号</strong>：模块缺少文档或依赖说明，新人无法独立运行</li>
+                    <li><strong>敏感数据入库</strong>：将含患者真实 ID 的临床表提交到 Git 仓库</li>
                 </ul>
+            </div>
+        </div>
+
+        <!-- ========== 模块协作与版本管理 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">🔄 模块协作与版本管理</h2>
+
+                <div class="lead-box" style="background:#ecfdf5; border-color:#6ee7b7;">
+                    <strong>✨ 核心设计：</strong> 多模块组成流水线时，必须有清晰的数据传递契约、依赖声明和版本管理策略，确保任意模块可独立更新而不破坏上下游。
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('collab-data', event)">
+                            <span class="tab-icon">📤</span> 模块间数据传递
+                        </button>
+                        <button class="tab" onclick="showTab('collab-deps', event)">
+                            <span class="tab-icon">🔗</span> 跨模块依赖声明
+                        </button>
+                        <button class="tab" onclick="showTab('collab-version', event)">
+                            <span class="tab-icon">🏷️</span> 版本管理细则
+                        </button>
+                    </div>
+
+                    <div id="collab-data" class="tab-content active">
+                        <h4>📤 模块间数据传递约定</h4>
+                        <table class="matrix">
+                            <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>传递介质</strong></td><td>模块间一律通过 <span class="text-red">文件</span>（CSV / .qs2）传递数据，禁止依赖内存/全局变量</td><td>确保任意模块可独立运行和调试</td></tr>
+                                <tr><td><strong>输出路径约定</strong></td><td>上游模块将结果写入自己的 <code>result/分析点/</code>；下游模块通过相对路径 <code>../上游模块/result/分析点/</code> 读取</td><td>路径在读取前必须经过 normalizePath</td></tr>
+                                <tr><td><strong>完成标志</strong></td><td>模块成功结束时在 <code>result/分析点/</code> 写入隐藏追踪文件 <code>.时间戳</code></td><td>下游可检查该文件判断上游是否已完成</td></tr>
+                                <tr><td><strong>接口文件规范</strong></td><td>模块对外暴露的输出文件名、列名、数据类型在 <code>README.md</code> 中明确列出</td><td>视为模块的公开 API，变更需通知下游</td></tr>
+                                <tr><td><strong>向后兼容</strong></td><td>输出文件新增列允许，<span class="text-red">删除或重命名已有列视为破坏性变更</span></td><td>破坏性变更需升主版本号</td></tr>
+                                <tr><td><strong>空结果处理</strong></td><td>如分析结果为空（如 0 个差异基因），仍应输出带表头的空 CSV + 日志记录</td><td>下游不因文件缺失而崩溃</td></tr>
+                            </tbody>
+                        </table>
+
+                        <strong style="display:block; margin-top:18px;">流水线数据流示例：</strong>
+                        <pre class="code-block"># 多模块流水线目录布局
+project/
+├── RawData/          # 模块 1：数据预处理
+│   ├── run.sh
+│   └── result/RawData/01.GSEXXX_count.csv
+├── DEGs/             # 模块 2：差异分析（依赖模块 1）
+│   ├── run.sh
+│   └── result/DEGs/01.DEGs.csv
+└── Enrichment/       # 模块 3：富集分析（依赖模块 2）
+    ├── run.sh
+    └── result/GSEA/01.gsea_result.csv
+
+# DEGs/run.sh 中读取上游数据：
+INPUT="../RawData/result/RawData/01.GSEXXX_count.csv"</pre>
+                    </div>
+
+                    <div id="collab-deps" class="tab-content">
+                        <h4>🔗 跨模块依赖声明</h4>
+                        <table class="matrix">
+                            <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>声明位置</strong></td><td>在模块 <code>README.md</code> 的「依赖」章节中列出</td><td>必须标注上游模块名和所需文件</td></tr>
+                                <tr><td><strong>声明格式</strong></td><td>表格形式：上游模块 / 所需文件 / 最低版本</td><td>示例见下方</td></tr>
+                                <tr><td><strong>运行时校验</strong></td><td><code>run.sh</code> 启动时检查上游输出文件和追踪文件是否存在</td><td>不存在则报错退出（exit 2），不继续执行</td></tr>
+                                <tr><td><strong>环境依赖</strong></td><td>R/Python 版本、关键包版本在 <code>README.md</code> 和锁定文件中声明</td><td><code>renv.lock</code> / <code>requirements.txt</code></td></tr>
+                            </tbody>
+                        </table>
+
+                        <strong style="display:block; margin-top:18px;">依赖声明示例（README.md 片段）：</strong>
+                        <pre class="code-block">## 依赖
+
+### 上游模块依赖
+
+| 上游模块   | 所需文件                           | 最低版本 |
+|-----------|-----------------------------------|---------|
+| RawData   | result/RawData/01.GSEXXX_count.csv | v1.0    |
+| RawData   | result/RawData/.时间戳（完成标志）   | -       |
+
+### 环境依赖
+
+- R &gt;= 4.2
+- DESeq2 &gt;= 1.38
+- data.table &gt;= 1.14
+- 完整依赖见 renv.lock</pre>
+                    </div>
+
+                    <div id="collab-version" class="tab-content">
+                        <h4>🏷️ 版本管理细则</h4>
+                        <table class="matrix">
+                            <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>版本号方案</strong></td><td>采用语义化版本 <code>vMAJOR.MINOR.PATCH</code></td><td><code>v1.2.0</code>：MAJOR=不兼容变更，MINOR=新增功能，PATCH=修复</td></tr>
+                                <tr><td><strong>版本号位置</strong></td><td>写在 <code>run.sh</code> 头部注释和 <code>README.md</code> 中</td><td>日志中也应记录当前版本号</td></tr>
+                                <tr><td><strong>CHANGELOG</strong></td><td><span class="text-red">每个模块根目录必须维护 <code>CHANGELOG.md</code></span></td><td>记录每次变更的版本号、日期、变更内容</td></tr>
+                                <tr><td><strong>Git 标签</strong></td><td>发布版本打 tag：<code>模块名/v1.2.0</code></td><td>示例：<code>DEGs/v1.2.0</code></td></tr>
+                                <tr><td><strong>分支策略</strong></td><td><code>main</code> 保持稳定可运行；开发使用 <code>dev</code> 或 <code>feature/*</code> 分支</td><td>合并前需通过 lint + 冒烟测试</td></tr>
+                                <tr><td><strong>提交信息</strong></td><td>遵循 Conventional Commits：<code>feat:</code> / <code>fix:</code> / <code>docs:</code> / <code>refactor:</code></td><td>便于自动生成 CHANGELOG</td></tr>
+                            </tbody>
+                        </table>
+
+                        <strong style="display:block; margin-top:18px;">CHANGELOG.md 示例：</strong>
+                        <pre class="code-block"># CHANGELOG
+
+## [v1.2.0] - 2026-03-26
+
+### 新增
+- 计算与作图分离：DEGs_analysis.R / DEGs_plot.R
+- 支持 --plot-only 参数
+
+### 修复
+- 修复 normalizePath 在 Windows 上的分隔符问题
+
+## [v1.1.0] - 2026-03-20
+
+### 新增
+- 新增路径标准化处理</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 质量保证规范 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">🧪 质量保证规范</h2>
+
+                <div class="danger-box">
+                    <strong>⚠️ 核心原则：</strong>
+                    <span class="text-red">每个模块必须具备输出自检能力和基本测试覆盖</span>，确保结果在传递给下游或交付前经过验证。
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('qa-output', event)">
+                            <span class="tab-icon">✅</span> 输出校验规范
+                        </button>
+                        <button class="tab" onclick="showTab('qa-test', event)">
+                            <span class="tab-icon">🧪</span> 测试要求
+                        </button>
+                    </div>
+
+                    <div id="qa-output" class="tab-content active">
+                        <h4>✅ 输出校验规范</h4>
+                        <table class="matrix">
+                            <thead><tr><th>校验项</th><th>要求</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>文件存在性</strong></td><td>脚本结束前检查所有预期输出文件是否已生成</td><td>缺少任何预期文件应报错退出</td></tr>
+                                <tr><td><strong>文件非空</strong></td><td>输出 CSV 至少包含表头行；.png/.pdf 文件大小 &gt; 0</td><td>空文件视为异常</td></tr>
+                                <tr><td><strong>行数/列数检查</strong></td><td>结果 CSV 的行数和列数写入日志，并与预期范围做对比</td><td>如差异基因数为 0，日志中标注 <code>[WARN]</code></td></tr>
+                                <tr><td><strong>关键列存在性</strong></td><td>输出 CSV 必须包含文档约定的关键列（如 <code>SYMBOL</code>、<code>log2FoldChange</code>、<code>pvalue</code>）</td><td>列名缺失直接报错</td></tr>
+                                <tr><td><strong>数据类型检查</strong></td><td>数值列不含非数值字符串；分类列取值在允许范围内</td><td>如 <code>riskgroup</code> 只允许 <code>High</code>/<code>Low</code></td></tr>
+                                <tr><td><strong>NA/空值检查</strong></td><td><span class="text-red">输出文件中不允许出现 NA</span>（与输入规范一致）</td><td>若分析结果含 NA 需在日志中说明并过滤</td></tr>
+                                <tr><td><strong>双格式图表验证</strong></td><td>每个图表同时存在 .png 和 .pdf，否则报 <code>[WARN]</code></td><td>与文件格式规范联动</td></tr>
+                            </tbody>
+                        </table>
+
+                        <strong style="display:block; margin-top:18px;">R 输出校验示例：</strong>
+                        <pre class="code-block"># 输出校验函数
+validate_output &lt;- function(file_path, required_cols = NULL) {
+    if (!file.exists(file_path)) stop("输出文件缺失: ", file_path)
+    if (file.size(file_path) == 0) stop("输出文件为空: ", file_path)
+
+    if (grepl("\\.csv$", file_path)) {
+        df &lt;- data.table::fread(file_path, nrows = 5)
+        if (!is.null(required_cols)) {
+            missing &lt;- setdiff(required_cols, names(df))
+            if (length(missing) &gt; 0) stop("缺少关键列: ", paste(missing, collapse = ", "))
+        }
+    }
+    log_info(paste0("校验通过: ", file_path))
+}
+
+# 使用
+validate_output("result/DEGs/01.DEGs.csv", c("SYMBOL", "log2FoldChange", "pvalue", "padj"))</pre>
+                    </div>
+
+                    <div id="qa-test" class="tab-content">
+                        <h4>🧪 测试要求</h4>
+                        <table class="matrix">
+                            <thead><tr><th>测试类型</th><th>要求</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>示例数据</strong></td><td><span class="text-red">每个模块必须包含可运行的小规模示例数据</span></td><td>放在 <code>tests/data/</code> 下，确保 <code>run.sh</code> 可端到端运行</td></tr>
+                                <tr><td><strong>冒烟测试</strong></td><td>模块根目录提供 <code>tests/smoke_test.sh</code>，一键验证核心流程</td><td>退出码 0 = 通过；检查关键输出文件是否生成</td></tr>
+                                <tr><td><strong>单元测试（推荐）</strong></td><td>R 使用 <code>testthat</code>，Python 使用 <code>pytest</code></td><td>至少覆盖：数据读取、核心计算、输出校验函数</td></tr>
+                                <tr><td><strong>回归验证</strong></td><td>保留基准结果（golden file），新版本结果与基准做 diff</td><td>关键数值列允许浮点误差 ≤ 1e-6</td></tr>
+                                <tr><td><strong>CI 集成</strong></td><td>冒烟测试纳入 CI/CD 流程，每次提交自动运行</td><td>未通过则阻止合并</td></tr>
+                            </tbody>
+                        </table>
+
+                        <strong style="display:block; margin-top:18px;">冒烟测试示例（tests/smoke_test.sh）：</strong>
+                        <pre class="code-block">#!/usr/bin/env bash
+set -euo pipefail
+
+echo "=== 冒烟测试开始 ==="
+
+# 使用示例数据运行
+bash run.sh --config tests/data/test_config.yaml
+
+# 检查关键输出
+for f in result/DEGs/01.DEGs.csv result/DEGs/02.heatmap.png result/DEGs/02.heatmap.pdf; do
+    if [ ! -s "$f" ]; then
+        echo "[FAIL] 文件缺失或为空: $f"
+        exit 1
+    fi
+done
+
+echo "=== 冒烟测试通过 ==="</pre>
+
+                        <div class="lead-box">
+                            <strong>💡 测试目录结构：</strong>
+                            <pre style="margin-top:8px; font-family: Consolas, monospace; font-size: 0.9em;">tests/
+├── smoke_test.sh        # 冒烟测试入口
+├── data/                # 小规模示例数据
+│   ├── expression.csv
+│   ├── group.csv
+│   └── test_config.yaml
+└── golden/              # 基准结果（用于回归比对）
+    └── 01.DEGs.csv</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== README.md 必备内容 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">📖 README.md 必备内容</h2>
+
+                <div class="lead-box">
+                    <strong>📌 设计原则：</strong> 每个模块根目录必须包含 <code>README.md</code>，内容足够让新开发者<span class="text-red">仅凭此文件即可理解模块用途、运行方式和数据接口</span>。
+                </div>
+
+                <table class="matrix">
+                    <thead><tr><th>必备章节</th><th>内容要求</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>模块名称与简介</strong></td><td>一句话说明模块功能</td><td>示例：<code># DEGs — 差异基因分析模块</code></td></tr>
+                        <tr><td><strong>版本与更新日期</strong></td><td>当前版本号 + 最后更新日期</td><td>与 CHANGELOG.md 保持一致</td></tr>
+                        <tr><td><strong>环境依赖</strong></td><td>R/Python 最低版本、关键包列表、锁定文件位置</td><td>示例：<code>R &gt;= 4.2 | 依赖见 renv.lock</code></td></tr>
+                        <tr><td><strong>上游模块依赖</strong></td><td>表格列出所需上游模块和文件（见模块协作章节）</td><td>无上游依赖时标注"无"</td></tr>
+                        <tr><td><strong>快速开始</strong></td><td>从安装到运行的完整命令序列</td><td>包含 <code>bash run.sh --help</code> 和典型运行示例</td></tr>
+                        <tr><td><strong>输入文件说明</strong></td><td>列出所有输入文件名、格式、关键列和约束</td><td>与输入校验规范对齐</td></tr>
+                        <tr><td><strong>输出文件说明</strong></td><td>列出所有输出文件名、所在目录、关键列</td><td>这是模块的公开 API</td></tr>
+                        <tr><td><strong>参数说明</strong></td><td>所有可配置参数、默认值和取值范围</td><td>可引用配置文件模板</td></tr>
+                        <tr><td><strong>目录结构</strong></td><td>展示模块内部目录树（可简化）</td><td>帮助快速定位文件</td></tr>
+                    </tbody>
+                </table>
+
+                <strong style="display:block; margin-top:18px;">README.md 模板：</strong>
+                <pre class="code-block"># DEGs — 差异基因分析模块
+
+> 版本: v1.2.0 | 更新: 2026-03-26
+
+## 简介
+
+基于 DESeq2 进行差异基因分析，输出差异基因列表、热图和火山图。
+
+## 环境依赖
+
+- R &gt;= 4.2
+- 关键包：DESeq2, data.table, ggplot2, qs2, pheatmap
+- 完整依赖：`renv.lock`
+
+## 上游模块依赖
+
+| 上游模块 | 所需文件                           | 最低版本 |
+|---------|-----------------------------------|---------|
+| RawData | result/RawData/01.GSEXXX_count.csv | v1.0    |
+
+## 快速开始
+
+```bash
+# 查看帮助
+bash run.sh --help
+
+# 完整运行（计算 + 作图）
+bash run.sh --config config/DEGs.config.yaml
+
+# 仅重新作图
+bash run.sh --plot-only
+```
+
+## 输入文件
+
+| 文件              | 格式  | 关键列            | 说明           |
+|------------------|------|------------------|---------------|
+| expression.csv   | CSV  | SYMBOL + 样本列   | 表达矩阵        |
+| group.csv        | CSV  | sample, group    | 分组信息        |
+
+## 输出文件
+
+| 文件                    | 目录           | 说明           |
+|------------------------|---------------|---------------|
+| 01.DEGs.csv            | result/DEGs/  | 差异基因列表     |
+| 02.heatmap.png/.pdf    | result/DEGs/  | Top 基因热图    |
+| 03.volcano.png/.pdf    | result/DEGs/  | 火山图          |
+
+## 参数说明
+
+| 参数            | 默认值  | 说明               |
+|----------------|--------|--------------------|
+| p_value_cutoff | 0.05   | 显著性阈值           |
+| log2fc_cutoff  | 1.0    | log2 倍数变化阈值     |
+| method         | DESeq2 | 差异分析方法          |</pre>
             </div>
         </div>
 
@@ -947,6 +1446,9 @@ OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.ar
                         <tr><td><strong>软件环境记录</strong></td><td>记录 Python/R 版本和关键包版本</td><td>建议输出 <code>sessionInfo()</code> 或 <code>pip freeze</code> 摘要</td></tr>
                         <tr><td><strong>依赖锁定文件</strong></td><td><span class="text-red">每个模块必须包含可复现的依赖锁定文件</span></td><td>R 项目：<code>renv.lock</code>；Python 项目：<code>requirements.txt</code> 或 <code>environment.yml</code></td></tr>
                         <tr><td><strong>最低版本约束</strong></td><td>在 <code>README.md</code> 或 <code>config/</code> 中标注最低 R/Python 版本</td><td>示例：<code>Requires: R >= 4.2, Python >= 3.9</code></td></tr>
+                        <tr><td><strong>并行与多线程</strong></td><td>涉及并行计算时必须在配置和日志中记录线程数，<span class="text-red">默认线程数不超过可用核心的 80%</span></td><td>R 使用 <code>data.table::setDTthreads()</code>、<code>BiocParallel</code>；Python 使用 <code>multiprocessing</code> 并记录 <code>n_jobs</code></td></tr>
+                        <tr><td><strong>临时文件与资源清理</strong></td><td>日志保留策略：<span class="text-red">默认保留最近 30 天</span>，超期日志 + 中间结果由定期清理脚本删除</td><td>模块可提供 <code>scripts/cleanup.sh --days 30</code>；临时文件统一放 <code>result/分析点/_tmp/</code>，分析结束后自动清理</td></tr>
+                        <tr><td><strong>数据安全与隐私</strong></td><td>涉及临床/患者数据时，<span class="text-red">样本 ID 必须脱敏</span>；原始临床表不纳入 Git</td><td>脱敏规则记录在日志中；敏感文件加入 <code>.gitignore</code>；传输使用加密通道</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1024,6 +1526,21 @@ OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.ar
                                 <li><strong>补充</strong>：支持跨平台（Windows、Mac、Linux）与团队协作流程</li>
                             </ul>
                         </div>
+
+                        <div class="warn-box" style="margin-top:14px;">
+                            <strong>📝 报告标准章节结构</strong>
+                            <p style="margin-top:8px;">无论使用 Quarto 还是其他工具，分析报告应包含以下标准章节：</p>
+                            <ol style="margin-top:8px; padding-left:20px;">
+                                <li><strong>分析概述</strong> — 一句话说明本次分析的目的和方法</li>
+                                <li><strong>数据来源</strong> — 数据集名称、样本量、来源平台（如 GEO、TCGA）</li>
+                                <li><strong>分析参数</strong> — 所有关键参数（阈值、方法、随机种子等）</li>
+                                <li><strong>结果摘要</strong> — 关键统计数字（差异基因数、富集通路数等）</li>
+                                <li><strong>图表展示</strong> — 每个图表配简要解读文字</li>
+                                <li><strong>结论与讨论</strong> — 结果解读、局限性说明</li>
+                                <li><strong>软件与版本</strong> — R/Python 版本、关键包版本（可附 sessionInfo 输出）</li>
+                                <li><strong>附录</strong>（可选） — 补充表格、完整参数列表、辅助图表</li>
+                            </ol>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1087,7 +1604,7 @@ OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.ar
         </div>
 
         <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.2 | <strong>更新日期:</strong> 2026-03-26</p>
+        <p class="footer-note"><strong>版本:</strong> v1.3 | <strong>更新日期:</strong> 2026-03-26</p>
 
     </div>
 
