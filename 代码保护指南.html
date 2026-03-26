@@ -330,6 +330,7 @@
 ├── logs/
 ├── result/
 ├── report/
+├── README.md           # 必备（参见《规范》README 必备内容章节）
 ├── tests/              # 冒烟/回归测试（参见《规范》质量保证章节）
 ├── CHANGELOG.md        # 版本变更记录
 ├── cleanup.sh          # 临时文件清理脚本
@@ -355,6 +356,11 @@
                             <td><code>run.sh</code></td>
                             <td>公开</td>
                             <td>这是模块稳定入口，应明确参数、帮助信息、退出码和日志位置。</td>
+                        </tr>
+                        <tr>
+                            <td><code>README.md</code></td>
+                            <td>公开</td>
+                            <td>记录运行方式、输入输出说明、依赖要求，属于外部使用所必需（参见《规范》README 必备内容章节）。</td>
                         </tr>
                         <tr>
                             <td><code>config/*.example.ini/yaml</code></td>
@@ -462,7 +468,7 @@
                     <li>保护后仍需保留稳定的日志输出、结果目录结构和配置映射关系。</li>
                     <li>若使用中间调度脚本，如 <code>scripts.sh</code>，应由 <code>run.sh</code> 统一调用，不单独对外宣讲。</li>
                     <li>调试用开关、测试参数和临时路径不应在对外交付版本中保留。</li>
-                    <li>保护后路径可能发生变化，仍须遵循 <code>normalizePath()</code> 规范（详见《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》路径规范章节），确保跨平台兼容。</li>
+                    <li>保护后路径可能发生变化，<span class="text-red">仍须遵循 <code>normalizePath()</code> 规范</span>（详见《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》路径规范章节），确保跨平台兼容。</li>
                 </ul>
                 <div class="danger-box">
                     <strong>禁止事项：</strong> <span class="text-red">不要把密钥、临时账号、内网路径、调试数据源、测试样本或历史分析结果一并打包到交付目录中。</span>
