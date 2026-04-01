@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>初步数据处理指南</title>
+    <style>
+        :root {
+            --bg: #f3f6fb;
+            --card: #ffffff;
+            --text: #223043;
+            --muted: #5b6b80;
+            --primary: #1d4ed8;
+            --primary-soft: #dbeafe;
+            --accent: #0f766e;
+            --accent-soft: #ccfbf1;
+            --warn: #b45309;
+            --warn-soft: #fef3c7;
+            --danger: #b91c1c;
+            --danger-soft: #fee2e2;
+            --success: #15803d;
+            --success-soft: #dcfce7;
+            --border: #d9e2ef;
+            --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(29,78,216,0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(15,118,110,0.12), transparent 24%),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 20px 56px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 32px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 55%, #ecfeff 100%);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.7);
+            margin-bottom: 24px;
+        }
+        .hero h1 { margin: 0 0 10px; font-size: clamp(2rem,4vw,3rem); line-height: 1.15; color: #0f172a; }
+        .hero p  { margin: 0; max-width: 920px; color: var(--muted); font-size: 1.05rem; }
+
+        .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .pill { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 999px; font-size: 0.92rem; font-weight: 600; }
+        .pill.primary { background: var(--primary-soft); color: var(--primary); }
+        .pill.accent  { background: var(--accent-soft);  color: var(--accent); }
+        .pill.warn    { background: var(--warn-soft);    color: var(--warn); }
+        .pill.danger  { background: var(--danger-soft);  color: var(--danger); }
+
+        /* Grid & Card */
+        .grid { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 18px; margin-bottom: 18px; }
+        .card {
+            grid-column: span 12;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 28px rgba(15,23,42,0.05);
+        }
+        .card.two-col { grid-column: span 6; }
+
+        .section-title { margin: 0 0 14px; font-size: 1.3rem; color: #0f172a; }
+
+        /* Boxes */
+        .lead-box, .warn-box, .danger-box, .success-box { border-radius: 16px; padding: 16px 18px; margin: 14px 0 0; }
+        .lead-box   { background: #f8fafc; border: 1px solid #dbeafe; }
+        .warn-box   { background: var(--warn-soft); border: 1px solid #fcd34d; }
+        .danger-box { background: var(--danger-soft); border: 1px solid #fca5a5; }
+        .success-box { background: var(--success-soft); border: 1px solid #86efac; }
+
+        /* Table (matrix) */
+        .matrix { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; }
+        .matrix th, .matrix td { border: 1px solid var(--border); padding: 12px 14px; text-align: left; vertical-align: top; }
+        .matrix th { background: #eff6ff; color: #1e3a8a; }
+
+        /* Code */
+        code, .code-block { font-family: Consolas, "Courier New", monospace; }
+        code { background: #eef2ff; color: #3730a3; padding: 2px 6px; border-radius: 6px; font-size: 0.9em; }
+        .code-block {
+            display: block; white-space: pre-wrap;
+            background: #0f172a; color: #e2e8f0;
+            border-radius: 16px; padding: 18px; margin: 14px 0 0; overflow-x: auto;
+            font-size: 0.88em; line-height: 1.65;
+        }
+
+        /* Tabs */
+        .tabs-container { margin: 18px 0 0; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 2px solid var(--primary); }
+        .tab {
+            padding: 10px 16px;
+            background: var(--primary-soft);
+            border: none; border-radius: 12px 12px 0 0;
+            cursor: pointer; font-size: 0.95rem; font-weight: 600;
+            color: var(--primary);
+            transition: background .2s, color .2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .tab:hover { background: #bfdbfe; }
+        .tab.active { background: var(--primary); color: #fff; }
+        .tab-content { display: none; padding: 20px; background: var(--card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 16px 16px; }
+        .tab-content.active { display: block; }
+        .tab-icon { font-size: 1.1em; }
+
+        /* Steps (numbered circles) */
+        .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+        .steps li { position: relative; padding-left: 54px; margin-bottom: 18px; min-height: 38px; }
+        .steps li::before {
+            counter-increment: step; content: counter(step);
+            position: absolute; left: 0; top: 0;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #0f766e);
+            color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.75em; font-weight: 700; margin-left: 6px; }
+        .badge-required { background: var(--danger-soft); color: var(--danger); }
+        .badge-recommended { background: var(--primary-soft); color: var(--primary); }
+        .badge-optional { background: var(--warn-soft); color: var(--warn); }
+
+        /* Emphasis */
+        .text-red { color: var(--danger); font-weight: 700; }
+        .text-green { color: var(--success); font-weight: 700; }
+        .text-bold { font-weight: 700; }
+
+        /* Check list */
+        .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin-top: 14px; }
+        .check-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 12px 14px; border-radius: 12px;
+            border: 1px solid var(--border); background: #fafbfd;
+        }
+        .check-item .icon { font-size: 1.3em; flex-shrink: 0; }
+        .check-item .desc { font-size: 0.92rem; }
+
+        /* Flow arrow */
+        .flow-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+        .flow-step {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 0.92rem;
+        }
+        .flow-arrow { color: var(--muted); font-size: 1.3em; }
+
+        /* Footer */
+        .footer-note { margin-top: 18px; color: var(--muted); font-size: 0.95rem; text-align: center; }
+
+        /* Lists */
+        ul { padding-left: 22px; }
+        li { margin: 6px 0; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .card.two-col { grid-column: span 12; }
+            .hero { padding: 24px; }
+            .check-grid { grid-template-columns: 1fr; }
+        }
+        @media print {
+            body { background: #fff; }
+            .card { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- ========== Hero ========== -->
+        <section class="hero">
+            <h1>🔬 初步数据处理指南</h1>
+            <p>本指南用于规范从原始 GEO 数据到标准化格式输入文件的全流程，涵盖输入文件格式要求、数据处理步骤、标准化模块执行命令记录和数据校验清单。确保数据在进入分析流水线前格式统一、质量可控。</p>
+            <div class="pill-row">
+                <span class="pill primary">📊 格式标准化</span>
+                <span class="pill accent">🔧 命令记录</span>
+                <span class="pill warn">✅ 校验清单</span>
+                <span class="pill danger">⚠️ 常见问题</span>
+            </div>
+        </section>
+
+        <!-- ========== 处理流程总览 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">🔄 数据处理流程总览</h2>
+                <div class="flow-row">
+                    <span class="flow-step" style="background:var(--primary-soft);color:var(--primary);">📥 GEO 下载</span>
+                    <span class="flow-arrow">→</span>
+                    <span class="flow-step" style="background:var(--accent-soft);color:var(--accent);">🧹 数据清洗</span>
+                    <span class="flow-arrow">→</span>
+                    <span class="flow-step" style="background:var(--warn-soft);color:var(--warn);">🔄 格式转换</span>
+                    <span class="flow-arrow">→</span>
+                    <span class="flow-step" style="background:var(--success-soft);color:var(--success);">✅ 校验通过</span>
+                    <span class="flow-arrow">→</span>
+                    <span class="flow-step" style="background:var(--danger-soft);color:var(--danger);">🚀 进入模块</span>
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('flow-bulk', event)">
+                            <span class="tab-icon">📊</span> Bulk RNA-seq / 芯片
+                        </button>
+                        <button class="tab" onclick="showTab('flow-sc', event)">
+                            <span class="tab-icon">🔬</span> 单细胞 scRNA-seq
+                        </button>
+                    </div>
+
+                    <div id="flow-bulk" class="tab-content active">
+                        <h4>Bulk 转录组 / 微阵列处理流程</h4>
+                        <ol class="steps">
+                            <li><strong>GEO 数据下载</strong>：使用 <code>run_download_gse.sh</code> 一键下载并清洗。脚本自动处理芯片/RNA-seq 数据，包括 GPL 注释、探针映射、SYMBOL 聚合、生成质控报告。</li>
+                            <li><strong>自动探针/ID 映射</strong>：脚本内部自动完成探针 → SYMBOL 映射，同一基因多探针默认取均值（<code>--symbol-agg-method mean</code>），可改为 <code>max_row_sum</code>。</li>
+                            <li><strong>表达量预处理</strong>：
+                                <ul>
+                                    <li>RNA-seq：默认输出 TPM，可加 <code>--no-tpm</code> 输出原始 Count</li>
+                                    <li>芯片：自动检测 log2 尺度并在报告中标注</li>
+                                </ul>
+                            </li>
+                            <li><strong>分组信息提取</strong>：使用 <code>run_extract_groups.sh</code> 从 pdata.csv 中提取分组，支持自动检测、手动指定列、分组映射/重命名</li>
+                            <li><strong>格式输出</strong>：下载工具输出 <code>*_cleaned_expression.csv</code> + <code>*_pdata.csv</code>，分组工具输出 <code>groups.csv</code>，最终整理为标准 expression.csv / group.csv 进入分析模块</li>
+                        </ol>
+                        <div class="lead-box">
+                            <strong>📌 输出文件结构（run_download_gse.sh）：</strong>
+                            <pre class="code-block" style="margin-top:8px;">output/GSEXXXXX/
+├── GSEXXXXX_cleaned_expression.csv   # 表达矩阵（基因 × 样本；芯片/TPM/FPKM）
+├── GSEXXXXX_counts.csv               # Count 矩阵（仅 RNA-seq Count 时生成）
+├── GSEXXXXX_pdata.csv                # 样本元信息（用于 run_extract_groups.sh）
+├── GSEXXXXX_fdata.csv                # 探针/基因注释
+├── GSEXXXXX_data.qs2                 # 完整数据（qs2 格式，含 geo 对象）
+└── GSEXXXXX_report.txt               # 数据质量报告</pre>
+                        </div>
+                    </div>
+
+                    <div id="flow-sc" class="tab-content">
+                        <h4>单细胞 scRNA-seq 处理流程</h4>
+                        <ol class="steps">
+                            <li><strong>数据下载</strong>：从 GEO 下载 10X Genomics 格式文件（barcodes.tsv / features.tsv / matrix.mtx）或 h5 文件</li>
+                            <li><strong>创建 Seurat 对象</strong>：使用 <code>Read10X()</code> 或 <code>Read10X_h5()</code> 加载数据，创建 <code>CreateSeuratObject()</code></li>
+                            <li><strong>质控过滤</strong>：
+                                <ul>
+                                    <li>过滤低质量细胞（nFeature_RNA、nCount_RNA、percent.mt）</li>
+                                    <li>过滤双联体（DoubletFinder 等）</li>
+                                    <li>记录过滤前后细胞数量</li>
+                                </ul>
+                            </li>
+                            <li><strong>样本合并与整合</strong>：多样本需合并后做批次校正（如 Harmony / CCA / RPCA），记录整合方法和参数</li>
+                            <li><strong>分组标注</strong>：根据项目需求标注样本分组（疾病/对照），整理为元数据</li>
+                        </ol>
+                        <div class="warn-box">
+                            <strong>⚠️ 单细胞数据注意：</strong>单细胞分析流程与 bulk 差异较大，通常不输出标准 CSV 格式，而是保存为 <code>.qs2</code>（Seurat 对象，使用 <code>qs2</code> 包序列化）供后续分析模块使用。样本分组决策需在数据反馈阶段确认。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 输入数据格式标准 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">📋 输入数据格式标准 <span class="badge badge-required">必须遵守</span></h2>
+
+                <div class="danger-box">
+                    <strong>⚠️ 核心规则：</strong>
+                    所有输入文件统一使用 <span class="text-red">CSV 格式</span>；数值列必须是 <code>num</code> 或 <code>int</code> 类型；分类列必须是 <code>chr</code> 类型；<span class="text-red">不允许有 NA 值</span>。
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('fmt-expression', event)">
+                            <span class="tab-icon">📊</span> expression.csv
+                            <span class="badge badge-required">必需</span>
+                        </button>
+                        <button class="tab" onclick="showTab('fmt-group', event)">
+                            <span class="tab-icon">👥</span> group.csv
+                            <span class="badge badge-required">必需</span>
+                        </button>
+                        <button class="tab" onclick="showTab('fmt-gene', event)">
+                            <span class="tab-icon">🧬</span> gene.csv
+                            <span class="badge badge-required">必需</span>
+                        </button>
+                        <button class="tab" onclick="showTab('fmt-survival', event)">
+                            <span class="tab-icon">⏱️</span> survival.csv
+                            <span class="badge badge-optional">按需</span>
+                        </button>
+                        <button class="tab" onclick="showTab('fmt-riskscore', event)">
+                            <span class="tab-icon">📈</span> riskscore.csv
+                            <span class="badge badge-optional">按需</span>
+                        </button>
+                    </div>
+
+                    <div id="fmt-expression" class="tab-content active">
+                        <h4>📊 expression.csv — 表达矩阵</h4>
+                        <table class="matrix">
+                            <thead><tr><th>项目</th><th>要求</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>行</strong></td><td>基因（每行一个基因）</td></tr>
+                                <tr><td><strong>列</strong></td><td>样本（每列一个样本）</td></tr>
+                                <tr><td><strong>第一列</strong></td><td>列名为 <code>SYMBOL</code>（大写），内容为基因 Symbol</td></tr>
+                                <tr><td><strong>数据类型</strong></td><td>表达值为 <code>num</code> 或 <code>int</code>，可以存在负值</td></tr>
+                                <tr><td><strong>缺失值</strong></td><td class="text-red">不允许有 NA</td></tr>
+                                <tr><td><strong>基因物种</strong></td><td>人、小鼠、大鼠（暂时只适配这三种）</td></tr>
+                            </tbody>
+                        </table>
+                        <div class="lead-box">
+                            <strong>📌 示例结构：</strong>
+                        </div>
+                        <pre class="code-block">SYMBOL,Sample_01,Sample_02,Sample_03,Sample_04
+TP53,12.34,15.67,8.92,11.05
+BRCA1,6.78,9.23,4.56,7.89
+EGFR,20.11,18.45,22.67,19.33</pre>
+                        <div class="lead-box" style="margin-top:12px;">
+                            <strong>💡 数据验证（R）：</strong>
+                        </div>
+                        <pre class="code-block">library(data.table)
+expr &lt;- fread("expression.csv", data.table = FALSE)
+str(expr)
+# 'data.frame': N obs. of M variables:
+#  $ SYMBOL   : chr  "TP53" "BRCA1" "EGFR" ...
+#  $ Sample_01: num  12.34 6.78 20.11 ...
+#  $ Sample_02: num  15.67 9.23 18.45 ...
+
+# 检查 NA
+stopifnot(!any(is.na(expr)))</pre>
+                    </div>
+
+                    <div id="fmt-group" class="tab-content">
+                        <h4>👥 group.csv — 分组文件</h4>
+                        <table class="matrix">
+                            <thead><tr><th>列名</th><th>数据类型</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>sample</code></td><td><code>chr</code></td><td>样本名，必须与 expression.csv 的列名一致</td></tr>
+                                <tr><td><code>group</code></td><td><code>chr</code></td><td>分组标签（如 "Disease" / "Control"），内容可灵活变动</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code-block">sample,group
+Sample_01,Disease
+Sample_02,Control
+Sample_03,Disease
+Sample_04,Control</pre>
+                        <div class="warn-box">
+                            <strong>⚠️ 注意：</strong>group 列的值可以根据项目自定义（如 CA/Control、Tumor/Normal 等），但需保证一致性。<code>sample</code> 列值必须与 expression.csv 列名严格匹配。
+                        </div>
+                    </div>
+
+                    <div id="fmt-gene" class="tab-content">
+                        <h4>🧬 gene.csv — 基因列表</h4>
+                        <table class="matrix">
+                            <thead><tr><th>列名</th><th>数据类型</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>SYMBOL</code></td><td><code>chr</code></td><td>基因 Symbol，大写列名</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code-block">SYMBOL
+TP53
+BRCA1
+EGFR
+MYC
+KRAS</pre>
+                        <div class="lead-box">
+                            <strong>📌 基因物种支持：</strong>目前只适配人、小鼠、大鼠的基因。文件命名建议附带物种标识（如 <code>gene_v1_human.csv</code>，待定）。
+                        </div>
+                    </div>
+
+                    <div id="fmt-survival" class="tab-content">
+                        <h4>⏱️ survival.csv — 生存信息</h4>
+                        <table class="matrix">
+                            <thead><tr><th>列名</th><th>数据类型</th><th>约束</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>sample</code></td><td><code>chr</code></td><td>—</td><td>样本名</td></tr>
+                                <tr><td><code>OS.time</code></td><td><code>int</code></td><td class="text-red">必须 &gt; 0</td><td>总生存时间</td></tr>
+                                <tr><td><code>OS</code></td><td><code>int</code></td><td class="text-red">只能是 0 或 1</td><td>生存状态（0=存活, 1=死亡）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code-block">sample,OS.time,OS
+TCGA-02-0003-01A,144,1
+TCGA-02-0016-01A,2648,1
+TCGA-02-0033-01A,86,1
+TCGA-02-0038-01A,326,0</pre>
+                    </div>
+
+                    <div id="fmt-riskscore" class="tab-content">
+                        <h4>📈 riskscore.csv — 风险评分</h4>
+                        <table class="matrix">
+                            <thead><tr><th>列名</th><th>数据类型</th><th>约束</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><code>sample</code></td><td><code>chr</code></td><td>—</td><td>样本名</td></tr>
+                                <tr><td><code>OS.time</code></td><td><code>int</code></td><td>必须 &gt; 0</td><td>总生存时间</td></tr>
+                                <tr><td><code>OS</code></td><td><code>int</code></td><td>只能是 0 或 1</td><td>生存状态</td></tr>
+                                <tr><td><code>RS</code></td><td><code>num</code></td><td>可以是负值</td><td>风险评分</td></tr>
+                                <tr><td><code>group</code></td><td><code>chr</code></td><td class="text-red">只能是 "High" 或 "Low"</td><td>风险分组</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code-block">sample,OS.time,OS,RS,group
+TCGA-02-0003-01A,144,1,169.4,High
+TCGA-02-0016-01A,2648,1,81.6,High
+TCGA-02-0033-01A,86,1,152.8,High
+TCGA-02-0038-01A,326,0,-12.3,Low</pre>
+                        <div class="lead-box">
+                            <strong>💡 数据验证（R）：</strong>
+                        </div>
+                        <pre class="code-block">library(data.table)
+rs_dat &lt;- fread("riskscore.csv", data.table = FALSE)
+str(rs_dat)
+# 'data.frame': 757 obs. of 5 variables:
+#  $ sample : chr  "TCGA-02-0003-01A" ...
+#  $ OS.time: int  144 2648 86 ...
+#  $ OS     : int  1 1 1 ...
+#  $ RS     : num  169.4 81.6 152.8 ...
+#  $ group  : chr  "High" "High" "High" ...</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 数据处理步骤详解 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">🔧 数据处理步骤详解</h2>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('proc-download', event)">
+                            <span class="tab-icon">📥</span> 1. 数据下载
+                        </button>
+                        <button class="tab" onclick="showTab('proc-clean', event)">
+                            <span class="tab-icon">🧹</span> 2. 清洗预处理
+                        </button>
+                        <button class="tab" onclick="showTab('proc-convert', event)">
+                            <span class="tab-icon">🔄</span> 3. 格式转换
+                        </button>
+                        <button class="tab" onclick="showTab('proc-group', event)">
+                            <span class="tab-icon">👥</span> 4. 分组决策
+                        </button>
+                    </div>
+
+                    <div id="proc-download" class="tab-content active">
+                        <h4>📥 Step 1：GEO 数据下载（使用 run_download_gse.sh）</h4>
+
+                        <div class="lead-box">
+                            <strong>📌 工具位置：</strong><code>/media/share/secure/gse_download_and_cleaning/run_download_gse.sh</code>
+                        </div>
+
+                        <pre class="code-block"># ---- 单个 GSE 数据集下载 ----
+run_download_gse.sh -g GSE65204 -o /media/share/output/GSE65204
+
+# ---- 使用代理下载 ----
+run_download_gse.sh -g GSE65204 -o /media/share/output/GSE65204 --proxy
+
+# ---- RNA-seq 数据，使用 Counts 而非 TPM ----
+run_download_gse.sh -g GSE126848 -o /media/share/output/GSE126848 --no-tpm
+
+# ---- 跳过附件（附件列名不标准时）----
+run_download_gse.sh -g GSE19187 -o /media/share/output/GSE19187 --skip-suppl
+
+# ---- 批量下载（GSE ID 列表文件，每行一个）----
+run_download_gse.sh -l config/gse_list.txt -o /media/share/output/batch -t 8
+
+# ---- 强制重新处理（保留下载缓存，只重跑分析）----
+run_download_gse.sh -g GSE65204 -o /media/share/output/GSE65204 --force</pre>
+
+                        <div class="lead-box">
+                            <strong>📌 参数说明：</strong>
+                            <table class="matrix" style="margin-top:8px;">
+                                <thead><tr><th>参数</th><th>说明</th><th>默认值</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>-g / --gse</code></td><td>单个 GSE 编号</td><td>—</td></tr>
+                                    <tr><td><code>-l / --list</code></td><td>GSE 编号列表文件（与 -g 互斥）</td><td>—</td></tr>
+                                    <tr><td><code>-o / --output</code></td><td>输出目录</td><td>—</td></tr>
+                                    <tr><td><code>--no-geochina</code></td><td>不使用 geoChina 镜像</td><td>FALSE</td></tr>
+                                    <tr><td><code>--no-tpm</code></td><td>RNA-seq 用 Counts 而非 TPM</td><td>FALSE</td></tr>
+                                    <tr><td><code>--skip-gpl</code></td><td>跳过 GPL 注释，使用探针数据</td><td>FALSE</td></tr>
+                                    <tr><td><code>--skip-suppl</code></td><td>跳过 GEO 附件，用 NCBI TPM/Counts</td><td>FALSE</td></tr>
+                                    <tr><td><code>--symbol-agg-method</code></td><td>SYMBOL 聚合: mean / max_row_sum</td><td>mean</td></tr>
+                                    <tr><td><code>--force</code></td><td>强制重新处理（保留缓存）</td><td>FALSE</td></tr>
+                                    <tr><td><code>--proxy</code></td><td>使用代理 http://127.0.0.1:7890</td><td>—</td></tr>
+                                    <tr><td><code>-t / --threads</code></td><td>并行线程数</td><td>4</td></tr>
+                                    <tr><td><code>--timeout</code></td><td>操作超时（秒）</td><td>1800</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h4 style="margin-top:24px;">10X 单细胞数据（手动处理）</h4>
+                        <pre class="code-block"># 单细胞数据目前需手动处理（下载工具暂不支持）
+# 通常从 GEO 补充文件下载 barcodes.tsv.gz + features.tsv.gz + matrix.mtx.gz
+library(Seurat)
+data_10x &lt;- Read10X(data.dir = "raw_data/GSMXXXXXXX/")
+# 或下载 .h5 文件
+data_h5 &lt;- Read10X_h5("raw_data/GSMXXXXXXX_filtered_feature_bc_matrix.h5")</pre>
+                    </div>
+
+                    <div id="proc-clean" class="tab-content">
+                        <h4>🧹 Step 2：分组信息提取（使用 run_extract_groups.sh）</h4>
+
+                        <div class="lead-box">
+                            <strong>📌 工具位置：</strong><code>/media/share/secure/gse_download_and_cleaning/run_extract_groups.sh</code>
+                        </div>
+
+                        <strong>推荐工作流（三步）：</strong>
+
+                        <pre class="code-block"># ─── 第 1 步：浏览可用分组列（只看不写）───
+run_extract_groups.sh -i output/GSE65204/GSE65204_pdata.csv
+# → 自动检测所有可能的分组列，打印每列的唯一值和样本数
+
+# ─── 第 2 步：选定列 + 映射/重命名分组（确认结果正确再输出）───
+run_extract_groups.sh -i output/GSE65204/GSE65204_pdata.csv \
+    -c "asthma:ch1" \
+    --map "TRUE=CA,FALSE=Control"
+# → 屏幕预览映射结果，不加 -o 不会写文件
+
+# ─── 第 3 步：确认无误后输出到文件 ───
+run_extract_groups.sh -i output/GSE65204/GSE65204_pdata.csv \
+    -c "asthma:ch1" \
+    --map "TRUE=CA,FALSE=Control" \
+    -o output/GSE65204/groups.csv</pre>
+
+                        <div class="lead-box">
+                            <strong>📌 参数说明：</strong>
+                            <table class="matrix" style="margin-top:8px;">
+                                <thead><tr><th>参数</th><th>说明</th><th>默认值</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>-i / --input</code></td><td>pdata.csv 文件路径</td><td>—</td></tr>
+                                    <tr><td><code>-c / --column</code></td><td>指定分组列名（如 "disease:ch1"）</td><td>自动检测</td></tr>
+                                    <tr><td><code>--map</code></td><td>分组映射："原值1=新值1,原值2=新值2"</td><td>—</td></tr>
+                                    <tr><td><code>--mapped-only</code></td><td>仅保留被映射的样本</td><td>TRUE</td></tr>
+                                    <tr><td><code>-o / --output</code></td><td>输出文件（不指定则仅预览）</td><td>—</td></tr>
+                                    <tr><td><code>--show-values</code></td><td>显示每个分组列的唯一值</td><td>FALSE</td></tr>
+                                    <tr><td><code>--max-unique</code></td><td>分组列最大唯一值数量</td><td>10</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="warn-box" style="margin-top:16px;">
+                            <strong>⚠️ 注意：</strong><code>run_download_gse.sh</code> 已自动完成探针→SYMBOL 映射、log2 检测等预处理，无需手动处理。这一步只需提取分组信息。
+                        </div>
+                    </div>
+
+                    <div id="proc-convert" class="tab-content">
+                        <h4>🔄 Step 3：格式转换为标准输入</h4>
+                        <p>下载工具输出的 <code>*_cleaned_expression.csv</code> 和 <code>groups.csv</code> 需转换为标准输入格式：</p>
+                        <pre class="code-block">library(data.table)
+
+# 1. expression.csv — 整理列名，确保第一列为 SYMBOL
+expr &lt;- fread("output/GSEXXXXX/GSEXXXXX_cleaned_expression.csv", data.table = FALSE)
+colnames(expr)[1] &lt;- "SYMBOL"
+fwrite(expr, "expression.csv")
+
+# 2. group.csv — 从 groups.csv 整理为标准两列格式
+groups &lt;- fread("output/GSEXXXXX/groups.csv", data.table = FALSE)
+# 确保只有 sample + group 两列
+group_std &lt;- data.frame(
+    sample = groups$geo_accession,    # 或 groups$sample_id，按实际列名
+    group  = groups$group             # run_extract_groups.sh 输出的分组列
+)
+fwrite(group_std, "group.csv")
+
+# 3. gene.csv（如有特定基因集）
+gene_df &lt;- data.frame(SYMBOL = target_genes)
+fwrite(gene_df, "gene.csv")
+
+# ─── 交叉校验 ───
+expr_samples  &lt;- colnames(expr)[-1]
+group_samples &lt;- group_std$sample
+stopifnot("sample 不匹配" = length(setdiff(group_samples, expr_samples)) == 0)</pre>
+
+                        <div class="danger-box">
+                            <strong>⚠️ 输出前必须检查：</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li>所有数值列确认为 <code>numeric</code> / <code>integer</code>，不能是字符串</li>
+                                <li>所有分类列确认为 <code>character</code></li>
+                                <li>检查并移除所有 NA 值</li>
+                                <li>检查 <code>group.csv</code> 的 sample 列与 <code>expression.csv</code> 列名完全匹配</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="proc-group" class="tab-content">
+                        <h4>👥 Step 4：分组决策记录</h4>
+                        <p>数据反馈文件（Excel）通常会给出分组建议，需要在此阶段确认和记录：</p>
+
+                        <table class="matrix" style="margin-top:14px;">
+                            <thead><tr><th>决策项</th><th>示例</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>哪些样本作为疾病组</strong></td><td>仅哮喘样本 / 包含合并症样本</td><td>避免混杂因素干扰，需客户确认</td></tr>
+                                <tr><td><strong>哪些样本作为对照组</strong></td><td>健康对照 / 正常组织</td><td>确保组间有可比性</td></tr>
+                                <tr><td><strong>排除的样本</strong></td><td>质量不达标 / 不相关亚型</td><td>记录排除原因</td></tr>
+                                <tr><td><strong>多数据集验证</strong></td><td>训练集 GSE_A + 验证集 GSE_B</td><td>明确各数据集的用途</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="success-box" style="margin-top:14px;">
+                            <strong>✅ 最佳实践：</strong>在初步处理日志中详细记录分组决策的依据和最终方案，便于后续追溯。如果数据反馈文件中有多个分组方案可选，务必等待客户确认后再处理。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 标准化模块执行命令 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">🖥️ 标准化模块执行命令 <span class="badge badge-required">核心</span></h2>
+
+                <div class="lead-box">
+                    <strong>📌 命令规范：</strong>所有模块通过顶层 <code>run.sh</code> 统一调用。命令执行前需确保输入文件已通过校验，执行后检查输出文件和日志。
+                </div>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('cmd-rawdata', event)">
+                            <span class="tab-icon">📥</span> RawData
+                        </button>
+                        <button class="tab" onclick="showTab('cmd-degs', event)">
+                            <span class="tab-icon">📊</span> DEGs
+                        </button>
+                        <button class="tab" onclick="showTab('cmd-enrich', event)">
+                            <span class="tab-icon">🧬</span> 富集分析
+                        </button>
+                        <button class="tab" onclick="showTab('cmd-combine', event)">
+                            <span class="tab-icon">🔗</span> Combine 合并
+                        </button>
+                        <button class="tab" onclick="showTab('cmd-template', event)">
+                            <span class="tab-icon">📋</span> 命令模板
+                        </button>
+                    </div>
+
+                    <div id="cmd-rawdata" class="tab-content active">
+                        <h4>📥 RawData — GEO 数据下载与清洗</h4>
+                        <pre class="code-block"># ---- 典型工作流（两步完成）----
+
+# Step 1: 下载并清洗表达矩阵
+run_download_gse.sh -g GSE65204 -o /media/share/output/GSE65204
+
+# Step 2: 提取分组信息（先浏览 → 再映射 → 最后输出）
+run_extract_groups.sh -i /media/share/output/GSE65204/GSE65204_pdata.csv
+run_extract_groups.sh -i /media/share/output/GSE65204/GSE65204_pdata.csv \
+    -c "asthma:ch1" --map "TRUE=Disease,FALSE=Control"
+run_extract_groups.sh -i /media/share/output/GSE65204/GSE65204_pdata.csv \
+    -c "asthma:ch1" --map "TRUE=Disease,FALSE=Control" \
+    -o /media/share/output/GSE65204/groups.csv
+
+# ---- 常用选项组合 ----
+
+# RNA-seq 数据用 Count
+run_download_gse.sh -g GSE126848 -o output/GSE126848 --no-tpm
+
+# 附件列名不标准，跳过附件
+run_download_gse.sh -g GSE19187 -o output/GSE19187 --skip-suppl
+
+# 使用代理 + 8 线程批量下载
+run_download_gse.sh -l config/gse_list.txt -o output/ --proxy -t 8
+
+# 强制重新处理（保留下载缓存）
+run_download_gse.sh -g GSE65204 -o output/GSE65204 --force</pre>
+
+                        <div class="lead-box">
+                            <strong>📌 输出文件：</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li><code>GSEXXXXX_cleaned_expression.csv</code> — 清洗后的表达矩阵（行=基因, 列=样本）</li>
+                                <li><code>GSEXXXXX_counts.csv</code> — Count 矩阵（仅 RNA-seq 时生成）</li>
+                                <li><code>GSEXXXXX_pdata.csv</code> — 样本元信息</li>
+                                <li><code>GSEXXXXX_fdata.csv</code> — 探针/基因注释</li>
+                                <li><code>GSEXXXXX_report.txt</code> — 数据质量报告</li>
+                                <li><code>groups.csv</code> — 分组信息（extract_groups 输出）</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="cmd-degs" class="tab-content">
+                        <h4>📊 DEGs 模块 — 差异表达分析</h4>
+                        <pre class="code-block"># ---- 基础用法 ----
+bash run.sh \
+    --module DEGs \
+    --expression expression.csv \
+    --group group.csv \
+    --method DESeq2 \
+    --pvalue 0.05 \
+    --log2fc 1 \
+    --output result/DEGs/
+
+# ---- 仅重新作图（不重跑计算）----
+bash run.sh \
+    --module DEGs \
+    --plot-only \
+    --output result/DEGs/
+
+# ---- 参数说明 ----
+# --method     : DESeq2 / edgeR / limma（根据数据类型选择）
+# --pvalue     : 显著性阈值
+# --log2fc     : log2 倍数变化阈值
+# --plot-only  : 仅重新生成图表</pre>
+                    </div>
+
+                    <div id="cmd-enrich" class="tab-content">
+                        <h4>🧬 富集分析模块</h4>
+                        <pre class="code-block"># ---- GO / KEGG 富集分析 ----
+bash run.sh \
+    --module Enrichment \
+    --gene gene.csv \
+    --species human \
+    --type GO,KEGG \
+    --pvalue 0.05 \
+    --output result/Enrichment/
+
+# ---- GSEA 基因集富集分析 ----
+bash run.sh \
+    --module GSEA \
+    --expression expression.csv \
+    --group group.csv \
+    --gene-sets MSigDB \
+    --output result/GSEA/</pre>
+                    </div>
+
+                    <div id="cmd-combine" class="tab-content">
+                        <h4>🔗 Combine 模块 — 多数据集合并与批次效应校正</h4>
+
+                        <div class="lead-box">
+                            <strong>📌 工具位置：</strong><code>/media/share/secure/Combine/run_combine.sh</code><br>
+                            使用 ComBat（sva 包）对多个数据集进行批次效应校正，输出合并后的表达矩阵和分组文件。
+                        </div>
+
+                        <pre class="code-block"># ---- 合并两个数据集 ----
+bash run_combine.sh \
+    -d /path/GSE65204_dat.csv,/path/GSE19187_dat.csv \
+    -g /path/GSE65204_group.csv,/path/GSE19187_group.csv \
+    -n GSE65204,GSE19187 \
+    -o /media/share/output/project/combine
+
+# ---- 自定义输出前缀名 ----
+bash run_combine.sh \
+    -d dat1.csv,dat2.csv,dat3.csv \
+    -g group1.csv,group2.csv,group3.csv \
+    -n Dataset1,Dataset2,Dataset3 \
+    --output-name merged \
+    -o output/combine</pre>
+
+                        <div class="lead-box" style="margin-top:14px;">
+                            <strong>📌 参数说明：</strong>
+                            <table class="matrix" style="margin-top:8px;">
+                                <thead><tr><th>参数</th><th>说明</th><th>默认值</th></tr></thead>
+                                <tbody>
+                                    <tr><td><code>-d / --data-files</code></td><td>表达矩阵 CSV，逗号分隔（至少 2 个）</td><td>—</td></tr>
+                                    <tr><td><code>-g / --group-files</code></td><td>对应的分组 CSV，逗号分隔</td><td>—</td></tr>
+                                    <tr><td><code>-n / --dataset-names</code></td><td>数据集名称，逗号分隔</td><td>文件名</td></tr>
+                                    <tr><td><code>-o / --output-dir</code></td><td>输出目录</td><td>./output</td></tr>
+                                    <tr><td><code>--output-name</code></td><td>输出文件前缀名</td><td>combat</td></tr>
+                                    <tr><td><code>--gene-col</code></td><td>基因列名</td><td>SYMBOL</td></tr>
+                                    <tr><td><code>-w / --width</code></td><td>图片宽度（英寸）</td><td>9</td></tr>
+                                    <tr><td><code>--height</code></td><td>图片高度（英寸）</td><td>7</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="lead-box" style="margin-top:14px;">
+                            <strong>📌 输出文件：</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li><code>combat.dat.csv</code> — 校正后表达矩阵（按组排序）</li>
+                                <li><code>combat.group.csv</code> — 合并后分组文件（含 dataset 列）</li>
+                                <li><code>00.dataset_info.csv</code> — 数据集统计信息</li>
+                                <li><code>01~03.*</code> — 校正前 PCA + 箱线图（pdf + png）</li>
+                                <li><code>04~06.*</code> — 校正后 PCA + 箱线图（pdf + png）</li>
+                                <li><code>combine_report_*.docx</code> — 自动生成的分析报告</li>
+                            </ul>
+                        </div>
+
+                        <div class="warn-box" style="margin-top:14px;">
+                            <strong>⚠️ 使用前提：</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li>各数据集已通过 <code>run_download_gse.sh</code> 下载并清洗完成</li>
+                                <li>各数据集的表达矩阵第一列为 <code>SYMBOL</code>，分组文件为标准 sample + group 格式</li>
+                                <li>校正后检查 PCA 图：批次效应应消除，但组间差异保留</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="cmd-template" class="tab-content">
+                        <h4>📋 命令执行记录模板</h4>
+                        <p>每次执行标准化模块时，建议按以下格式记录到项目日志中：</p>
+                        <pre class="code-block"># ============================================================
+# 项目编号: XXXXXXX
+# 执行日期: YYYY-MM-DD HH:MM:SS
+# 执行人员: XXX
+# ============================================================
+
+# ---- Step 1: GEO 数据下载 ----
+# 数据集: GSEXXXXX
+# 平台: GPLXXXXX
+run_download_gse.sh -g GSEXXXXX -o /media/share/output/GSEXXXXX
+# 状态: ✅ 完成 / ❌ 失败
+# 样本数: XX | 基因数: XXXXX
+# 备注: 
+
+# ---- Step 2: 分组提取 ----
+# 分组列: "disease:ch1"
+# 映射规则: "HC=Control,Disease=Disease"
+run_extract_groups.sh -i output/GSEXXXXX/GSEXXXXX_pdata.csv \
+    -c "disease:ch1" \
+    --map "HC=Control,Disease=Disease" \
+    -o output/GSEXXXXX/groups.csv
+# 状态: ✅ 完成 / ❌ 失败
+# 分组: XX 例 Disease + XX 例 Control
+# 备注: 
+
+# ---- Step 3: 格式转换 ----
+# 输入: GSEXXXXX_cleaned_expression.csv + groups.csv
+# 输出: expression.csv + group.csv + gene.csv
+# 状态: ✅ 校验通过 / ❌ 校验失败
+# 备注: 
+
+# ---- Step 4: DEGs 分析 ----
+# 方法: DESeq2 / limma
+# 阈值: p&lt;0.05, |log2FC|&gt;1
+bash run.sh --module DEGs --expression expression.csv --group group.csv --output result/DEGs/
+# 状态: ✅ 完成 / ❌ 失败
+# 上调基因: XXX 个 | 下调基因: XXX 个
+# 备注: 
+
+# ---- Step 5: 富集分析 ----
+bash run.sh --module Enrichment --gene gene.csv --output result/Enrichment/
+# 状态: ✅ 完成 / ❌ 失败
+# 备注: </pre>
+                        <div class="success-box">
+                            <strong>✅ 为什么要记录命令？</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li><strong>可复现性</strong>：任何人都能用同样的命令重现结果</li>
+                                <li><strong>追溯性</strong>：出问题时快速定位参数和输入</li>
+                                <li><strong>交付标准</strong>：命令记录是项目交付的一部分</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 数据校验清单 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">✅ 数据校验清单</h2>
+
+                <div class="lead-box" style="background:#ecfdf5; border-color:#6ee7b7;">
+                    <strong>✨ 校验原则：</strong>所有输入文件在进入分析模块前必须通过校验。校验结果输出为结构化格式（通过 / 失败 + 错误原因 + 修正建议）。
+                </div>
+
+                <h3 style="margin-top:18px; font-size:1.1rem;">通用校验项</h3>
+                <div class="check-grid">
+                    <div class="check-item">
+                        <span class="icon">📄</span>
+                        <div class="desc"><strong>文件格式</strong><br>必须是 CSV 格式，UTF-8 编码（无 BOM）</div>
+                    </div>
+                    <div class="check-item">
+                        <span class="icon">🚫</span>
+                        <div class="desc"><strong>缺失值</strong><br>不允许任何 NA / NaN / 空值</div>
+                    </div>
+                    <div class="check-item">
+                        <span class="icon">🔢</span>
+                        <div class="desc"><strong>数据类型</strong><br>数值列为 num/int，分类列为 chr</div>
+                    </div>
+                    <div class="check-item">
+                        <span class="icon">📝</span>
+                        <div class="desc"><strong>列名规范</strong><br>SYMBOL 大写，sample/group 小写</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top:24px; font-size:1.1rem;">文件特定校验项</h3>
+                <table class="matrix" style="margin-top:12px;">
+                    <thead><tr><th>文件</th><th>校验项</th><th>规则</th><th>自动修正</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="4"><code>expression.csv</code></td>
+                            <td>第一列名</td>
+                            <td>必须为 <code>SYMBOL</code></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>基因名格式</td>
+                            <td>符合人/鼠/大鼠基因命名规范</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>重复基因</td>
+                            <td>不允许重复的 SYMBOL</td>
+                            <td>取均值（默认）或行和最大值</td>
+                        </tr>
+                        <tr>
+                            <td>log2 尺度检测</td>
+                            <td>最大值 &gt; 25 提示需要 log2 转换</td>
+                            <td>log2(x+1)</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2"><code>group.csv</code></td>
+                            <td>列名</td>
+                            <td>必须包含 <code>sample</code> 和 <code>group</code></td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>样本匹配</td>
+                            <td>sample 值必须与 expression.csv 列名一致</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2"><code>survival.csv</code></td>
+                            <td>OS 值域</td>
+                            <td>OS 列只能是 0 或 1</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td>OS.time 值域</td>
+                            <td>OS.time 必须 &gt; 0</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td><code>riskscore.csv</code></td>
+                            <td>group 值域</td>
+                            <td>group 列只能是 "High" 或 "Low"</td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top:24px; font-size:1.1rem;">校验脚本示例</h3>
+                <pre class="code-block"># ---- R: 数据校验函数 ----
+validate_input &lt;- function(file_path, file_type = c("expression", "group", "gene",
+                                                    "survival", "riskscore")) {
+  file_type &lt;- match.arg(file_type)
+  dat &lt;- data.table::fread(file_path, data.table = FALSE)
+  errors &lt;- character()
+  warnings &lt;- character()
+
+  # ---- 通用校验 ----
+  if (any(is.na(dat))) {
+    na_cols &lt;- colnames(dat)[colSums(is.na(dat)) &gt; 0]
+    errors &lt;- c(errors, paste0("发现 NA 值，涉及列: ", paste(na_cols, collapse = ", ")))
+  }
+
+  # ---- expression 专用 ----
+  if (file_type == "expression") {
+    if (colnames(dat)[1] != "SYMBOL")
+      errors &lt;- c(errors, "第一列名必须为 SYMBOL")
+    if (any(duplicated(dat$SYMBOL)))
+      warnings &lt;- c(warnings, paste0("存在 ", sum(duplicated(dat$SYMBOL)),
+                                      " 个重复基因，建议取均值聚合"))
+    max_val &lt;- max(dat[, -1], na.rm = TRUE)
+    if (max_val &gt; 25)
+      warnings &lt;- c(warnings, paste0("最大表达值 = ", round(max_val, 2),
+                                      "，可能需要 log2 转换"))
+  }
+
+  # ---- survival 专用 ----
+  if (file_type == "survival") {
+    if (!all(dat$OS %in% c(0, 1)))
+      errors &lt;- c(errors, "OS 列只能包含 0 或 1")
+    if (any(dat$OS.time &lt;= 0))
+      errors &lt;- c(errors, "OS.time 必须 &gt; 0")
+  }
+
+  # ---- riskscore 专用 ----
+  if (file_type == "riskscore") {
+    if (!all(dat$group %in% c("High", "Low")))
+      errors &lt;- c(errors, 'group 列只能是 "High" 或 "Low"')
+  }
+
+  # ---- 输出结果 ----
+  list(
+    status   = if (length(errors) == 0) "PASS" else "FAIL",
+    errors   = errors,
+    warnings = warnings,
+    summary  = paste0("行数: ", nrow(dat), " | 列数: ", ncol(dat))
+  )
+}
+
+# ---- 使用示例 ----
+result &lt;- validate_input("expression.csv", "expression")
+cat("[", result$status, "] ", result$summary, "\n")
+if (length(result$errors) &gt; 0)   cat("  错误: ", paste(result$errors, collapse = "\n         "), "\n")
+if (length(result$warnings) &gt; 0) cat("  警告: ", paste(result$warnings, collapse = "\n         "), "\n")</pre>
+
+                <div class="lead-box" style="margin-top:16px;">
+                    <strong>📌 校验输出格式示例：</strong>
+                </div>
+                <pre class="code-block">[PASS] expression.csv — 行数: 18500 | 列数: 70
+  警告: 最大表达值 = 14.82，数据已处于 log2 尺度
+
+[FAIL] group.csv — 行数: 69 | 列数: 2
+  错误: sample 值与 expression.csv 列名不匹配（缺少: GSM1589570）
+  建议: 检查 group.csv 是否遗漏了样本，或 expression.csv 列头有多余空格
+
+[PASS] survival.csv — 行数: 69 | 列数: 3
+  无警告</pre>
+            </div>
+        </div>
+
+        <!-- ========== 常见问题与注意事项 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">⚠️ 常见问题与注意事项</h2>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('faq-log2', event)">
+                            <span class="tab-icon">📐</span> log2 转换
+                        </button>
+                        <button class="tab" onclick="showTab('faq-probe', event)">
+                            <span class="tab-icon">🔬</span> 探针映射
+                        </button>
+                        <button class="tab" onclick="showTab('faq-batch', event)">
+                            <span class="tab-icon">🔄</span> 批次效应
+                        </button>
+                        <button class="tab" onclick="showTab('faq-sample', event)">
+                            <span class="tab-icon">👥</span> 样本匹配
+                        </button>
+                        <button class="tab" onclick="showTab('faq-sc', event)">
+                            <span class="tab-icon">🔬</span> 单细胞特有
+                        </button>
+                    </div>
+
+                    <div id="faq-log2" class="tab-content active">
+                        <h4>📐 log2 转换判断</h4>
+                        <table class="matrix">
+                            <thead><tr><th>场景</th><th>最大值</th><th>操作</th></tr></thead>
+                            <tbody>
+                                <tr><td>微阵列（已标准化）</td><td>&lt; 25</td><td>无需转换，已在 log2 尺度</td></tr>
+                                <tr><td>微阵列（原始信号值）</td><td>&gt; 25</td><td>执行 <code>log2(x + 1)</code></td></tr>
+                                <tr><td>RNA-seq count</td><td>通常很大</td><td>保留原始 count，由 DESeq2/edgeR 处理</td></tr>
+                                <tr><td>RNA-seq TPM/FPKM</td><td>视情况</td><td>如用于机器学习，可 <code>log2(x + 1)</code></td></tr>
+                            </tbody>
+                        </table>
+                        <div class="warn-box">
+                            <strong>⚠️ 关键警告：</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li>DESeq2 <span class="text-red">禁止输入已 log 转换的数据</span>，只接受原始 count</li>
+                                <li>微阵列数据通常已由平台标准化过，先确认再决定是否转换</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="faq-probe" class="tab-content">
+                        <h4>🔬 探针/ID 映射注意事项</h4>
+                        <ul>
+                            <li><strong>同一基因多探针</strong>：默认取<span class="text-red">均值（mean）</span>，可通过 <code>--symbol-agg-method max_row_sum</code> 改为取行和最大值</li>
+                            <li><strong>无法映射的探针</strong>：直接丢弃（不保留无 Symbol 的探针）</li>
+                            <li><strong>GPL 注释文件字段名</strong>：不同平台的列名可能不同（如 "Gene Symbol"、"gene_assignment"、"Symbol"），需手动确认</li>
+                            <li><strong>Ensembl → Symbol</strong>：使用 <code>org.Hs.eg.db</code>（人）/ <code>org.Mm.eg.db</code>（鼠）/ <code>org.Rn.eg.db</code>（大鼠）</li>
+                        </ul>
+                    </div>
+
+                    <div id="faq-batch" class="tab-content">
+                        <h4>🔄 批次效应处理</h4>
+                        <ul>
+                            <li><strong>多数据集合并</strong>：使用 <code>run_combine.sh</code> 一键完成 ComBat 批次校正，自动生成校正前后 PCA/箱线图对比</li>
+                            <li><strong>RNA-seq + 微阵列混合</strong>：通常不建议直接合并，建议作为独立验证集使用</li>
+                        </ul>
+                        <div class="danger-box">
+                            <strong>⚠️ 批次校正注意：</strong>
+                            <ul style="margin-top:8px; padding-left:20px;">
+                                <li>校正前必须确保各批次的分组比例相近，避免批次与分组混淆</li>
+                                <li>校正后检查 PCA 图（<code>04.pca_after_dataset.*</code>），确认批次效应已消除但组间差异保留</li>
+                                <li>批次校正参数和方法已自动写入日志和报告</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="faq-sample" class="tab-content">
+                        <h4>👥 样本名匹配</h4>
+                        <ul>
+                            <li><strong>常见问题</strong>：expression.csv 列名与 group.csv 的 sample 列不一致</li>
+                            <li><strong>原因</strong>：GEO 下载后列名可能带版本号（<code>.1</code>）、空格或特殊字符</li>
+                            <li><strong>检查方法</strong>：
+                        <pre class="code-block"># 快速检查样本名匹配
+expr_samples &lt;- colnames(fread("expression.csv", nrows = 0))[-1]
+group_samples &lt;- fread("group.csv")$sample
+
+# 在 expression 但不在 group 中的样本
+setdiff(expr_samples, group_samples)
+
+# 在 group 但不在 expression 中的样本
+setdiff(group_samples, expr_samples)</pre>
+                            </li>
+                            <li><strong>修正方法</strong>：统一使用 GEO accession（如 GSM1589502）作为样本名</li>
+                        </ul>
+                    </div>
+
+                    <div id="faq-sc" class="tab-content">
+                        <h4>🔬 单细胞数据特有问题</h4>
+                        <ul>
+                            <li><strong>样本分组决策</strong>：单细胞数据集中可能包含多种亚型（如哮喘 + 合并感染），需在数据反馈阶段明确哪些样本纳入分析</li>
+                            <li><strong>数据格式</strong>：单细胞不输出 expression.csv 格式，而是保存为 Seurat 对象（<code>.qs2</code> 格式，使用 <code>qs2::qs_save()</code>）</li>
+                            <li><strong>质控阈值</strong>：需根据数据集实际情况调整（<code>nFeature_RNA</code>、<code>percent.mt</code> 等），不能使用固定阈值</li>
+                            <li><strong>整合方法选择</strong>：
+                                <table class="matrix" style="margin-top:8px;">
+                                    <thead><tr><th>方法</th><th>适用场景</th><th>速度</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>Harmony</td><td>大多数场景，性能均衡</td><td>快</td></tr>
+                                        <tr><td>CCA</td><td>批次间差异大</td><td>慢</td></tr>
+                                        <tr><td>RPCA</td><td>大数据集，内存友好</td><td>中</td></tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 输入文件汇总表 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">📦 输入文件汇总与交付清单</h2>
+
+                <table class="matrix">
+                    <thead>
+                        <tr>
+                            <th>文件名</th>
+                            <th>必需性</th>
+                            <th>关键列</th>
+                            <th>数据类型</th>
+                            <th>特殊约束</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>expression.csv</code></td>
+                            <td><span class="badge badge-required" style="margin:0;">必需</span></td>
+                            <td>SYMBOL + 样本列</td>
+                            <td>chr + num/int</td>
+                            <td>无 NA，无重复基因</td>
+                        </tr>
+                        <tr>
+                            <td><code>group.csv</code></td>
+                            <td><span class="badge badge-required" style="margin:0;">必需</span></td>
+                            <td>sample, group</td>
+                            <td>chr, chr</td>
+                            <td>sample 与 expression 列名匹配</td>
+                        </tr>
+                        <tr>
+                            <td><code>gene.csv</code></td>
+                            <td><span class="badge badge-required" style="margin:0;">必需</span></td>
+                            <td>SYMBOL</td>
+                            <td>chr</td>
+                            <td>人/鼠/大鼠基因</td>
+                        </tr>
+                        <tr>
+                            <td><code>survival.csv</code></td>
+                            <td><span class="badge badge-optional" style="margin:0;">按需</span></td>
+                            <td>sample, OS.time, OS</td>
+                            <td>chr, int, int</td>
+                            <td>OS∈{0,1}，OS.time&gt;0</td>
+                        </tr>
+                        <tr>
+                            <td><code>riskscore.csv</code></td>
+                            <td><span class="badge badge-optional" style="margin:0;">按需</span></td>
+                            <td>sample, OS.time, OS, RS, group</td>
+                            <td>chr, int, int, num, chr</td>
+                            <td>group∈{"High","Low"}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="success-box" style="margin-top:16px;">
+                    <strong>✅ 交付前检查清单：</strong>
+                    <ul style="margin-top:8px; padding-left:20px;">
+                        <li>☐ 所有必需文件已生成且通过校验</li>
+                        <li>☐ 数据处理日志已保存到 <code>logs/</code> 目录</li>
+                        <li>☐ 分组决策已记录（含数据反馈文件中的建议和最终方案）</li>
+                        <li>☐ 标准化模块执行命令已记录</li>
+                        <li>☐ 各文件的 sample 列/列名已交叉验证一致</li>
+                        <li>☐ 如有多个数据集，各数据集用途已明确（训练/验证/独立验证）</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <p class="footer-note"><strong>版本:</strong> v1.0 | 更新日期: 2026-04-01 | 关联文档：《生信开发模块文件与输出规范》</p>
+
+    </div>
+
+    <script>
+        function showTab(id, event) {
+            var container = event.target.closest('.tabs-container');
+            var tabs = container.querySelectorAll('.tab');
+            var contents = container.querySelectorAll('.tab-content');
+            for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+            for (var j = 0; j < contents.length; j++) contents[j].classList.remove('active');
+            event.target.closest('.tab').classList.add('active');
+            document.getElementById(id).classList.add('active');
+        }
+    </script>
+</body>
+</html>
