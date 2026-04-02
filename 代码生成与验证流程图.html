@@ -46,8 +46,8 @@
         }
 
         .container {
-            max-width: 1180px;
-            margin: 0 auto;
+            max-width: 1100px;
+            margin-left: 280px;
             padding: 32px 20px 56px;
         }
 
@@ -306,18 +306,71 @@
 
         /* Responsive */
         @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+            .container { margin-left: 0; }
             .card.two-col, .card.three-col { grid-column: span 12; }
             .hero { padding: 24px; }
             .branches { grid-template-columns: 1fr; }
         }
 
         @media print {
+            .sidebar { display: none !important; }
+            .sidebar-toggle { display: none !important; }
+            .container { margin-left: 0 !important; max-width: 100%; }
             body { background: #fff; }
             .card { box-shadow: none; }
         }
-    </style>
+    
+        [id] { scroll-margin-top: 80px; }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+            overflow-y: auto; background: #ffffff; border-right: 1px solid var(--border);
+            padding: 24px 16px; z-index: 100; box-shadow: 2px 0 12px rgba(0,0,0,0.06);
+        }
+        .sidebar-title {
+            font-size: 1.05rem; font-weight: 700; color: #0f172a;
+            margin: 0 0 16px; padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+        .sidebar a {
+            display: block; text-decoration: none; color: var(--muted);
+            padding: 6px 10px; border-radius: 8px; font-size: 0.87rem; line-height: 1.5;
+            transition: background .15s, color .15s;
+        }
+        .sidebar a:hover { background: var(--primary-soft); color: var(--primary); }
+        .sidebar a.active { background: var(--primary); color: #fff; font-weight: 600; }
+        .sidebar-toggle {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+            background: #fff; font-size: 1.3em; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+</style>
 </head>
 <body>
+        <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#x2630;</button>
+    <nav class="sidebar">
+        <div class="sidebar-title">&#x1F4D1; 目录导航</div>
+        <a href="#sec-roles">角色图例</a>
+        <a href="#sec-loop">循环规则速览</a>
+        <a href="#sec-main">可折叠主流程</a>
+        <a href="#sec-rules">关键执行规则</a>
+        <a href="#sec-exit">阶段退出标准</a>
+        <a href="#sec-delivery">最终交付清单</a>
+    </nav>
+        <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#x2630;</button>
+    <nav class="sidebar">
+        <div class="sidebar-title">&#x1F4D1; 目录导航</div>
+        <a href="#sec-roles">角色图例</a>
+        <a href="#sec-loop">循环规则速览</a>
+        <a href="#sec-main">可折叠主流程</a>
+        <a href="#sec-rules">关键执行规则</a>
+        <a href="#sec-exit">阶段退出标准</a>
+        <a href="#sec-delivery">最终交付清单</a>
+    </nav>
     <div class="container">
 
         <!-- Hero -->
@@ -344,7 +397,7 @@
         <!-- 角色图例 -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">角色图例</h2>
+                <h2 class="section-title" id="sec-roles">&#x1F465; 角色图例</h2>
                 <div class="legend">
                     <span class="legend-item"><span class="dot ai"></span>AI + 执行者</span>
                     <span class="legend-item"><span class="dot jinjie"></span>金杰</span>
@@ -357,7 +410,7 @@
         <!-- 循环规则速览 -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">循环规则速览</h2>
+                <h2 class="section-title" id="sec-loop">&#x1F504; 循环规则速览</h2>
                 <div class="summary-grid">
                     <div class="summary-card">
                         <h3>循环 1: 功能测试未通过</h3>
@@ -378,7 +431,7 @@
         <!-- 可折叠主流程 -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">可折叠主流程</h2>
+                <h2 class="section-title" id="sec-main">&#x1F4CB; 可折叠主流程</h2>
                 <div class="accordion">
                     <details class="phase phase-1" open>
                         <summary>阶段 1: 准备与定范围 (Step 0 - Step 2)</summary>
@@ -533,7 +586,7 @@
         <!-- 关键执行规则 -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">关键执行规则</h2>
+                <h2 class="section-title" id="sec-rules">&#x26A0;&#xFE0F; 关键执行规则</h2>
                 <div class="rule-grid">
                     <div class="rule-card ai">
                         <h4>默认执行模式</h4>
@@ -554,7 +607,7 @@
         <!-- 阶段退出标准 -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">阶段退出标准</h2>
+                <h2 class="section-title" id="sec-exit">&#x1F6AA; 阶段退出标准</h2>
                 <div class="criteria-grid">
                     <div class="criteria-card jinjie">
                         <h4>阶段 1 退出标准</h4>
@@ -584,7 +637,7 @@
         <!-- 最终交付清单 -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">最终交付清单</h2>
+                <h2 class="section-title" id="sec-delivery">&#x2705; 最终交付清单</h2>
                 <div class="deliverable-grid">
                     <div class="deliverable-card ai">
                         <h4>代码交付</h4>
@@ -610,5 +663,51 @@
         <p class="footer-note"><strong>版本:</strong> v1.1 | <strong>更新日期:</strong> 2026-03-27 | 与《生信开发模块文件与输出规范 v1.3》配套</p>
 
     </div>
+<script>
+    (function() {
+        var links = document.querySelectorAll('.sidebar a[href^="#"]');
+        var ids = [];
+        for (var i = 0; i < links.length; i++) ids.push(links[i].getAttribute('href').slice(1));
+        function update() {
+            var current = ids[0];
+            for (var j = 0; j < ids.length; j++) {
+                var el = document.getElementById(ids[j]);
+                if (el && el.getBoundingClientRect().top <= 120) current = ids[j];
+            }
+            for (var k = 0; k < links.length; k++) {
+                if (links[k].getAttribute('href') === '#' + current) {
+                    links[k].classList.add('active');
+                } else {
+                    links[k].classList.remove('active');
+                }
+            }
+        }
+        window.addEventListener('scroll', update, { passive: true });
+        update();
+    })();
+    </script>
+<script>
+    (function() {
+        var links = document.querySelectorAll('.sidebar a[href^="#"]');
+        var ids = [];
+        for (var i = 0; i < links.length; i++) ids.push(links[i].getAttribute('href').slice(1));
+        function update() {
+            var current = ids[0];
+            for (var j = 0; j < ids.length; j++) {
+                var el = document.getElementById(ids[j]);
+                if (el && el.getBoundingClientRect().top <= 120) current = ids[j];
+            }
+            for (var k = 0; k < links.length; k++) {
+                if (links[k].getAttribute('href') === '#' + current) {
+                    links[k].classList.add('active');
+                } else {
+                    links[k].classList.remove('active');
+                }
+            }
+        }
+        window.addEventListener('scroll', update, { passive: true });
+        update();
+    })();
+    </script>
 </body>
 </html>

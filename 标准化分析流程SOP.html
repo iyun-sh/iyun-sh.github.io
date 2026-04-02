@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标准化分析流程 SOP</title>
+    <style>
+        :root {
+            --bg: #f3f6fb;
+            --card: #ffffff;
+            --text: #223043;
+            --muted: #5b6b80;
+            --primary: #1d4ed8;
+            --primary-soft: #dbeafe;
+            --accent: #0f766e;
+            --accent-soft: #ccfbf1;
+            --warn: #b45309;
+            --warn-soft: #fef3c7;
+            --danger: #b91c1c;
+            --danger-soft: #fee2e2;
+            --success: #15803d;
+            --success-soft: #dcfce7;
+            --border: #d9e2ef;
+            --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(29,78,216,0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(15,118,110,0.12), transparent 24%),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin-left: 280px;
+            padding: 32px 20px 56px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 32px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 55%, #ecfeff 100%);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.7);
+            margin-bottom: 24px;
+        }
+        .hero h1 { margin: 0 0 10px; font-size: clamp(2rem,4vw,3rem); line-height: 1.15; color: #0f172a; }
+        .hero p  { margin: 0; max-width: 920px; color: var(--muted); font-size: 1.05rem; }
+
+        .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .pill { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 999px; font-size: 0.92rem; font-weight: 600; }
+        .pill.primary { background: var(--primary-soft); color: var(--primary); }
+        .pill.accent  { background: var(--accent-soft);  color: var(--accent); }
+        .pill.warn    { background: var(--warn-soft);    color: var(--warn); }
+        .pill.danger  { background: var(--danger-soft);  color: var(--danger); }
+
+        /* Grid & Card */
+        .grid { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 18px; margin-bottom: 18px; }
+        .card {
+            grid-column: span 12;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 28px rgba(15,23,42,0.05);
+        }
+        .card.two-col { grid-column: span 6; }
+        .card.four-col { grid-column: span 4; }
+
+        .section-title { margin: 0 0 14px; font-size: 1.3rem; color: #0f172a; }
+        h3 { margin: 18px 0 10px; font-size: 1.1rem; color: #1e3a8a; }
+
+        /* Boxes */
+        .lead-box, .warn-box, .danger-box, .success-box { border-radius: 16px; padding: 16px 18px; margin: 14px 0 0; }
+        .lead-box   { background: #f8fafc; border: 1px solid #dbeafe; }
+        .warn-box   { background: var(--warn-soft); border: 1px solid #fcd34d; }
+        .danger-box { background: var(--danger-soft); border: 1px solid #fca5a5; }
+        .success-box { background: var(--success-soft); border: 1px solid #86efac; }
+
+        /* Table (matrix) */
+        .matrix { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; }
+        .matrix th, .matrix td { border: 1px solid var(--border); padding: 12px 14px; text-align: left; vertical-align: top; }
+        .matrix th { background: #eff6ff; color: #1e3a8a; }
+
+        /* Code */
+        code, .code-block { font-family: Consolas, "Courier New", monospace; }
+        code { background: #eef2ff; color: #3730a3; padding: 2px 6px; border-radius: 6px; font-size: 0.9em; }
+        .code-block {
+            display: block; white-space: pre-wrap;
+            background: #0f172a; color: #e2e8f0;
+            border-radius: 16px; padding: 18px; margin: 14px 0 0; overflow-x: auto;
+            font-size: 0.88em; line-height: 1.65;
+        }
+        .code-block .comment { color: #64748b; }
+        .code-block .flag { color: #7dd3fc; }
+        .code-block .path { color: #86efac; }
+        .code-block .value { color: #fbbf24; }
+
+        /* Tabs */
+        .tabs-container { margin: 18px 0 0; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 2px solid var(--primary); }
+        .tab {
+            padding: 10px 16px;
+            background: var(--primary-soft);
+            border: none; border-radius: 12px 12px 0 0;
+            cursor: pointer; font-size: 0.95rem; font-weight: 600;
+            color: var(--primary);
+            transition: background .2s, color .2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .tab:hover { background: #bfdbfe; }
+        .tab.active { background: var(--primary); color: #fff; }
+        .tab-content { display: none; padding: 20px; background: var(--card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 16px 16px; }
+        .tab-content.active { display: block; }
+        .tab-icon { font-size: 1.1em; }
+
+        /* Steps (numbered circles) */
+        .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+        .steps li { position: relative; padding-left: 54px; margin-bottom: 18px; min-height: 38px; }
+        .steps li::before {
+            counter-increment: step; content: counter(step);
+            position: absolute; left: 0; top: 0;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #0f766e);
+            color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.75em; font-weight: 700; margin-left: 6px; white-space: nowrap; }
+        .badge-required { background: var(--danger-soft); color: var(--danger); }
+        .badge-recommended { background: var(--primary-soft); color: var(--primary); }
+        .badge-optional { background: var(--warn-soft); color: var(--warn); }
+        .badge-owner { background: var(--accent-soft); color: var(--accent); }
+
+        /* Emphasis */
+        .text-red { color: var(--danger); font-weight: 700; }
+        .text-green { color: var(--success); font-weight: 700; }
+        .text-bold { font-weight: 700; }
+
+        /* Check list */
+        .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin-top: 14px; }
+        .check-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 12px 14px; border-radius: 12px;
+            border: 1px solid var(--border); background: #fafbfd;
+        }
+        .check-item .icon { font-size: 1.3em; flex-shrink: 0; }
+        .check-item .desc { font-size: 0.92rem; }
+
+        /* Flow arrow */
+        .flow-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+        .flow-step {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 0.92rem;
+        }
+        .flow-arrow { color: var(--muted); font-size: 1.3em; }
+        .flow-step.data { background: #dbeafe; color: #1d4ed8; }
+        .flow-step.process { background: #ccfbf1; color: #0f766e; }
+        .flow-step.analysis { background: #fef3c7; color: #b45309; }
+        .flow-step.output { background: #dcfce7; color: #15803d; }
+        .flow-step.special { background: #ede9fe; color: #6d28d9; }
+
+        /* TOC */
+        .toc { columns: 2; column-gap: 24px; }
+        .toc a { text-decoration: none; color: var(--primary); display: block; padding: 4px 0; }
+        .toc a:hover { text-decoration: underline; }
+
+        /* Module card */
+        .module-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .module-icon { font-size: 1.6em; }
+        .module-name { font-size: 1.3rem; color: #0f172a; font-weight: 700; }
+        .module-desc { color: var(--muted); font-size: 0.95rem; }
+
+        /* Footer */
+        .footer-note { margin-top: 18px; color: var(--muted); font-size: 0.95rem; text-align: center; }
+
+        /* Lists */
+        ul { padding-left: 22px; }
+        li { margin: 6px 0; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+            .container { margin-left: 0; }
+            .card.two-col { grid-column: span 12; }
+            .card.four-col { grid-column: span 12; }
+            .hero { padding: 24px; }
+            .check-grid { grid-template-columns: 1fr; }
+        }
+        @media print {
+            body { background: #fff; }
+            .sidebar { display: none !important; }
+            .menu-toggle { display: none !important; }
+            .container { margin-left: 0 !important; max-width: 100%; }
+            .matrix { page-break-inside: avoid; }
+            .card { box-shadow: none; page-break-inside: avoid; }
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+            overflow-y: auto; background: #ffffff; border-right: 1px solid var(--border);
+            padding: 24px 16px; z-index: 100; box-shadow: 2px 0 12px rgba(0,0,0,0.06);
+        }
+        .sidebar-title {
+            font-size: 1.05rem; font-weight: 700; color: #0f172a;
+            margin: 0 0 16px; padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+        .sidebar a {
+            display: block; text-decoration: none; color: var(--muted);
+            padding: 6px 10px; border-radius: 8px; font-size: 0.87rem; line-height: 1.5;
+            transition: background .15s, color .15s;
+        }
+        .sidebar a:hover { background: var(--primary-soft); color: var(--primary); }
+        .sidebar a.active { background: var(--primary); color: #fff; font-weight: 600; }
+        .sidebar-toggle {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+            background: #fff; font-size: 1.3em; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Table responsive overflow */
+        .matrix { overflow-x: auto; display: block; max-width: 100%; }
+        table.matrix { display: table; }
+        @media (max-width: 900px) {
+            .matrix { font-size: 0.85em; }
+        }
+
+        /* Anchor offset */
+        [id] { scroll-margin-top: 80px; }
+    </style>
+</head>
+<body>
+    <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+    <nav class="sidebar">
+        <div class="sidebar-title">📑 目录导航</div>
+        <a href="#prerequisites">0. 前置条件</a>
+        <a href="#workflow">1. 全流程总览</a>
+        <a href="#invoke">2. 统一调用规范</a>
+        <a href="#m-gse">3. GEO 数据下载</a>
+        <a href="#m-combine">4. Combine 合并</a>
+        <a href="#m-degs">5. DEGs 差异分析</a>
+        <a href="#m-enrichment">6. 富集分析</a>
+        <a href="#m-ml">7. 机器学习</a>
+        <a href="#m-venn">8. 韦恩图</a>
+        <a href="#m-exprverify">9. 表达验证</a>
+        <a href="#m-prognosis">10. 预后分析</a>
+        <a href="#m-nomogram">11. 列线图</a>
+        <a href="#m-depth2">12. DEPTH2</a>
+        <a href="#m-wgcna">13. WGCNA</a>
+        <a href="#m-friends">14. GO 语义相似性</a>
+        <a href="#m-ppi">15. PPI 网络</a>
+        <a href="#m-immune">16. 免疫浸润</a>
+        <a href="#m-chrplot">17. 染色体图</a>
+        <a href="#m-tmb">18. TMB</a>
+        <a href="#m-msi">19. MSI</a>
+        <a href="#m-mr">20. MR</a>
+        <a href="#m-tsg">21. TSG</a>
+        <a href="#troubleshoot">22. 故障排除</a>
+    </nav>
+    <div class="container">
+
+        <!-- ========== Hero ========== -->
+        <div class="hero">
+            <h1>&#x1F9EC; 标准化分析流程 SOP</h1>
+            <p>涵盖 20 个生物信息学分析模块的标准操作流程，从 GEO 数据下载到因果推断全链路覆盖。所有模块统一通过入口脚本调用，代码受保护，多用户共享。</p>
+            <div class="pill-row">
+                <span class="pill primary">&#x1F4CB; 20 个分析模块</span>
+                <span class="pill accent">&#x1F512; 代码保护机制</span>
+                <span class="pill warn">&#x1F4C4; 自动报告生成</span>
+                <span class="pill danger">&#x26A0;&#xFE0F; 只用入口脚本运行</span>
+            </div>
+        </div>
+
+
+
+        <!-- ========== 0. 前置条件 ========== -->
+        <div class="grid" id="prerequisites">
+            <div class="card">
+                <h2 class="section-title">&#x2699;&#xFE0F; 0. 前置条件</h2>
+                <p>在开始任何分析之前，请确认以下环境已就绪：</p>
+
+                <div class="check-grid">
+                    <div class="check-item">
+                        <span class="icon">&#x1F5A5;&#xFE0F;</span>
+                        <div class="desc"><strong>服务器账号</strong><br>已有 iyun163 服务器的 SSH 登录账号（如 <code>iyunzjx</code>、<code>iyunlpf</code> 等）</div>
+                    </div>
+                    <div class="check-item">
+                        <span class="icon">&#x1F4C1;</span>
+                        <div class="desc"><strong>共享目录</strong><br>脚本位于 <code>/media/share/secure/</code>，输出请写到 <code>/media/share/Project/</code></div>
+                    </div>
+                    <div class="check-item">
+                        <span class="icon">&#x1F512;</span>
+                        <div class="desc"><strong>权限配置</strong><br>已配置免密调用受保护脚本（<code>/etc/sudoers.d/secure_scripts</code>）</div>
+                    </div>
+                    <div class="check-item">
+                        <span class="icon">&#x1F4E6;</span>
+                        <div class="desc"><strong>R 环境</strong><br>R &ge; 4.2.0 + 各模块依赖包（首次运行 <code>--install-deps</code> 自动安装）</div>
+                    </div>
+                </div>
+
+                <div class="danger-box">
+                    <strong>&#x1F6AB; 绝对禁止</strong>
+                    <ul style="margin-top:8px">
+                        <li>直接运行 <code>/media/share/secure/</code> 下的 <code>.R</code> 脚本 — 只能通过 <code>run_*.sh</code> 入口脚本调用</li>
+                        <li>修改 <code>/media/share/secure/</code> 下任何文件 — 该目录只读（对非所有者）</li>
+                        <li>输出目录不要放在 <code>/media/share/secure/</code> 内</li>
+                    </ul>
+                </div>
+                <p style="margin-top:14px;font-size:14px;">📖 <strong>新人培训：</strong><a href="生信流程执行员培训手册.html">生信流程执行员培训手册</a> &mdash; 3 岗位 &times; 7 天速成培训方案</p>
+            </div>
+        </div>
+
+        <!-- ========== 1. 全流程总览 ========== -->
+        <div class="grid" id="workflow">
+            <div class="card">
+                <h2 class="section-title">&#x1F5FA;&#xFE0F; 1. 全流程总览</h2>
+                <p>以下 20 个模块可根据项目需求<strong>灵活组合</strong>，不存在固定的执行顺序。每个模块只要满足其<strong>前置数据需求</strong>即可独立运行。</p>
+
+                <table class="matrix">
+                    <thead><tr><th style="width:30px">#</th><th>模块</th><th>功能</th><th>前置数据需求</th><th style="min-width:60px;text-align:center">类型</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td>GEO 下载</td><td>从 GEO 数据库下载表达芯片/RNA-seq 数据集</td><td>GSE 编号列表</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>2</td><td>分组提取</td><td>从 GEO 数据提取分组信息</td><td>GEO 下载的输出</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>3</td><td>Combine 合并</td><td>多平台/多数据集合并为统一矩阵</td><td>GEO 下载 + 分组提取的输出</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>4</td><td>DEGs 差异表达</td><td>鉴定差异表达基因</td><td>合并后的表达矩阵 + 分组信息</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>5</td><td>Enrichment 富集分析</td><td>GO / KEGG / GSEA 功能注释</td><td>差异基因列表（DEGs 输出）</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>6</td><td>MachineLearn 机器学习</td><td>多种算法筛选关键特征基因</td><td>差异基因列表 + 表达矩阵</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>7</td><td>Venn 韦恩图</td><td>取多种方法的特征基因交集</td><td>MachineLearn 各算法输出</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>8</td><td>Expression_verify 表达验证</td><td>在独立数据集中验证候选基因表达</td><td>Venn 交集基因 + 验证数据集</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>9</td><td>Prognosis 预后分析</td><td>Cox/LASSO/KM 生存分析与预后建模</td><td>候选基因 + 生存数据</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>10</td><td>Nomogram 列线图</td><td>构建多因素列线图并校准</td><td>预后模型输出</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>11</td><td>WGCNA</td><td>加权共表达网络分析</td><td>表达矩阵 + 临床特征</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>12</td><td>Friends GO 语义相似性</td><td>基因 GO 功能相似性网络</td><td>候选基因列表</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>13</td><td>PPI 蛋白互作</td><td>STRING 蛋白互作网络</td><td>候选基因列表</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>14</td><td>Immune 免疫浸润</td><td>8 种方法评估免疫微环境</td><td>表达矩阵 + 分组信息</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>15</td><td>Chromosome 染色体图</td><td>基因在染色体上的位置可视化</td><td>候选基因列表 + 物种信息</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>16</td><td>TMB 肿瘤突变负担</td><td>突变负担计算与分组比较</td><td>MAF 突变数据 + riskscore（Prognosis 输出）</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>17</td><td>MSI 微卫星不稳定</td><td>MSI 状态分析与风险关联</td><td>MSI 数据 + riskscore（Prognosis 输出）</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>18</td><td>DEPTH2</td><td>拷贝数 / 甲基化 / 免疫联合分析</td><td>Prognosis 输出 + TCGA 数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>19</td><td>MR 孟德尔随机化</td><td>因果推断（GWAS 数据驱动）</td><td>GWAS 汇总统计数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>20</td><td>TSG (TWAS+SMR+MR)</td><td>多组学因果推断</td><td>GWAS + eQTL 数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="lead-box" style="margin-top:18px">
+                    <strong>&#x1F4A1; 项目目录推荐结构</strong>
+<pre style="margin:8px 0 0; font-family:Consolas,monospace; font-size:0.9em; line-height:1.6">
+/media/share/Project/项目名/
+├── 01_GSE/                  &larr; GEO 下载输出
+├── 02_Combine/              &larr; 合并后数据
+├── 03_DEGs/                 &larr; 差异表达结果
+├── 04_Enrichment/           &larr; 富集分析结果
+├── 05_MachineLearn/         &larr; 特征选择结果
+├── 06_Venn/                 &larr; 韦恩图交集
+├── 07_Expression_verify/    &larr; 表达验证
+├── 08_Prognosis/            &larr; 预后分析
+├── 09_Nomogram/             &larr; 列线图
+├── 10_WGCNA/                &larr; WGCNA
+├── 11_Friends/              &larr; GO 语义相似性
+├── 12_PPI/                  &larr; 蛋白互作网络
+├── 13_Immune/               &larr; 免疫浸润
+├── 14_Chromosome/           &larr; 染色体图
+├── 15_TMB/                  &larr; 肿瘤突变负担
+├── 16_MSI/                  &larr; 微卫星不稳定性
+├── 17_DEPTH2/               &larr; DEPTH2
+├── 18_MR/                   &larr; 孟德尔随机化
+└── 19_TSG/                  &larr; 因果推断
+</pre>
+                </div>
+
+                <div class="info-box" style="margin-top:10px">
+                    <strong>&#x1F4CC; 说明</strong>：<span class="badge" style="background:#059669;color:#fff">核心</span> 模块构成主线分析路径，<span class="badge" style="background:#f59e0b;color:#fff">扩展</span> 模块按课题需求选用。目录编号仅为管理方便，不代表执行顺序。
+                
+            </div>
+            </div>
+        </div>
+
+        
+        <!-- ========== 1.5 通用数据格式规范 ========== -->
+        <div class="grid" id="data-formats">
+            <div class="card">
+                <h2 class="section-title">&#x1F4CB; 1.5 通用输入文件格式规范</h2>
+                <p>以下是各模块共用的标准文件格式定义。各模块输入表中的「格式」列引用此处编号。</p>
+
+                <table class="matrix" id="fmt-table">
+                    <thead><tr><th style="width:40px">编号</th><th>文件名模式</th><th>格式</th><th>列要求</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr id="fmt-expr"><td>F1</td><td>expression.csv / *.dat.csv</td><td>CSV, UTF-8</td><td>第一列 <code>SYMBOL</code>（基因名），其余列为样本，值为数值型表达量</td><td>行=基因，列=样本。支持 raw counts / log2 / TPM</td></tr>
+                        <tr id="fmt-group"><td>F2</td><td>group.csv</td><td>CSV, UTF-8</td><td><code>sample</code>, <code>group</code></td><td>sample 值必须与表达矩阵列名精确匹配</td></tr>
+                        <tr id="fmt-gene"><td>F3</td><td>gene.csv / genes.csv</td><td>CSV, UTF-8</td><td><code>SYMBOL</code>（或 <code>gene</code>），每行一个基因名</td><td>通常来自 DEGs / Venn / MachineLearn 输出</td></tr>
+                        <tr id="fmt-surv"><td>F4</td><td>survival.csv</td><td>CSV, UTF-8</td><td><code>sample</code>, <code>OS.time</code>(天数), <code>OS</code>(0/1)</td><td>也支持 DFS.time/DFS、PFS.time/PFS 等终点</td></tr>
+                        <tr id="fmt-risk"><td>F5</td><td>riskscore.csv / rs_dat.csv</td><td>CSV, UTF-8</td><td><code>sample</code>, <code>riskscore</code>, <code>riskgroup</code></td><td>来自 Prognosis 模块输出</td></tr>
+                        <tr id="fmt-config"><td>F6</td><td>config.ini</td><td>INI 格式</td><td>[section] + key = value</td><td>各模块的配置文件，指定输入路径和参数</td></tr>
+                        <tr id="fmt-gse"><td>F7</td><td>gse_list.txt</td><td>纯文本</td><td>每行一个 GSE ID（如 GSE126124）</td><td>批量下载模式使用</td></tr>
+                        <tr id="fmt-maf"><td>F8</td><td>MAF 数据</td><td>TCGA MAF</td><td>标准 MAF 列（Hugo_Symbol, Variant_Classification 等）</td><td>TMB 模块自动从 TCGA 下载，通过 cancer_type 指定</td></tr>
+                        <tr id="fmt-gwas"><td>F9</td><td>GWAS 汇总统计</td><td>TSV/TXT</td><td>SNP, A1, A2, FREQ, BETA, SE, P</td><td>MR / TSG 模块使用的标准 GWAS 汇总格式</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="info-box" style="margin-top:12px">
+                    <strong>&#x1F4CC; 通用约定</strong>：所有 CSV 文件使用英文逗号分隔、UTF-8 编码、首行为列名。基因名统一使用 HGNC Official Symbol 格式。
+                </div>
+            </div>
+        </div>
+<!-- ========== 2. 统一调用规范 ========== -->
+        <div class="grid" id="invoke">
+            <div class="card">
+                <h2 class="section-title">&#x1F4E2; 2. 统一调用规范</h2>
+                <p>所有模块的调用方式遵循相同模式：</p>
+
+                <div class="code-block"><span class="comment"># 通用调用格式</span>
+/media/share/secure/<span class="path">&lt;模块名&gt;</span>/<span class="flag">run_*.sh</span> <span class="value">[参数]</span>
+
+<span class="comment"># 查看帮助</span>
+/media/share/secure/<span class="path">&lt;模块名&gt;</span>/<span class="flag">run_*.sh</span> --help
+
+<span class="comment"># 删除输出（仅创建者可删）</span>
+/media/share/secure/<span class="path">&lt;模块名&gt;</span>/<span class="flag">run_*.sh</span> --rm -o <span class="path">&lt;输出目录&gt;</span>
+</div>
+
+                <table class="matrix" style="margin-top:18px">
+                    <thead>
+                        <tr>
+                            <th>所有者</th>
+                            <th>负责模块</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>iyunlyl</code></td>
+                            <td>gse_download_and_cleaning、Combine、DEGs、MachineLearn、Expression_verify、Prognosis、Nomogram、DEPTH2、wgcna、friends、PPI、immune_infiltration、chromosome_plot、TMB、MSI、MR</td>
+                        </tr>
+                        <tr>
+                            <td><code>iyunlpf</code></td>
+                            <td>unified_enrichment、venn_plot、TSG</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="warn-box" style="margin-top:14px">
+                    <strong>&#x1F4DD; 输出目录权限模型</strong>
+                    <ul style="margin-top:8px">
+                        <li>输出目录自动设为 <code>777 + sticky bit</code>（所有人可写，但不能删别人的文件）</li>
+                        <li>目录下生成 <code>.owner</code> 文件记录创建者</li>
+                        <li>删除操作需 <code>.owner</code> 匹配当前用户</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 3. GEO 下载 ========== -->
+        <div class="grid" id="m-gse">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F4E5;</span>
+                    <div>
+                        <div class="module-name">3. GEO 数据下载与清洗 <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">从 GEO 下载芯片/高通量数据，自动探针注释、log2 变换检测、分组提取</div>
+                    </div>
+                </div>
+
+                <h3>入口脚本</h3>
+                <table class="matrix">
+                    <thead><tr><th>脚本</th><th>用途</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>run_download_gse.sh</code></td><td>下载 GSE 数据集（支持单个或批量列表）</td></tr>
+                        <tr><td><code>run_extract_groups.sh</code></td><td>交互式提取 pdata 中的分组信息</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>下载单个数据集</strong>
+                        <div class="code-block">/media/share/secure/gse_download_and_cleaning/run_download_gse.sh \
+  <span class="flag">-g</span> <span class="value">GSE126124</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/01_GSE/GSE126124</span></div>
+                    </li>
+                    <li>
+                        <strong>批量下载（列表文件）</strong>
+                        <div class="code-block"><span class="comment"># gse_list.txt 每行一个 GSE ID</span>
+/media/share/secure/gse_download_and_cleaning/run_download_gse.sh \
+  <span class="flag">-l</span> <span class="path">gse_list.txt</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/01_GSE</span></div>
+                    </li>
+                    <li>
+                        <strong>提取分组信息</strong>
+                        <div class="code-block">/media/share/secure/gse_download_and_cleaning/run_extract_groups.sh \
+  <span class="flag">-f</span> <span class="path">GSE126124_pdata.csv</span> \
+  <span class="flag">-o</span> <span class="path">groups.csv</span></div>
+                    </li>
+                </ol>
+
+                <h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th><th>默认</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-g GSE</code></td><td>GSE ID</td><td>—</td></tr>
+                        <tr><td><code>-l LIST</code></td><td>GSE ID 列表文件（纯文本，每行一个 GSE ID，无表头）</td><td>—</td></tr>
+                        <tr><td><code>-o OUTPUT</code></td><td>输出目录</td><td>—</td></tr>
+                        <tr><td><code>--no-geochina</code></td><td>不使用 geoChina 镜像</td><td>使用镜像</td></tr>
+                        <tr><td><code>--no-tpm</code></td><td>高通量数据用 Counts 而非 TPM</td><td>TPM</td></tr>
+                        <tr><td><code>--skip-gpl</code></td><td>跳过 GPL 探针注释（仅高通量数据可用，芯片数据不要跳过否则无基因映射）</td><td>不跳过</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>GSE ID 或 gse_list.txt</td><td><a href="#fmt-gse">F7</a></td><td>单个 GSE 编号或每行一个 GSE ID 的纯文本文件</td></tr>
+                    </tbody>
+                </table>
+
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>GSExxxxx.dat.csv</code></td><td>表达矩阵（第一列 SYMBOL）</td></tr>
+                        <tr><td><code>GSExxxxx_pdata.csv</code></td><td>样本临床信息</td></tr>
+                        <tr><td><code>GSExxxxx_group.csv</code></td><td>分组文件（sample, group）</td></tr>
+                        <tr><td><strong>项目编号-数据集反馈.xlsx</strong></td><td>数据集反馈表（总览 + 各数据集样本详情），详见培训手册 <a href="生信流程执行员培训手册.html#feedback">附录 A</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 4. Combine ========== -->
+        <div class="grid" id="m-combine">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F3AF;</span>
+                    <div>
+                        <div class="module-name">4. 多数据集合并 (Combine) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">ComBat 批次效应校正，合并多个 GEO 数据集为统一表达矩阵</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>执行合并</strong>
+                        <div class="code-block">/media/share/secure/Combine/run_combine.sh \
+  <span class="flag">-d</span> <span class="path">/path/GSE10072_dat.csv,/path/GSE19804_dat.csv</span> \
+  <span class="flag">-g</span> <span class="path">/path/GSE10072_group.csv,/path/GSE19804_group.csv</span> \
+  <span class="flag">-n</span> <span class="value">GSE10072,GSE19804</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/02_Combine</span></div>
+                    </li>
+                </ol>
+
+                <h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th><th>必需</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-d, --data-files</code></td><td>表达矩阵 CSV（逗号分隔多个文件路径，至少 2 个），第一列为 SYMBOL</td><td>&#x2705;</td></tr>
+                        <tr><td><code>-g, --group-files</code></td><td>分组文件 CSV（逗号分隔），须与 <code>-d</code> 一一对应，各含 sample, group 两列</td><td>&#x2705;</td></tr>
+                        <tr><td><code>-o, --output-dir</code></td><td>输出目录</td><td>&#x2705;</td></tr>
+                        <tr><td><code>-n, --dataset-names</code></td><td>数据集标签（逗号分隔），须与 <code>-d</code> 文件数量和顺序一一对应。将写入输出 group.csv 的 <code>dataset</code> 列。省略时自动用文件名</td><td>可选</td></tr>
+                        <tr><td><code>--gene-col</code></td><td>表达矩阵第一列列名（如表达矩阵以 Gene 而非 SYMBOL 命名则填 Gene）</td><td>可选，默认 SYMBOL</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>表达矩阵 (&ge;2个，逗号分隔)</td><td><a href="#fmt-expr">F1</a></td><td>GEO 下载输出的 GSExxxxx.dat.csv，多个文件逗号分隔</td></tr>
+                        <tr><td>分组文件 (&ge;2个，逗号分隔)</td><td><a href="#fmt-group">F2</a></td><td>与表达矩阵一一对应，顺序一致</td></tr>
+                    </tbody>
+                </table>
+
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>combat.dat.csv</code></td><td>批次校正后表达矩阵</td></tr>
+                        <tr><td><code>combat.group.csv</code></td><td>合并后分组文件（含 dataset 列）</td></tr>
+                        <tr><td><code>00.dataset_info.csv</code></td><td>数据集统计信息</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 5. DEGs ========== -->
+        <div class="grid" id="m-degs">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F52C;</span>
+                    <div>
+                        <div class="module-name">5. 差异表达分析 (DEGs) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">支持 DESeq2 和 limma，自动检测数据类型并选择方法，生成火山图和热图</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>标准差异分析</strong>
+                        <div class="code-block">/media/share/secure/DEGs/run_degs.sh \
+  <span class="flag">-d</span> <span class="path">combat.dat.csv</span> \
+  <span class="flag">-g</span> <span class="path">combat.group.csv</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/03_DEGs</span></div>
+                    </li>
+                    <li>
+                        <strong>指定比较组</strong>
+                        <div class="code-block">/media/share/secure/DEGs/run_degs.sh \
+  <span class="flag">-d</span> <span class="path">combat.dat.csv</span> \
+  <span class="flag">-g</span> <span class="path">combat.group.csv</span> \
+  <span class="flag">-c</span> <span class="value">"Normal,Tumor"</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/03_DEGs</span></div>
+                    </li>
+                    <li>
+                        <strong>仅生成报告（不重跑分析）</strong>
+                        <div class="code-block">/media/share/secure/DEGs/run_degs.sh \
+  <span class="flag">--report-only</span> \
+  <span class="flag">--results-dir</span> <span class="path">/media/share/Project/myproject/03_DEGs</span></div>
+                    </li>
+                </ol>
+
+                <h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th><th>默认</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-d, --data-file</code></td><td>表达矩阵 CSV（第一列 SYMBOL，其余列为样本表达值），支持 raw counts / log2 / TPM</td><td>—</td></tr>
+                        <tr><td><code>-g, --group-file</code></td><td>分组文件 CSV（sample, group 两列），样本名须与表达矩阵列名一致</td><td>—</td></tr>
+                        <tr><td><code>-m, --method</code></td><td>分析方法：auto（根据数据自动选择）/ DESeq2（counts 数据）/ limma（log2/TPM）</td><td>auto</td></tr>
+                        <tr><td><code>-c, --comparison</code></td><td>比较组："group1,group2"</td><td>自动检测</td></tr>
+                        <tr><td><code>--ref-group</code></td><td>参考组名</td><td>Control</td></tr>
+                        <tr><td><code>--logfc-cutoff</code></td><td>logFC 阈值</td><td>1</td></tr>
+                        <tr><td><code>--pvalue-cutoff</code></td><td>p 值阈值</td><td>0.05</td></tr>
+                        <tr><td><code>--pvalue-type</code></td><td>显著性筛选依据：<code>padj</code>=用 BH 校正后 p 值（推荐）；<code>pvalue</code>=用原始 p 值</td><td>padj</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>expression.csv</td><td><a href="#fmt-expr">F1</a></td><td>合并后表达矩阵（来自 Combine），自动检测 counts/log2/TPM</td></tr>
+                        <tr><td>group.csv</td><td><a href="#fmt-group">F2</a></td><td>sample 列必须与 expression.csv 列名一致</td></tr>
+                    </tbody>
+                </table>
+
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>01.DEG_all.csv</code></td><td>全部基因差异结果</td></tr>
+                        <tr><td><code>01.DEG_sig.csv</code></td><td>显著差异基因</td></tr>
+                        <tr><td><code>01.gene.csv</code></td><td>差异基因列表（仅基因名）</td></tr>
+                        <tr><td><code>volcano.png/pdf</code></td><td>火山图</td></tr>
+                        <tr><td><code>heatmap.png/pdf</code></td><td>热图</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 6. 富集分析 ========== -->
+        <div class="grid" id="m-enrichment">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F9EA;</span>
+                    <div>
+                        <div class="module-name">6. 富集分析 (unified_enrichment) <span class="badge badge-owner">iyunlpf</span></div>
+                        <div class="module-desc">GO / KEGG / Reactome 富集分析，支持 ORA + GSEA 双模式</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>完整流程（GO/KEGG + GSEA）</strong>
+                        <div class="code-block">/media/share/secure/unified_enrichment/run_unified_enrichment.sh \
+  <span class="flag">-w</span> <span class="path">/path/to/workdir</span> \
+  <span class="flag">-s</span> <span class="value">hsa</span> \
+  <span class="flag">--gene-list</span> <span class="path">gene_list.csv</span> \
+  <span class="flag">--expr-matrix</span> <span class="path">expr_matrix.csv</span> \
+  <span class="flag">--ranked-list</span> <span class="path">ranked_gene_list.csv</span> \
+  <span class="flag">--go-kegg</span> <span class="value">true</span> \
+  <span class="flag">--gsea</span> <span class="value">true</span> \
+  <span class="flag">--output-dir</span> <span class="path">/media/share/Project/myproject/04_Enrichment</span></div>
+                    </li>
+                    <li>
+                        <strong>仅 GSEA 模式</strong>
+                        <div class="code-block">/media/share/secure/unified_enrichment/run_unified_enrichment.sh \
+  <span class="flag">-w</span> <span class="path">/path/to/workdir</span> \
+  <span class="flag">-s</span> <span class="value">hsa</span> \
+  <span class="flag">--analysis-mode</span> <span class="value">gsea-only</span> \
+  <span class="flag">--ranked-list</span> <span class="path">ranked_gene_list.csv</span> \
+  <span class="flag">--gmt</span> <span class="path">hallmark.gmt</span> \
+  <span class="flag">--output-dir</span> <span class="path">/media/share/Project/myproject/04_GSEA</span></div>
+                    </li>
+                </ol>
+
+                <h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th><th>必需</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-s</code></td><td>物种：hsa（人）/ mmu（小鼠）</td><td>&#x2705;</td></tr>
+                        <tr><td><code>--gene-list</code></td><td>ORA 基因列表 CSV（含 gene 列头，一列基因名），通常来自 DEGs 的 <code>01.gene.csv</code></td><td>ORA 时必填</td></tr>
+                        <tr><td><code>--ranked-list</code></td><td>GSEA 排序基因列表 CSV（两列：gene + logFC），按 logFC 降序排列。通常取 DEGs 输出的 <code>01.DEG_all.csv</code> 中 gene 和 logFC 列</td><td>GSEA 时必填</td></tr>
+                        <tr><td><code>--expr-matrix</code></td><td>表达矩阵（提供全部检测基因作为 ORA 背景基因集，推荐提供，否则用物种全基因组）</td><td>推荐</td></tr>
+                        <tr><td><code>--gene-id-type</code></td><td>基因 ID 类型：symbol（基因名）/ entrez（Entrez ID）</td><td>可选，默认 symbol</td></tr>
+                        <tr><td><code>--universe-mode</code></td><td>背景基因模式：<code>expr_matrix</code>=仅用表达矩阵中的基因；<code>all</code>=用该物种全部注释基因</td><td>可选，默认 expr_matrix</td></tr>
+                                            <tr><td><code>--gmt</code></td><td>自定义 GMT 基因集文件路径（GSEA 模式下可指定 hallmark、KEGG 等自定义集合，替代默认 MSigDB）</td><td>可选</td></tr>
+                        <tr><td><code>--analysis-mode</code></td><td>分析模式：<code>full</code>=GO/KEGG+GSEA 联合，<code>gsea-only</code>=仅 GSEA</td><td>可选，默认 full</td></tr></tbody>
+                </table>
+
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>gene.csv</td><td><a href="#fmt-gene">F3</a></td><td>ORA 模式：差异基因列表（来自 DEGs 输出 01.gene.csv）</td></tr>
+                        <tr><td>expression.csv</td><td><a href="#fmt-expr">F1</a></td><td>GSEA 模式：全基因表达矩阵（自动计算 logFC 排序）</td></tr>
+                        <tr><td>group.csv</td><td><a href="#fmt-group">F2</a></td><td>GSEA 模式需要，提供分组信息计算 logFC</td></tr>
+                        <tr><td>gmt 文件（可选）</td><td>GMT 格式</td><td>自定义基因集，每行: 通路名\tURL\tgene1\tgene2...</td></tr>
+                    </tbody>
+                </table>
+
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>GO_BP/CC/MF_*.csv</code></td><td>GO 富集结果（BP/CC/MF 分别输出）</td></tr>
+                        <tr><td><code>KEGG_*.csv</code></td><td>KEGG 通路富集结果</td></tr>
+                        <tr><td><code>Reactome_*.csv</code></td><td>Reactome 通路富集结果</td></tr>
+                        <tr><td><code>GSEA_*.csv</code></td><td>GSEA 富集结果（含 NES、p.adjust）</td></tr>
+                        <tr><td><code>*_barplot.png/pdf</code></td><td>柱状图 / 泡泡图 / 点图可视化</td></tr>
+                        <tr><td><code>gsea_plot_*.png/pdf</code></td><td>GSEA 山脊图（前 N 条通路）</td></tr>
+                        <tr><td><code>report.docx</code></td><td>Word 自动汇总报告</td></tr>
+                    </tbody>
+                </table>
+                </div>
+        </div>
+
+        <!-- ========== 7. MachineLearn ========== -->
+        <div class="grid" id="m-ml">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F916;</span>
+                    <div>
+                        <div class="module-name">7. 机器学习特征选择 (MachineLearn) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">LASSO / 随机森林 / SVM-RFE / KNN-RFE / NNET-RFE / Boruta 多算法筛选</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>初始化配置文件</strong>
+                        <div class="code-block">/media/share/secure/MachineLearn/run_analysis.sh \
+  <span class="flag">--init</span> <span class="path">/media/share/Project/myproject/05_MachineLearn</span></div>
+                    </li>
+                    <li>
+                        <strong>编辑配置文件</strong>（修改 <code>MachineLearn.config.ini</code> 中的输入路径和算法选择）
+                    </li>
+                    <li>
+                        <strong>运行分析</strong>
+                        <div class="code-block">/media/share/secure/MachineLearn/run_analysis.sh \
+  <span class="flag">--config</span> <span class="path">/media/share/Project/myproject/05_MachineLearn/MachineLearn.config.ini</span></div>
+                    </li>
+                </ol>
+
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th><th>来源</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>01.gene.csv</code></td><td><a href="#fmt-gene">F3</a></td><td>差异基因列表（含 gene 列）</td><td>DEGs 模块输出</td></tr>
+                        <tr><td><code>combat.dat.csv</code></td><td><a href="#fmt-expr">F1</a></td><td>表达矩阵（行=基因，列=样本）</td><td>Combine 模块输出</td></tr>
+                        <tr><td><code>combat.group.csv</code></td><td><a href="#fmt-group">F2</a></td><td>分组表（sample, group）</td><td>Combine 模块输出</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="success-box">
+                    <strong>&#x1F4A1; 建议</strong>：首次运行用默认参数跑通，然后根据需要逐步启用更多算法。快速测试：<code>enabled = lasso,rf,boruta</code>
+                </div>
+
+                <h3>配置文件示例</h3>
+                <div class="code-block"><span class="comment"># MachineLearn.config.ini 关键段</span>
+[input]
+gene_file = /media/share/Project/myproject/03_DEGs/01.gene.csv
+expr_file = /media/share/Project/myproject/02_Combine/combat.dat.csv
+group_file = /media/share/Project/myproject/02_Combine/combat.group.csv
+
+[algorithms]
+<span class="comment"># 启用的算法（逗号分隔），可选: lasso,rf,svm_rfe,boruta,xgboost,elasticnet</span>
+enabled = lasso,rf,svm_rfe,boruta</div>
+
+                <h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th><th>下游用途</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>01.lasso_genes.csv</code></td><td>LASSO 筛选基因列表</td><td rowspan="4">作为 Venn 模块 <code>-i</code> 的输入文件</td></tr>
+                        <tr><td><code>02.rf_genes.csv</code></td><td>随机森林筛选基因列表</td></tr>
+                        <tr><td><code>03.svm_rfe_genes.csv</code></td><td>SVM-RFE 筛选基因列表</td></tr>
+                        <tr><td><code>04.boruta_genes.csv</code></td><td>Boruta 筛选基因列表</td></tr>
+                        <tr><td><code>ml_summary.csv</code></td><td>各算法汇总对比表</td><td>—</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 8. 韦恩图 ========== -->
+        <div class="grid" id="m-venn">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F4CA;</span>
+                    <div>
+                        <div class="module-name">8. 韦恩图 (venn_plot) <span class="badge badge-owner">iyunlpf</span></div>
+                        <div class="module-desc">2-5 组韦恩图 + UpSet 图，交集基因导出，支持自定义集合名称</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <div class="code-block">/media/share/secure/venn_plot/run_venn_plot.sh \
+  <span class="flag">-i</span> <span class="path">gene_list_1.csv,gene_list_2.csv,gene_list_3.csv</span> \
+  <span class="flag">-n</span> <span class="value">"LASSO,RF,Boruta"</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/06_Venn</span></div>
+
+                <h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-i</code></td><td>基因列表文件（逗号分隔多个），各含 gene 列头，一列基因名</td></tr>
+                        <tr><td><code>-n</code></td><td>集合名称（逗号分隔），须与 <code>-i</code> 文件数量和顺序一一对应。显示在图中的标签，如 “LASSO,RF,Boruta”</td></tr>
+                        <tr><td><code>--intersection-k</code></td><td>取交集时的“最少重叠集合数”：k=2 表示输出所有两两以上重叠的交集，k=3 表示只输出”至少 3 个集合共有”的基因</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>gene_list_*.csv（多个，逗号分隔）</td><td><a href="#fmt-gene">F3</a></td><td>各算法输出的基因列表（来自 MachineLearn）</td></tr>
+                    </tbody>
+                </table>
+
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>01.venn_intersect.csv</code></td><td>交集基因列表（含 gene 列头），可直接作为下游模块输入</td></tr>
+                        <tr><td><code>venn_plot.pdf / .png</code></td><td>韦恩图可视化</td></tr>
+                        <tr><td><code>upset_plot.pdf / .png</code></td><td>UpSet 图（≥3 组时自动生成）</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 9. 表达验证 ========== -->
+        <div class="grid" id="m-exprverify">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x2705;</span>
+                    <div>
+                        <div class="module-name">9. 表达验证 (Expression_verify) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">Wilcoxon 秩和检验 + ROC/AUC 跨数据集验证候选基因</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <div class="lead-box" style="margin-bottom:12px">
+                    <strong>&#x1F4CB; 数据来源说明</strong>
+                    <ul style="margin:6px 0 0">
+                        <li><code>-t</code> 训练集：使用 Combine 输出的 <code>combat.dat.csv</code>（全基因表达矩阵），模块会自动过滤至 <code>-G</code> 指定的候选基因</li>
+                        <li><code>-g</code> 训练集分组：使用 Combine 输出的 <code>combat.group.csv</code></li>
+                        <li><code>-v</code> 验证集：使用 GEO 模块单独下载的外部数据集（如 GSE126124），<strong>不需要</strong>经过 Combine 合并</li>
+                        <li><code>-G</code> 候选基因：来自 Venn 交集输出（<code>01.venn_intersect.csv</code>）或 MachineLearn 单算法输出</li>
+                    </ul>
+                </div>
+                <div class="code-block">/media/share/secure/Expression_verify/run_expression_verify.sh \
+  <span class="flag">-t</span> <span class="path">train_expr.csv</span> \
+  <span class="flag">-g</span> <span class="path">train_group.csv</span> \
+  <span class="flag">-v</span> <span class="path">val1_expr.csv,val2_expr.csv</span> \
+  <span class="flag">-V</span> <span class="path">val1_group.csv,val2_group.csv</span> \
+  <span class="flag">-G</span> <span class="path">genes.csv</span> \
+  <span class="flag">-n</span> <span class="value">TrainSet,GSE126124,GSE48958</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/07_Expression_verify</span></div>
+
+                <h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-t, --train-expr</code></td><td>训练集表达矩阵 CSV（第一列 SYMBOL，通常用 Combine 输出的 combat.dat.csv）</td></tr>
+                        <tr><td><code>-g, --train-group</code></td><td>训练集分组 CSV（sample, group 两列，样本名必须与 -t 列名一致）</td></tr>
+                        <tr><td><code>-v, --val-expr</code></td><td>验证集表达矩阵（逗号分隔多个文件），数量和顺序必须与 -V 一一对应</td></tr>
+                        <tr><td><code>-V, --val-group</code></td><td>验证集分组文件（逗号分隔，个数必须等于 -v 中的文件数）</td></tr>
+                        <tr><td><code>-G, --gene-list</code></td><td>候选基因列表 CSV（含 gene 列头，一列基因名），来自 Venn/MachineLearn 等筛选结果</td></tr>
+                        <tr><td><code>--auc-threshold</code></td><td>ROC 阈值：AUC ≥ 该值的基因才算通过验证，留入最终结果</td></tr>
+                        <tr><td><code>--no-roc</code></td><td>关闭 ROC 筛选，保留全部输入基因</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>expression.csv（训练集）</td><td><a href="#fmt-expr">F1</a></td><td>Combine 输出的合并表达矩阵</td></tr>
+                        <tr><td>group.csv（训练集）</td><td><a href="#fmt-group">F2</a></td><td>训练集分组信息</td></tr>
+                        <tr><td>expression.csv（验证集，可多个逗号分隔）</td><td><a href="#fmt-expr">F1</a></td><td>独立数据集的表达矩阵</td></tr>
+                        <tr><td>group.csv（验证集，对应数量）</td><td><a href="#fmt-group">F2</a></td><td>验证集分组，与表达矩阵一一对应</td></tr>
+                        <tr><td>genes.csv</td><td><a href="#fmt-gene">F3</a></td><td>候选基因列表，来自 Venn 或 MachineLearn</td></tr>
+                    </tbody>
+                </table>
+
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>01.*_stats.csv</code></td><td>各数据集统计结果</td></tr>
+                        <tr><td><code>04.gene.csv</code></td><td>最终筛选基因列表</td></tr>
+                        <tr><td>箱线图 / ROC 曲线图</td><td>PNG 格式可视化</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 10. 预后分析 ========== -->
+        <div class="grid" id="m-prognosis">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F4C8;</span>
+                    <div>
+                        <div class="module-name">10. 预后分析 (Prognosis) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">Cox 回归 + LASSO 特征选择 + KM 生存曲线 + 时间 ROC + 风险模型</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <div class="code-block">/media/share/secure/Prognosis/run_prognosis.sh \
+  <span class="flag">-d</span> <span class="path">expression.csv</span> \
+  <span class="flag">-g</span> <span class="path">group.csv</span> \
+  <span class="flag">-s</span> <span class="path">survival.csv</span> \
+  <span class="flag">-G</span> <span class="path">genes.csv</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/08_Prognosis</span></div>
+
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>expression.csv</code></td><td><a href="#fmt-expr">F1</a></td><td>第一列 SYMBOL，其余列为样本表达值（通常用 Combine 输出的 combat.dat.csv）</td></tr>
+                        <tr><td><code>group.csv</code></td><td><a href="#fmt-group">F2</a></td><td>sample, group 两列（样本名须与表达矩阵列名一致）</td></tr>
+                        <tr><td><code>survival.csv</code></td><td><a href="#fmt-surv">F4</a></td><td>sample, OS.time, OS 三列（OS: 1=死亡, 0=存活; OS.time: 天数）。也支持 DFS.time/DFS 等其他终点。<br><em>来源：由用户从 TCGA 临床数据或 GEO pdata 中整理，非模块自动生成</em></td></tr>
+                        <tr><td><code>genes.csv</code></td><td><a href="#fmt-gene">F3</a></td><td>含 gene 列头的基因列表（≥ 2 个基因），通常来自 Venn/MachineLearn 筛选结果</td></tr>
+                    </tbody>
+                </table>
+
+                
+
+                <h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th><th>下游用途</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>01.rs_dat.csv</code></td><td>风险评分数据（sample, riskscore, risk_group）</td><td>TMB / MSI / DEPTH2 模块输入</td></tr>
+                        <tr><td><code>01.lasso_genes.csv</code></td><td>LASSO 筛选的预后基因列表</td><td>TMB / DEPTH2 模块输入</td></tr>
+                        <tr><td><code>01.train_data.csv</code></td><td>训练集表达数据</td><td>DEPTH2 模块输入</td></tr>
+                        <tr><td><code>01.cox_*.csv</code></td><td>单因素 Cox 回归 + PH 假定检验结果</td><td>—</td></tr>
+                        <tr><td><code>KM_*.pdf/png</code></td><td>KM 生存曲线 + log-rank 检验</td><td>—</td></tr>
+                        <tr><td><code>ROC_*.pdf/png</code></td><td>1/3/5 年时间 ROC 曲线</td><td>—</td></tr>
+                        <tr><td><code>report.docx</code></td><td>Word 自动汇总报告</td><td>—</td></tr>
+                    </tbody>
+                </table>
+                <div class="warn-box" style="margin-top:10px">
+                    <strong>&#x26A0;&#xFE0F; 数据传递</strong>：Prognosis 的输出文件（<code>01.rs_dat.csv</code>、<code>01.lasso_genes.csv</code>、<code>01.train_data.csv</code>）是 TMB / MSI / DEPTH2 模块的必需输入。请将这些文件复制或软链接到对应模块的工作目录。
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 11. 列线图 ========== -->
+        <div class="grid" id="m-nomogram">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F4CF;</span>
+                    <div>
+                        <div class="module-name">11. 列线图 (Nomogram) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">Logistic 回归模型 + 列线图 + DCA + 校准曲线 + ROC，自动生成 Word 报告</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <div class="code-block">/media/share/secure/Nomogram/run_nomogram.sh \
+  <span class="flag">-d</span> <span class="path">expression.csv</span> \
+  <span class="flag">-g</span> <span class="path">group.csv</span> \
+  <span class="flag">-G</span> <span class="path">genes.csv</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/09_Nomogram</span></div>
+
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>expression.csv</td><td><a href="#fmt-expr">F1</a></td><td>表达矩阵（通常来自 Combine 输出）</td></tr>
+                        <tr><td>group.csv</td><td><a href="#fmt-group">F2</a></td><td>二分类分组信息</td></tr>
+                        <tr><td>genes.csv</td><td><a href="#fmt-gene">F3</a></td><td>候选基因列表</td></tr>
+                    </tbody>
+                </table>
+
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>nomogram.pdf/png</code></td><td>列线图</td></tr>
+                        <tr><td><code>DCA_curve.pdf/png</code></td><td>决策曲线分析</td></tr>
+                        <tr><td><code>calibration.pdf/png</code></td><td>校准曲线</td></tr>
+                        <tr><td><code>ROC_curve.pdf/png</code></td><td>ROC 曲线 + AUC</td></tr>
+                        <tr><td><code>report.docx</code></td><td>Word 自动汇总报告</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th><th>必需</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-d, --data-file</code></td><td>表达矩阵 CSV</td><td>&#x2705;</td></tr>
+                        <tr><td><code>-g, --group-file</code></td><td>分组文件 CSV</td><td>&#x2705;</td></tr>
+                        <tr><td><code>-G, --gene-file</code></td><td>基因列表 CSV</td><td>&#x2705;</td></tr>
+                        <tr><td><code>-c, --comparison</code></td><td>比较组（如 "Normal,Tumor"）</td><td>可选，自动识别</td></tr>
+                        <tr><td><code>--calibrate-b</code></td><td>校准曲线 bootstrap 次数</td><td>默认 1000</td></tr>
+                    </tbody>
+                </table>
+
+                </div>
+        </div>
+
+        <!-- ========== 12. DEPTH2 ========== -->
+        <div class="grid" id="m-depth2">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F9EC;</span>
+                    <div>
+                        <div class="module-name">12. DEPTH2 分析 <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">DEPTH2 综合分析管线，箱线图 + 相关性分析 + QC 质控</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>初始化</strong>
+                        <div class="code-block">/media/share/secure/DEPTH2/run_analysis.sh \
+  <span class="flag">--init</span> <span class="path">/media/share/Project/myproject/17_DEPTH2</span></div>
+                    </li>
+                    <li><strong>编辑配置文件</strong>（<code>DEPTH2.config.ini</code>）：设置表达矩阵、基因列表、风险评分文件路径</li>
+                    <li>
+                        <strong>运行分析</strong>
+                        <div class="code-block">/media/share/secure/DEPTH2/run_analysis.sh \
+  <span class="flag">--config</span> <span class="path">DEPTH2.config.ini</span></div>
+                    </li>
+                </ol>
+
+                
+                <h3>配置文件示例</h3>
+                <div class="code-block"><span class="comment"># DEPTH2.config.ini 关键段</span>
+[input]
+train_data = <span class="path">/media/share/Project/myproject/08_Prognosis/01.train_data.csv</span>
+lasso_genes = <span class="path">/media/share/Project/myproject/08_Prognosis/01.lasso_genes.csv</span>
+rs_dat = <span class="path">/media/share/Project/myproject/08_Prognosis/01.rs_dat.csv</span>
+clinical_data = <span class="path">/path/to/TCIA-ClinicalData.tsv</span>  <span class="comment"># 可选</span>
+
+[output]
+base_dir = <span class="path">/media/share/Project/myproject/17_DEPTH2</span></div>
+<h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th><th>来源</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>01.train_data.csv</code></td><td><a href="#fmt-expr">F1</a></td><td>训练集表达矩阵</td><td>Prognosis 模块输出</td></tr>
+                        <tr><td><code>01.lasso_genes.csv</code></td><td><a href="#fmt-gene">F3</a></td><td>LASSO 预后基因列表</td><td>Prognosis 模块输出</td></tr>
+                        <tr><td><code>01.rs_dat.csv</code></td><td><a href="#fmt-risk">F5</a></td><td>风险评分数据</td><td>Prognosis 模块输出</td></tr>
+                        <tr><td><code>TCIA-ClinicalData.tsv</code></td><td>—</td><td>临床数据（可选，TCGA 免疫治疗数据）</td><td>TCIA 下载</td></tr>
+                    </tbody>
+                </table>
+                <h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>boxplot_*.pdf/png</code></td><td>DEPTH2 箱线图可视化</td></tr>
+                        <tr><td><code>correlation_*.pdf/png</code></td><td>相关性分析图</td></tr>
+                        <tr><td><code>quality_report.html</code></td><td>QC 质控报告</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 13. WGCNA ========== -->
+        <div class="grid" id="m-wgcna">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F578;&#xFE0F;</span>
+                    <div>
+                        <div class="module-name">13. WGCNA 网络分析 <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">加权基因共表达网络分析：样本聚类、模块检测与合并、模块-表型关联、Cytoscape 导出</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>初始化配置</strong>
+                        <div class="code-block">/media/share/secure/wgcna/run_analysis.sh \
+  <span class="flag">--init</span> <span class="path">/media/share/Project/myproject/10_WGCNA</span></div>
+                    </li>
+                    <li><strong>编辑</strong> <code>wgcna.config.ini</code> — 填写表达矩阵和分组文件路径</li>
+                    <li>
+                        <strong>运行分析</strong>
+                        <div class="code-block">/media/share/secure/wgcna/run_analysis.sh \
+  <span class="flag">--config</span> <span class="path">wgcna.config.ini</span></div>
+                    </li>
+                </ol>
+
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>expr_matrix.csv</code></td><td><a href="#fmt-expr">F1</a></td><td>表达矩阵（行=基因，列=样本）</td></tr>
+                        <tr><td><code>group.csv</code></td><td><a href="#fmt-group">F2</a></td><td>分组信息（sample, group）</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <h3>配置文件示例</h3>
+                <div class="code-block"><span class="comment"># wgcna.config.ini 关键段</span>
+[input]
+expr_file = <span class="path">/media/share/Project/myproject/02_Combine/combat.dat.csv</span>
+group_file = <span class="path">/media/share/Project/myproject/02_Combine/combat.group.csv</span>
+
+[parameters]
+soft_power = auto                <span class="comment"># auto 自动检测或手动指定整数</span>
+merge_cut_height = 0.25          <span class="comment"># 模块合并阈值</span>
+min_module_size = 30             <span class="comment"># 最小模块基因数</span>
+
+[output]
+base_dir = <span class="path">/media/share/Project/myproject/10_WGCNA</span></div>
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>sample_clustering.pdf</code></td><td>样本聚类树状图 + 离群值检测</td></tr>
+                        <tr><td><code>soft_threshold.pdf</code></td><td>软阈值选择图</td></tr>
+                        <tr><td><code>module_trait_heatmap.pdf</code></td><td>模块-表型关联热图</td></tr>
+                        <tr><td><code>CytoscapeInput_*.txt</code></td><td>Cytoscape 网络文件（节点 + 边）</td></tr>
+                        <tr><td><code>module_genes_*.csv</code></td><td>各模块基因列表</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 14. GO 语义相似性 ========== -->
+        <div class="grid" id="m-friends">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F91D;</span>
+                    <div>
+                        <div class="module-name">14. GO 语义相似性 (friends) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">基于 GOSemSim 的基因功能关系分析（BP/CC/MF 本体 + KEGG/Reactome）</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>初始化配置</strong>
+                        <div class="code-block">/media/share/secure/friends/run_analysis.sh \
+  <span class="flag">--init</span> <span class="path">/media/share/Project/myproject/11_Friends</span></div>
+                    </li>
+                    <li><strong>编辑</strong> <code>config.ini</code> — 填写基因列表路径和物种</li>
+                    <li>
+                        <strong>运行分析</strong>
+                        <div class="code-block">/media/share/secure/friends/run_analysis.sh \
+  <span class="flag">--config</span> <span class="path">config.ini</span></div>
+                    </li>
+                </ol>
+
+                
+                <h3>配置文件示例</h3>
+                <div class="code-block"><span class="comment"># config.ini 关键段</span>
+[input]
+gene_file = <span class="path">/media/share/Project/myproject/05_MachineLearn/01.lasso_genes.csv</span>
+
+[parameters]
+species = human                  <span class="comment"># human / mouse</span>
+ontology = BP,CC,MF              <span class="comment"># 分析的本体类型</span>
+
+[output]
+base_dir = <span class="path">/media/share/Project/myproject/11_Friends</span></div>
+<h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th><th>来源</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>genes.csv</code></td><td><a href="#fmt-gene">F3</a></td><td>基因列表（含 gene 列）</td><td>Venn / MachineLearn / ExprVerify 筛选结果</td></tr>
+                    </tbody>
+                </table>
+                <h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>similarity_matrix_*.csv</code></td><td>基因语义相似性矩阵（BP/CC/MF）</td></tr>
+                        <tr><td><code>heatmap_*.pdf/png</code></td><td>相似性热图</td></tr>
+                        <tr><td><code>network_*.pdf/png</code></td><td>基因关系网络图</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 15. PPI ========== -->
+        <div class="grid" id="m-ppi">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F578;</span>
+                    <div>
+                        <div class="module-name">15. PPI 蛋白互作网络 <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">STRING API 蛋白互作查询 + 网络图 + 弦图可视化</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <div class="code-block">/media/share/secure/PPI/run_ppi.sh \
+  <span class="flag">-i</span> <span class="path">genes.csv</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/12_PPI</span> \
+  <span class="flag">-s</span> <span class="value">9606</span> \
+  <span class="flag">-r</span> <span class="value">700</span> \
+  <span class="flag">-d</span> <span class="value">2</span></div>
+
+                <h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th><th>默认</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-i, --input</code></td><td>基因文件 CSV（含 gene 列头，一列基因名）</td><td>—</td></tr>
+                        <tr><td><code>-o, --output-dir</code></td><td>输出目录</td><td>—</td></tr>
+                        <tr><td><code>-s, --species</code></td><td>物种 ID：9606=人, 10090=小鼠（STRING 数据库 taxonomy ID）</td><td>9606</td></tr>
+                        <tr><td><code>-r, --required-score</code></td><td>互作评分阈值 0-1000：400=中等可信，700=高可信，900=极高可信。值越高互作越可靠但网络越稀疏</td><td>400</td></tr>
+                        <tr><td><code>-d, --min-degree</code></td><td>最小度数过滤：只保留与 ≥d 个其他蛋白有互作的节点。d=1 保留所有有互作的，d=2 过滤孤立节点</td><td>1</td></tr>
+                        <tr><td><code>--no-network</code></td><td>跳过网络图</td><td>FALSE</td></tr>
+                        <tr><td><code>--no-chord</code></td><td>跳过弦图</td><td>FALSE</td></tr>
+                    </tbody>
+                </table>
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th><th>来源</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>genes.csv</code></td><td><a href="#fmt-gene">F3</a></td><td>基因列表 CSV（含 gene 列头）</td><td>Venn / MachineLearn / ExprVerify 筛选结果</td></tr>
+                    </tbody>
+                </table>
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>ppi_network.pdf/png</code></td><td>PPI 网络图</td></tr>
+                        <tr><td><code>chord_diagram.pdf/png</code></td><td>弦图可视化</td></tr>
+                        <tr><td><code>string_interactions.csv</code></td><td>STRING 互作数据（节点、边、评分）</td></tr>
+                        <tr><td><code>hub_genes.csv</code></td><td>枢纽基因列表（按 degree 排序）</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 16. 免疫浸润 ========== -->
+        <div class="grid" id="m-immune">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F9F2;</span>
+                    <div>
+                        <div class="module-name">16. 免疫浸润分析 <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">8 种免疫浸润方法：CIBERSORT / EPIC / ESTIMATE / IPS / MCPcounter / ssGSEA / TIMER / xCell</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>编辑配置文件</strong>
+                        <div class="code-block"><span class="comment"># config/config.ini</span>
+[Methods]
+methods = 1-8                <span class="comment"># 1=CIBERSORT 2=EPIC 3=ESTIMATE 4=IPS 5=MCPcounter 6=ssGSEA 7=TIMER 8=xCell</span>
+
+[Input]
+expression = <span class="path">/path/to/expression.csv</span>
+group = <span class="path">/path/to/group.csv</span>
+signature = <span class="path">/path/to/signature.rds</span>  <span class="comment"># 仅 ssGSEA 需要</span>
+
+[Output]
+base_dir = <span class="path">/media/share/Project/myproject/13_Immune</span></div>
+                    </li>
+                    <li>
+                        <strong>运行分析</strong>
+                        <div class="code-block">/media/share/secure/immune_infiltration/run_immune_infiltration.sh \
+  <span class="flag">--config</span> <span class="path">config/config.ini</span></div>
+                    </li>
+                </ol>
+
+                <h3>8 种方法说明</h3>
+                <table class="matrix">
+                    <thead><tr><th>编号</th><th>方法</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td>CIBERSORT</td><td>22 种免疫细胞相对比例（线性 SVM）</td></tr>
+                        <tr><td>2</td><td>EPIC</td><td>多种免疫细胞绝对丰度</td></tr>
+                        <tr><td>3</td><td>ESTIMATE</td><td>Stromal / Immune / ESTIMATE Score</td></tr>
+                        <tr><td>4</td><td>IPS</td><td>免疫表型评分</td></tr>
+                        <tr><td>5</td><td>MCPcounter</td><td>免疫细胞丰度计数</td></tr>
+                        <tr><td>6</td><td>ssGSEA</td><td>单样本基因集富集（需 signature 文件）</td></tr>
+                        <tr><td>7</td><td>TIMER</td><td>免疫浸润评估（需 tissue 参数）</td></tr>
+                        <tr><td>8</td><td>xCell</td><td>64 种细胞类型富集评分</td></tr>
+                    </tbody>
+                </table>
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th><th>来源</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>expression.csv</code></td><td><a href="#fmt-expr">F1</a></td><td>表达矩阵（样本 x 基因）</td><td>Combine 模块输出</td></tr>
+                        <tr><td><code>group.csv</code></td><td><a href="#fmt-group">F2</a></td><td>分组信息（sample + group 列）</td><td>Combine 模块输出</td></tr>
+                        <tr><td><code>signature.rds</code></td><td>—</td><td>基因集签名文件（仅 ssGSEA 需要）</td><td>用户自备或公共数据库</td></tr>
+                    </tbody>
+                </table>
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>immune_scores_*.csv</code></td><td>各方法免疫浸润评分矩阵</td></tr>
+                        <tr><td><code>boxplot_*.pdf/png</code></td><td>免疫细胞分布箱线图（高/低风险组对比）</td></tr>
+                        <tr><td><code>heatmap_immune.pdf/png</code></td><td>免疫浸润热图</td></tr>
+                        <tr><td><code>correlation_*.pdf/png</code></td><td>免疫细胞与风险评分相关性分析</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 17. 染色体图 ========== -->
+        <div class="grid" id="m-chrplot">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F9EC;</span>
+                    <div>
+                        <div class="module-name">17. 染色体图 (chromosome_plot) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">RCircos 染色体环形图，基因位置标注 + 热图叠加</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <div class="code-block">/media/share/secure/chromosome_plot/run_chromosome_plot.sh \
+  <span class="flag">-i</span> <span class="path">genes.csv</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/14_Chromosome</span></div>
+
+                <p style="margin-top:12px">支持自动获取基因染色体位置（本地 org.Hs.eg.db 或 Ensembl 在线查询），批量绘制多个基因集合。</p>
+                
+                <h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th><th>默认</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-i, --input</code></td><td>基因列表 CSV（含 gene 列头）</td><td>—</td></tr>
+                        <tr><td><code>-o, --output-dir</code></td><td>输出目录</td><td>—</td></tr>
+                        <tr><td><code>-s, --species</code></td><td>物种：human / mouse（用于查询基因组定位数据库）</td><td>human</td></tr>
+                        <tr><td><code>--genome</code></td><td>基因组版本：hg38 / hg19 / mm10</td><td>hg38</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th><th>来源</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>genes.csv</code></td><td><a href="#fmt-gene">F3</a></td><td>基因列表（含 gene 列头）</td><td>Venn / MachineLearn / ExprVerify 筛选结果</td></tr>
+                    </tbody>
+                </table>
+<h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>RCircos_plot.pdf/png</code></td><td>染色体环形图（基因位置标注）</td></tr>
+                        <tr><td><code>gene_locations.csv</code></td><td>基因染色体坐标表</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 18. TMB ========== -->
+        <div class="grid" id="m-tmb">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F9EC;</span>
+                    <div>
+                        <div class="module-name">18. 肿瘤突变负担 (TMB) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">TCGA MAF 数据 + TMB 计算 + 突变景观 + KM 生存分析</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>初始化</strong>
+                        <div class="code-block">/media/share/secure/TMB/run_analysis.sh \
+  <span class="flag">--init</span> <span class="path">/media/share/Project/myproject/15_TMB</span></div>
+                    </li>
+                    <li><strong>编辑</strong> <code>TMB_config.ini</code> — 设置癌种、风险评分文件、基因列表</li>
+                    <li>
+                        <strong>运行分析</strong>
+                        <div class="code-block">/media/share/secure/TMB/run_analysis.sh \
+  <span class="flag">--config</span> <span class="path">TMB_config.ini</span></div>
+                    </li>
+                </ol>
+
+                
+                <h3>配置文件示例</h3>
+                <div class="code-block"><span class="comment"># TMB_config.ini 关键段</span>
+[input]
+cancer_type = LUAD               <span class="comment"># TCGA 癌种缩写</span>
+rs_dat = <span class="path">/media/share/Project/myproject/08_Prognosis/01.rs_dat.csv</span>
+gene_file = <span class="path">/media/share/Project/myproject/08_Prognosis/01.lasso_genes.csv</span>
+
+[output]
+base_dir = <span class="path">/media/share/Project/myproject/15_TMB</span></div>
+<h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th><th>来源</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>01.rs_dat.csv</code></td><td><a href="#fmt-risk">F5</a></td><td>风险评分数据（含 sample, riskscore, risk_group）</td><td>Prognosis 模块输出</td></tr>
+                        <tr><td><code>03.lasso_genes.csv</code></td><td><a href="#fmt-gene">F3</a></td><td>LASSO 筛选基因列表</td><td>Prognosis 模块输出</td></tr>
+                    </tbody>
+                </table>
+                <h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>TMB_waterfall.pdf/png</code></td><td>突变瀑布图（Top N 高频突变基因）</td></tr>
+                        <tr><td><code>TMB_boxplot.pdf/png</code></td><td>TMB 高/低组箱线图</td></tr>
+                        <tr><td><code>TMB_KM_survival.pdf/png</code></td><td>TMB 分组 Kaplan-Meier 生存曲线</td></tr>
+                        <tr><td><code>TMB_summary.csv</code></td><td>各样本 TMB 值 + 分组结果</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 19. MSI ========== -->
+        <div class="grid" id="m-msi">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F9EC;</span>
+                    <div>
+                        <div class="module-name">19. 微卫星不稳定性 (MSI) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">MSI 状态与风险分组比例分析 + 差异分析</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <ol class="steps">
+                    <li>
+                        <strong>初始化配置</strong>
+                        <div class="code-block">/media/share/secure/MSI/run_analysis.sh \
+  <span class="flag">--init</span> <span class="path">/media/share/Project/myproject/16_MSI</span></div>
+                    </li>
+                    <li><strong>编辑</strong> <code>config.ini</code> — 设置风险评分和临床数据路径</li>
+                    <li>
+                        <strong>运行分析</strong>
+                        <div class="code-block">/media/share/secure/MSI/run_analysis.sh \
+  <span class="flag">--config</span> <span class="path">config.ini</span></div>
+                    </li>
+                </ol>
+
+                
+                <h3>配置文件示例</h3>
+                <div class="code-block"><span class="comment"># config.ini 关键段</span>
+[input]
+riskscore = <span class="path">/media/share/Project/myproject/08_Prognosis/01.rs_dat.csv</span>
+clinical = <span class="path">/path/to/clinical.csv</span>   <span class="comment"># 须含 MSI_status 列（MSI-H / MSI-L / MSS）</span>
+
+[output]
+base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
+<h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th><th>来源</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>riskscore.csv</code></td><td><a href="#fmt-risk">F5</a></td><td>风险评分数据（即 Prognosis 输出的 <code>01.rs_dat.csv</code>）</td><td>Prognosis 模块输出</td></tr>
+                        <tr><td><code>clinical.csv</code></td><td>—</td><td>临床数据（含 MSI 状态列）</td><td>用户准备 / TCGA 下载</td></tr>
+                    </tbody>
+                </table>
+                <h3>输出文件</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>MSI_proportion.pdf/png</code></td><td>MSI 状态比例堆叠图（高/低风险组对比）</td></tr>
+                        <tr><td><code>MSI_diff_analysis.csv</code></td><td>MSI 各组间差异分析结果（Fisher 检验）</td></tr>
+                        <tr><td><code>MSI_summary.csv</code></td><td>各样本 MSI 状态 + 风险分组汇总</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 20. MR ========== -->
+        <div class="grid" id="m-mr">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F52E;</span>
+                    <div>
+                        <div class="module-name">20. 孟德尔随机化 (MR) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">eQTL / pQTL / Traditional MR + 共定位分析 (Coloc)，支持交互式和命令行模式</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab(event, 'mr-interactive')"><span class="tab-icon">&#x1F4AC;</span> 交互模式</button>
+                        <button class="tab" onclick="switchTab(event, 'mr-cmd')"><span class="tab-icon">&#x2328;&#xFE0F;</span> 命令行模式</button>
+                    </div>
+                    <div id="mr-interactive" class="tab-content active">
+                        <div class="code-block">/media/share/secure/MR/run_mr.sh
+<span class="comment"># 按提示选择分析类型、输入文件等</span></div>
+                    </div>
+                    <div id="mr-cmd" class="tab-content">
+                        <div class="code-block"><span class="comment"># eQTL 分析</span>
+/media/share/secure/MR/run_mr.sh \
+  <span class="flag">-t</span> <span class="value">eqtl</span> \
+  <span class="flag">-i</span> <span class="path">genes.csv</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/18_MR/MR_eqtl</span>
+
+<span class="comment"># pQTL + 共定位</span>
+/media/share/secure/MR/run_mr.sh \
+  <span class="flag">-t</span> <span class="value">pqtl</span> \
+  <span class="flag">-i</span> <span class="path">genes.csv</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/18_MR/MR_pqtl</span> \
+  <span class="flag">-c</span> <span class="value">1</span>
+
+<span class="comment"># Traditional MR</span>
+/media/share/secure/MR/run_mr.sh \
+  <span class="flag">-t</span> <span class="value">traditional</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/18_MR/MR_traditional</span>
+
+<span class="comment"># eQTL + pQTL 联合分析</span>
+/media/share/secure/MR/run_mr.sh \
+  <span class="flag">-t</span> <span class="value">eqtl_pqtl</span> \
+  <span class="flag">-i</span> <span class="path">genes.csv</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/18_MR/MR_combined</span> \
+  <span class="flag">-c</span> <span class="value">1</span></div>
+                    </div>
+                </div>
+
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>genes.csv</td><td><a href="#fmt-gene">F3</a></td><td>eQTL/pQTL/eqtl_pqtl 模式必填；traditional 模式不需要</td></tr>
+                    </tbody>
+                </table>
+
+<h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th><th>默认</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>-t</code></td><td>分析类型：<code>eqtl</code>（表达 QTL）/ <code>pqtl</code>（蛋白 QTL）/ <code>traditional</code>（传统 MR）/ <code>eqtl_pqtl</code>（联合分析）</td><td>交互选择</td></tr>
+                        <tr><td><code>-i</code></td><td>基因列表 CSV（含 gene 列头），eQTL/pQTL 必填，traditional 模式不需要</td><td>—</td></tr>
+                        <tr><td><code>-o</code></td><td>输出目录</td><td>—</td></tr>
+                        <tr><td><code>-c</code></td><td>是否进行共定位分析（Coloc）：<code>1</code>=是，<code>0</code>=否。仅 pQTL / eqtl_pqtl 模式有效</td><td>0</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="warn-box" style="margin-top:14px">
+                    <strong>&#x1F511; OpenGWAS Token</strong>：MR 分析需要有效的 OpenGWAS API token。使用 <code>update_opengwas_token.sh</code> 更新。
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 21. TSG ========== -->
+        <div class="grid" id="m-tsg">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F52E;</span>
+                    <div>
+                        <div class="module-name">21. 因果推断 (TSG) <span class="badge badge-owner">iyunlpf</span></div>
+                        <div class="module-desc">TWAS + SMR + HEIDI + MR 整合因果推断流水线</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <div class="code-block"><span class="comment"># 完整流水线</span>
+/media/share/secure/TSG/run_tsg.sh \
+  <span class="flag">--config</span> <span class="path">config/tsg.example.ini</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/19_TSG</span>
+
+<span class="comment"># 仅运行部分模块</span>
+/media/share/secure/TSG/run_tsg.sh \
+  <span class="flag">--methods</span> <span class="value">twas,smr</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/19_TSG</span>
+
+<span class="comment"># 强制重跑</span>
+/media/share/secure/TSG/run_tsg.sh \
+  <span class="flag">--methods</span> <span class="value">twas,smr,mr</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/19_TSG</span> \
+  <span class="flag">--force</span></div>
+
+                <h3>模块依赖</h3>
+                <table class="matrix">
+                    <thead><tr><th>模块</th><th>说明</th><th>前置依赖</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>twas</code></td><td>TWAS 全基因组关联分析</td><td>无</td></tr>
+                        <tr><td><code>smr</code></td><td>SMR + HEIDI 检验</td><td>TWAS 结果</td></tr>
+                        <tr><td><code>mr</code></td><td>孟德尔随机化分析</td><td>TWAS 或 SMR 结果</td></tr>
+                    </tbody>
+                </table>
+
+                
+                <h3>输入文件格式</h3>
+                <table class="matrix">
+                    <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td>GWAS summary statistics</td><td><a href="#fmt-gwas">F9</a></td><td>GWAS 汇总统计文件（TSV，含 SNP/A1/A2/FREQ/BETA/SE/P）</td></tr>
+                        <tr><td>eQTL weight 文件</td><td>—</td><td>eQTL 权重库（TXT/TSV，由 FUSION 或 PredictDB 提供）</td></tr>
+                        <tr><td>config.ini</td><td><a href="#fmt-config">F6</a></td><td>模块配置文件，指定 GWAS 和权重路径</td></tr>
+                    </tbody>
+                </table>
+
+<h3>关键参数</h3>
+                <table class="matrix">
+                    <thead><tr><th>参数</th><th>说明</th><th>默认</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>--methods</code></td><td>模块选择（逗号分隔）</td><td>twas,smr,mr</td></tr>
+                        <tr><td><code>--mr-pval</code></td><td>MR SNP 选择 p 值</td><td>5e-8</td></tr>
+                        <tr><td><code>--mr-kb</code></td><td>Clumping 距离 (kb)</td><td>10000</td></tr>
+                        <tr><td><code>--force</code></td><td>强制重跑</td><td>—</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== 22. 故障排除 ========== -->
+        <div class="grid" id="troubleshoot">
+            <div class="card">
+                <h2 class="section-title">&#x1F527; 22. 故障排除</h2>
+
+                <h3>常见问题</h3>
+                <table class="matrix">
+                    <thead><tr><th>现象</th><th>可能原因</th><th>解决方案</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>Permission denied</td>
+                            <td>权限配置不正确或脚本路径错误</td>
+                            <td>确认免密调用已配置（见第 0 节前置条件），检查脚本路径是否正确</td>
+                        </tr>
+                        <tr>
+                            <td>R 包缺失报错</td>
+                            <td>依赖包未安装</td>
+                            <td>运行 <code>./run_*.sh --install-deps</code>（部分模块支持）</td>
+                        </tr>
+                        <tr>
+                            <td>输入文件格式错误</td>
+                            <td>CSV 编码问题 / 列名不匹配</td>
+                            <td>确认 UTF-8 编码，检查列名是否为 <code>SYMBOL</code>、<code>sample</code>、<code>group</code></td>
+                        </tr>
+                        <tr>
+                            <td>输出目录删除失败</td>
+                            <td>非创建者尝试删除</td>
+                            <td>只有 <code>.owner</code> 文件记录的用户可以 <code>--rm</code> 删除</td>
+                        </tr>
+                        <tr>
+                            <td>GEO 下载缓慢</td>
+                            <td>NCBI 直连网络差</td>
+                            <td>默认使用 geoChina 镜像，或指定 <code>--no-geochina</code> 切回 NCBI</td>
+                        </tr>
+                        <tr>
+                            <td>MR OpenGWAS 报错</td>
+                            <td>API token 过期</td>
+                            <td>运行 <code>update_opengwas_token.sh</code> 更新 token</td>
+                        </tr>
+                        <tr>
+                            <td>log2 变换后数据异常</td>
+                            <td>数据已是 log 尺度但被重复变换</td>
+                            <td>GSE 下载模块自动检测 log2 状态，通常无需手动干预</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>日志与报告</h3>
+                <div class="success-box">
+                    <strong>&#x1F4CB; 所有模块都会生成：</strong>
+                    <ul style="margin-top:8px">
+                        <li><strong>logs/</strong>：运行日志（含时间戳和 sessionInfo）</li>
+                        <li><strong>report/</strong>：自动 Word/Quarto 报告（大部分模块支持）</li>
+                        <li><strong>result/</strong>：分析结果（CSV + 图表）</li>
+                    </ul>
+                    遇到问题时，优先查看 <code>logs/</code> 目录下最新的 <code>.log</code> 文件。
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 模块速查表 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title">&#x1F4D6; 模块速查表</h2>
+                <table class="matrix">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>模块</th>
+                            <th>入口脚本</th>
+                            <th>所有者</th>
+                            <th>典型输入</th>
+                            <th>典型输出</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>GEO 下载</td><td><code>run_download_gse.sh</code></td><td>iyunlyl</td><td>GSE ID</td><td>dat.csv + group.csv</td></tr>
+                        <tr><td>2</td><td>分组提取</td><td><code>run_extract_groups.sh</code></td><td>iyunlyl</td><td>pdata.csv</td><td>group.csv</td></tr>
+                        <tr><td>3</td><td>Combine</td><td><code>run_combine.sh</code></td><td>iyunlyl</td><td>多个 dat.csv + group.csv</td><td>combat.dat.csv</td></tr>
+                        <tr><td>4</td><td>DEGs</td><td><code>run_degs.sh</code></td><td>iyunlyl</td><td>dat.csv + group.csv</td><td>DEG_all/sig.csv + 图表</td></tr>
+                        <tr><td>5</td><td>富集分析</td><td><code>run_unified_enrichment.sh</code></td><td>iyunlpf</td><td>gene_list.csv + ranked_list.csv</td><td>GO/KEGG/GSEA 结果</td></tr>
+                        <tr><td>6</td><td>MachineLearn</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>gene.csv + dat.csv + group.csv</td><td>各算法结果</td></tr>
+                        <tr><td>7</td><td>韦恩图</td><td><code>run_venn_plot.sh</code></td><td>iyunlpf</td><td>多个 gene_list.csv</td><td>Venn + UpSet 图</td></tr>
+                        <tr><td>8</td><td>表达验证</td><td><code>run_expression_verify.sh</code></td><td>iyunlyl</td><td>train/val expr + genes</td><td>统计 + 箱线图 + ROC</td></tr>
+                        <tr><td>9</td><td>预后分析</td><td><code>run_prognosis.sh</code></td><td>iyunlyl</td><td>expr + survival + genes</td><td>Cox + KM + 风险模型</td></tr>
+                        <tr><td>10</td><td>列线图</td><td><code>run_nomogram.sh</code></td><td>iyunlyl</td><td>expr + group + genes</td><td>Nomogram + DCA + ROC</td></tr>
+                        <tr><td>11</td><td>DEPTH2</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>expr + genes + riskscore</td><td>箱线图 + 相关性</td></tr>
+                        <tr><td>12</td><td>WGCNA</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>expr + group</td><td>模块 + 网络</td></tr>
+                        <tr><td>13</td><td>Friends</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>genes.csv</td><td>GO 相似性矩阵</td></tr>
+                        <tr><td>14</td><td>PPI</td><td><code>run_ppi.sh</code></td><td>iyunlyl</td><td>genes.csv</td><td>网络图 + 弦图</td></tr>
+                        <tr><td>15</td><td>免疫浸润</td><td><code>run_immune_infiltration.sh</code></td><td>iyunlyl</td><td>expr + group + config</td><td>8 种方法结果</td></tr>
+                        <tr><td>16</td><td>染色体图</td><td><code>run_chromosome_plot.sh</code></td><td>iyunlyl</td><td>genes.csv</td><td>Circos 环形图</td></tr>
+                        <tr><td>17</td><td>TMB</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>riskscore + genes</td><td>突变景观 + KM</td></tr>
+                        <tr><td>18</td><td>MSI</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>riskscore + clinical</td><td>MSI 分析图</td></tr>
+                        <tr><td>19</td><td>MR</td><td><code>run_mr.sh</code></td><td>iyunlyl</td><td>genes.csv + config</td><td>MR + Coloc 报告</td></tr>
+                        <tr><td>20</td><td>TSG</td><td><code>run_tsg.sh</code></td><td>iyunlpf</td><td>config.ini</td><td>TWAS+SMR+MR 报告</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========== Footer ========== -->
+        <p class="footer-note">
+            生物信息学标准化分析流程 SOP &mdash; 版本 1.7 &mdash; 最后更新：2026-04-02<br>
+            脚本目录：<code>/media/share/secure/</code> &nbsp;|&nbsp; 输出目录：<code>/media/share/Project/</code>
+        </p>
+
+    </div>
+
+    <!-- ========== JavaScript ========== -->
+    <script>
+        function switchTab(event, tabId) {
+            const container = event.target.closest('.tabs-container');
+            container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.closest('.tab').classList.add('active');
+            container.querySelector('#' + tabId).classList.add('active');
+        }
+        // Scroll-spy for sidebar
+        (function() {
+            const links = document.querySelectorAll('.sidebar a[href^="#"]');
+            const ids = Array.from(links).map(a => a.getAttribute('href').slice(1));
+            function update() {
+                let current = ids[0];
+                for (const id of ids) {
+                    const el = document.getElementById(id);
+                    if (el && el.getBoundingClientRect().top <= 120) current = id;
+                }
+                links.forEach(a => {
+                    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+                });
+            }
+            window.addEventListener('scroll', update, { passive: true });
+            update();
+        })();
+    </script>
+</body>
+</html>

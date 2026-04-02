@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+# ============================================================================
+# 多数据集合并与批次效应校正 - Code Protection Wrapper
+# ============================================================================
+set -euo pipefail
+
+# ==== 代码保护参数 ====
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TARGET_USER="iyunlyl"
+ALLOWED_PREFIX="/media/share/output"
+R_SCRIPT="${SCRIPT_DIR}/scripts/combine_standalone.R"
+
+# ---- 帮助信息 ----
+show_help() {
+  cat << 'HELP'
+用法: bash run_combine.sh [选项]
+
+必需参数:
+  -d, --data-files   FILE1,FILE2,...   表达矩阵 CSV 文件路径（逗号分隔，至少 2 个）
+  -g, --group-files  FILE1,FILE2,...   对应的分组 CSV 文件路径（逗号分隔）
+  -o, --output-dir   DIR              输出目录
+
+可选参数:
+  -n, --dataset-names NAME1,NAME2,... 数据集名称（逗号分隔）
+  --output-name       NAME            输出文件前缀名 [default: combat]
+  --gene-col          COL             基因列名 [default: SYMBOL]
+  -w, --width         NUM             图片宽度 [default: 9]
+  --height            NUM             图片高度 [default: 7]
+  --rm                                删除输出目录（需 .owner 校验）
+  -h, --help                          显示帮助
+
+输入文件格式:
+  表达矩阵 CSV:  SYMBOL,sample1,sample2,...（第一列为基因名）
+  分组文件 CSV:   sample,group（两列，表头固定）
+
+输出文件:
+  combat.dat.csv          校正后表达矩阵
+  combat.group.csv        合并后分组文件
+  00.dataset_info.csv     数据集信息
+  01.pca_before_group.*   校正前 PCA（按分组着色）
+  02.pca_before_dataset.* 校正前 PCA（按数据集着色）
+  03.boxplot_before.*     校正前箱线图
+  04.pca_after_group.*    校正后 PCA（按分组着色）
+  05.pca_after_dataset.*  校正后 PCA（按数据集着色）
+  06.boxplot_after.*      校正后箱线图
+  combine_report_*.docx   自动生成的分析报告
+
+示例:
+  bash run_combine.sh \
+    -d /path/GSE10072_dat.csv,/path/GSE19804_dat.csv \
+    -g /path/GSE10072_group.csv,/path/GSE19804_group.csv \
+    -n GSE10072,GSE19804 \
+    -o /media/share/output/project1/combine_results
+HELP
+}
+
+if [[ $# -eq 0 ]]; then
+  show_help
+  exit 1
+fi
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  show_help
+  exit 0
+fi
+
+# ==== 代码保护逻辑 ====
+_SCRIPT_ABS="${SCRIPT_DIR}/$(basename "${BASH_SOURCE[0]}")"
+CURRENT_USER="$(whoami)"
+if [[ "$CURRENT_USER" != "$TARGET_USER" ]]; then
+  echo "[权限切换] 当前用户: $CURRENT_USER -> 切换到: $TARGET_USER"
+  exec sudo -u "$TARGET_USER" "$_SCRIPT_ABS" "$@"
+fi
+
+# ---- 安全防护：清理危险环境变量 ----
+unset R_LIBS R_LIBS_USER R_LIBS_SITE
+unset R_PROFILE R_PROFILE_USER
+unset R_ENVIRON R_ENVIRON_USER
+unset R_HISTFILE R_HISTSIZE
+unset LD_PRELOAD LD_LIBRARY_PATH
+ulimit -c 0
+export TMPDIR="$SCRIPT_DIR/.tmp"
+mkdir -p "$TMPDIR" 2>/dev/null
+
+# ---- 解析参数 ----
+DELETE_MODE=false
+R_ARGS=()
+OUTPUT_DIR=""
+OUTPUT_NAME="combat"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)     show_help; exit 0 ;;
+    --rm)          DELETE_MODE=true; shift ;;
+    -o|--output-dir)
+      OUTPUT_DIR="$2"
+      R_ARGS+=("--output-dir" "$2"); shift 2 ;;
+    --output-name)
+      OUTPUT_NAME="$2"
+      R_ARGS+=("--output-name" "$2"); shift 2 ;;
+    *)
+      R_ARGS+=("$1"); shift ;;
+  esac
+done
+
+# ---- --rm 删除逻辑 ----
+if [[ "$DELETE_MODE" == "true" ]]; then
+  if [[ -z "$OUTPUT_DIR" ]]; then
+    echo "[错误] --rm 需要同时指定 --output-dir"
+    exit 1
+  fi
+  OUTPUT_DIR="$(realpath "$OUTPUT_DIR" 2>/dev/null || echo "$OUTPUT_DIR")"
+  if [[ "$OUTPUT_DIR" != ${ALLOWED_PREFIX}* ]]; then
+    echo "[错误] 仅允许删除 ${ALLOWED_PREFIX} 下的目录"
+    exit 1
+  fi
+  OWNER_FILE="${OUTPUT_DIR}/.owner"
+  if [[ ! -f "$OWNER_FILE" ]]; then
+    echo "[错误] 缺少 ${OWNER_FILE}，无法确认所有权"
+    exit 1
+  fi
+  OWNER="$(cat "$OWNER_FILE" 2>/dev/null)"
+  if [[ "$OWNER" != "$TARGET_USER" ]]; then
+    echo "[错误] .owner 记录的用户 ($OWNER) 不是 $TARGET_USER"
+    exit 1
+  fi
+  echo "[删除] 正在删除 ${OUTPUT_DIR} ..."
+    # ---- 路径白名单 + 符号链接保护 ----
+    REAL_OUTPUT=$(realpath "$OUTPUT_DIR" 2>/dev/null)
+    if [[ "$REAL_OUTPUT" != "$ALLOWED_PREFIX/"* ]]; then
+        echo "错误：只能删除 $ALLOWED_PREFIX/ 下的目录，拒绝: $REAL_OUTPUT" >&2
+        exit 1
+    fi
+    if [ -L "$OUTPUT_DIR" ]; then
+        echo "错误：输出目录不能是符号链接，拒绝删除" >&2
+        exit 1
+    fi
+  rm -rf "$OUTPUT_DIR"
+  echo "[完成] 已删除"
+  exit 0
+fi
+
+# ---- 执行 R 脚本 ----
+echo "============================================================"
+echo " Combine (ComBat Batch Correction)"
+echo "============================================================"
+/usr/local/bin/Rscript --vanilla --no-save --no-restore "${R_SCRIPT}" "${R_ARGS[@]}"
+EXIT_CODE=$?
+
+# ---- 设置输出权限与 .owner ----
+if [[ -n "$OUTPUT_DIR" && -d "$OUTPUT_DIR" ]]; then
+  latest_dir=$(ls -td "${OUTPUT_DIR}"/combine_* 2>/dev/null | head -1)
+  if [[ -n "$latest_dir" ]]; then
+    if [[ "$EXIT_CODE" -eq 0 ]]; then
+      report_script="${SCRIPT_DIR}/report_templates/generate_report.R"
+      if [[ -f "$report_script" ]]; then
+        if command -v quarto >/dev/null 2>&1; then
+          echo "[报告] 生成 Combine 报告..."
+          if ! /usr/local/bin/Rscript --vanilla --no-save --no-restore "$report_script" -d "$latest_dir" -p "$(basename "$latest_dir")" --output-name "$OUTPUT_NAME"; then
+            echo "[警告] Combine 报告生成失败，已保留分析结果。" >&2
+          fi
+        else
+          echo "[警告] 未检测到 Quarto，跳过 Combine 报告生成。" >&2
+        fi
+      fi
+    fi
+
+    echo "$TARGET_USER" > "${latest_dir}/.owner" 2>/dev/null || true
+    if [ -L "$latest_dir" ]; then
+        echo "错误：输出目录不能是符号链接，拒绝修改权限" >&2
+        exit 1
+    fi
+    chmod -R 777 "$latest_dir" 2>/dev/null || true
+    echo "[输出] ${latest_dir}"
+  fi
+fi
+
+exit $EXIT_CODE

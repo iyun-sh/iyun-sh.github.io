@@ -35,8 +35,8 @@
         }
 
         .container {
-            max-width: 1180px;
-            margin: 0 auto;
+            max-width: 1100px;
+            margin-left: 280px;
             padding: 32px 20px 56px;
         }
 
@@ -172,16 +172,67 @@
 
         /* Responsive */
         @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+            .container { margin-left: 0; }
             .card.two-col { grid-column: span 12; }
             .hero { padding: 24px; }
         }
         @media print {
+            .sidebar { display: none !important; }
+            .sidebar-toggle { display: none !important; }
+            .container { margin-left: 0 !important; max-width: 100%; }
             body { background: #fff; }
             .card { box-shadow: none; }
         }
-    </style>
+    
+        [id] { scroll-margin-top: 80px; }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+            overflow-y: auto; background: #ffffff; border-right: 1px solid var(--border);
+            padding: 24px 16px; z-index: 100; box-shadow: 2px 0 12px rgba(0,0,0,0.06);
+        }
+        .sidebar-title {
+            font-size: 1.05rem; font-weight: 700; color: #0f172a;
+            margin: 0 0 16px; padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+        .sidebar a {
+            display: block; text-decoration: none; color: var(--muted);
+            padding: 6px 10px; border-radius: 8px; font-size: 0.87rem; line-height: 1.5;
+            transition: background .15s, color .15s;
+        }
+        .sidebar a:hover { background: var(--primary-soft); color: var(--primary); }
+        .sidebar a.active { background: var(--primary); color: #fff; font-weight: 600; }
+        .sidebar-toggle {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+            background: #fff; font-size: 1.3em; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+</style>
 </head>
 <body>
+        <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#x2630;</button>
+    <nav class="sidebar">
+        <div class="sidebar-title">&#x1F4D1; 目录导航</div>
+        <a href="#sec-dir">模块目录结构</a>
+        <a href="#sec-naming">文件命名规范</a>
+        <a href="#sec-log">日志文件规范</a>
+        <a href="#sec-track">结果追踪机制</a>
+        <a href="#sec-path">路径规范</a>
+        <a href="#sec-script">脚本开发规范</a>
+        <a href="#sec-best">推荐做法</a>
+        <a href="#sec-avoid">避免做法</a>
+        <a href="#sec-collab">模块协作与版本管理</a>
+        <a href="#sec-qa">质量保证规范</a>
+        <a href="#sec-readme">README.md 必备内容</a>
+        <a href="#sec-bioinfo">生信开发补充规范</a>
+        <a href="#sec-format">文件格式建议</a>
+        <a href="#sec-input">输入文件校验规范</a>
+    </nav>
     <div class="container">
 
         <!-- Hero -->
@@ -201,7 +252,7 @@
         <!-- ========== 模块目录结构 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">📁 模块目录结构</h2>
+                <h2 class="section-title" id="sec-dir">📁 模块目录结构</h2>
 
                 <div class="lead-box">
                     <strong>📁 模块目录组织示例：</strong>
@@ -472,7 +523,7 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
         <!-- ========== 文件命名规范 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">📝 文件命名规范</h2>
+                <h2 class="section-title" id="sec-naming">📝 文件命名规范</h2>
 
                 <div class="tabs-container">
                     <div class="tabs">
@@ -580,7 +631,7 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
         <!-- ========== 日志文件规范 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">📄 日志文件规范</h2>
+                <h2 class="section-title" id="sec-log">📄 日志文件规范</h2>
 
                 <div class="danger-box">
                     <strong>⚠️ 核心原则：</strong>
@@ -707,7 +758,7 @@ Cook距离过滤: 是
         <!-- ========== 结果追踪机制 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">🔗 结果追踪机制</h2>
+                <h2 class="section-title" id="sec-track">🔗 结果追踪机制</h2>
 
                 <div class="lead-box" style="background:#ecfdf5; border-color:#6ee7b7;">
                     <strong>✨ 核心设计：</strong> 程序开始时生成时间戳，日志和报告使用时间戳命名，结果文件夹使用隐藏文件标识时间戳，配置文件保持简洁。
@@ -814,7 +865,7 @@ Output:
         <!-- ========== 路径规范与 normalizePath 要求 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">🛣️ 路径规范与 normalizePath 要求</h2>
+                <h2 class="section-title" id="sec-path">🛣️ 路径规范与 normalizePath 要求</h2>
 
                 <div class="danger-box">
                     <strong>⚠️ 核心原则：</strong>
@@ -901,7 +952,7 @@ OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.ar
         <!-- ========== 脚本开发规范 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">🛠️ 脚本开发规范</h2>
+                <h2 class="section-title" id="sec-script">🛠️ 脚本开发规范</h2>
 
                 <div class="danger-box">
                     <strong>⚠️ 核心原则：</strong>
@@ -1082,7 +1133,7 @@ echo "[$(date)] 分析完成"</pre>
         <!-- ========== 最佳实践 ========== -->
         <div class="grid">
             <div class="card two-col">
-                <h2 class="section-title">✅ 推荐做法</h2>
+                <h2 class="section-title" id="sec-best">✅ 推荐做法</h2>
                 <ul class="rule-list">
                     <li><strong>统一时间戳</strong>：程序开始时生成时间戳，所有输出文件统一使用</li>
                     <li><strong>日志优先</strong>：<span class="text-red">无论是否有配置文件，日志中必须详细记录所有参数</span></li>
@@ -1110,7 +1161,7 @@ echo "[$(date)] 分析完成"</pre>
                 </ul>
             </div>
             <div class="card two-col">
-                <h2 class="section-title">❌ 避免做法</h2>
+                <h2 class="section-title" id="sec-avoid">❌ 避免做法</h2>
                 <ul class="check-list">
                     <li>使用无意义的文件名（如 result1.csv, final.pdf）</li>
                     <li>时间戳只精确到日期，导致同一天多次运行无法区分</li>
@@ -1139,7 +1190,7 @@ echo "[$(date)] 分析完成"</pre>
         <!-- ========== 模块协作与版本管理 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">🔄 模块协作与版本管理</h2>
+                <h2 class="section-title" id="sec-collab">🔄 模块协作与版本管理</h2>
 
                 <div class="lead-box" style="background:#ecfdf5; border-color:#6ee7b7;">
                     <strong>✨ 核心设计：</strong> 多模块组成流水线时，必须有清晰的数据传递契约、依赖声明和版本管理策略，确保任意模块可独立更新而不破坏上下游。
@@ -1257,7 +1308,7 @@ INPUT="../RawData/result/RawData/01.GSEXXX_count.csv"</pre>
         <!-- ========== 质量保证规范 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">🧪 质量保证规范</h2>
+                <h2 class="section-title" id="sec-qa">🧪 质量保证规范</h2>
 
                 <div class="danger-box">
                     <strong>⚠️ 核心原则：</strong>
@@ -1360,7 +1411,7 @@ echo "=== 冒烟测试通过 ==="</pre>
         <!-- ========== README.md 必备内容 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">📖 README.md 必备内容</h2>
+                <h2 class="section-title" id="sec-readme">📖 README.md 必备内容</h2>
 
                 <div class="lead-box">
                     <strong>📌 设计原则：</strong> 每个模块根目录必须包含 <code>README.md</code>，内容足够让新开发者<span class="text-red">仅凭此文件即可理解模块用途、运行方式和数据接口</span>。
@@ -1443,7 +1494,7 @@ bash run.sh --plot-only
         <!-- ========== 生信开发补充规范 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">🧬 生信开发补充规范</h2>
+                <h2 class="section-title" id="sec-bioinfo">🧬 生信开发补充规范</h2>
                 <table class="matrix">
                     <thead><tr><th>规范项</th><th>建议要求</th><th>说明</th></tr></thead>
                     <tbody>
@@ -1467,7 +1518,7 @@ bash run.sh --plot-only
         <!-- ========== 文件格式建议 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">📊 文件格式建议</h2>
+                <h2 class="section-title" id="sec-format">📊 文件格式建议</h2>
 
                 <div class="tabs-container">
                     <div class="tabs">
@@ -1559,7 +1610,7 @@ bash run.sh --plot-only
         <!-- ========== 输入文件与结构化校验规范 ========== -->
         <div class="grid">
             <div class="card">
-                <h2 class="section-title">🔍 输入文件与结构化校验规范</h2>
+                <h2 class="section-title" id="sec-input">🔍 输入文件与结构化校验规范</h2>
 
                 <div class="tabs-container">
                     <div class="tabs">
@@ -1632,6 +1683,29 @@ bash run.sh --plot-only
             document.getElementById(tabName).classList.add('active');
             event.currentTarget.classList.add('active');
         }
+    </script>
+<script>
+    (function() {
+        var links = document.querySelectorAll('.sidebar a[href^="#"]');
+        var ids = [];
+        for (var i = 0; i < links.length; i++) ids.push(links[i].getAttribute('href').slice(1));
+        function update() {
+            var current = ids[0];
+            for (var j = 0; j < ids.length; j++) {
+                var el = document.getElementById(ids[j]);
+                if (el && el.getBoundingClientRect().top <= 120) current = ids[j];
+            }
+            for (var k = 0; k < links.length; k++) {
+                if (links[k].getAttribute('href') === '#' + current) {
+                    links[k].classList.add('active');
+                } else {
+                    links[k].classList.remove('active');
+                }
+            }
+        }
+        window.addEventListener('scroll', update, { passive: true });
+        update();
+    })();
     </script>
 </body>
 </html>

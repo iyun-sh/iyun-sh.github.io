@@ -36,8 +36,8 @@
         }
 
         .container {
-            max-width: 1180px;
-            margin: 0 auto;
+            max-width: 1100px;
+            margin-left: 280px;
             padding: 32px 20px 56px;
         }
 
@@ -288,17 +288,65 @@
         }
 
         @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+            .container { margin-left: 0; }
             .card.two-col { grid-column: span 12; }
             .hero { padding: 24px; }
             .flow-grid { grid-template-columns: 1fr; }
             .flow-step::after { display: none; }
         }
-    </style>
+    
+        [id] { scroll-margin-top: 80px; }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+            overflow-y: auto; background: #ffffff; border-right: 1px solid var(--border);
+            padding: 24px 16px; z-index: 100; box-shadow: 2px 0 12px rgba(0,0,0,0.06);
+        }
+        .sidebar-title {
+            font-size: 1.05rem; font-weight: 700; color: #0f172a;
+            margin: 0 0 16px; padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+        .sidebar a {
+            display: block; text-decoration: none; color: var(--muted);
+            padding: 6px 10px; border-radius: 8px; font-size: 0.87rem; line-height: 1.5;
+            transition: background .15s, color .15s;
+        }
+        .sidebar a:hover { background: var(--primary-soft); color: var(--primary); }
+        .sidebar a.active { background: var(--primary); color: #fff; font-weight: 600; }
+        .sidebar-toggle {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+            background: #fff; font-size: 1.3em; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+</style>
 </head>
 <body>
+        <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#x2630;</button>
+    <nav class="sidebar">
+        <div class="sidebar-title">&#x1F4D1; 目录导航</div>
+        <a href="#sec-core">核心原则</a>
+        <a href="#sec-dir">推荐目录边界</a>
+        <a href="#sec-scope">公开与保护边界</a>
+        <a href="#sec-runsh">run.sh 保护要求</a>
+        <a href="#sec-params">run.sh 参数规范</a>
+        <a href="#sec-scripts">scripts/ 保护要求</a>
+        <a href="#sec-level">保护策略分级</a>
+        <a href="#sec-impl">保护实施方法</a>
+        <a href="#sec-package">推荐交付包结构</a>
+        <a href="#sec-faq">常见问题</a>
+        <a href="#sec-redline">交付红线清单</a>
+        <a href="#sec-overview">保护指南总览流程</a>
+        <a href="#sec-checklist">交付前检查清单</a>
+        <a href="#sec-docs">建议的文档分工</a>
+    </nav>
     <div class="container">
         <section class="hero">
-            <h1>生信模块代码保护指南</h1>
+            <h1>&#x1F6E1;&#xFE0F; 生信模块代码保护指南</h1>
             <p>本指南用于约束模块对外交付时的源码暴露边界、入口脚本设计、配置模板留存策略以及保护实现原则，确保模块可用、可维护、可保护。</p>
             <div class="pill-row">
                 <span class="pill primary">主入口固定为 run.sh</span>
@@ -309,7 +357,7 @@
 
         <div class="grid">
             <section class="card two-col">
-                <h2 class="section-title">核心原则</h2>
+                <h2 class="section-title" id="sec-core">&#x1F3AF; 核心原则</h2>
                 <ol class="steps">
                     <li><strong>对外只暴露稳定入口</strong>：使用者统一通过 <code>run.sh</code> 调用模块，不应直接依赖 <code>scripts/</code> 内部脚本路径。</li>
                     <li><strong>内部实现与外部接口解耦</strong>：即使后续对 <code>scripts/</code> 做保护处理（如加密、编译、二进制化等），<code>run.sh</code> 的参数约定也应保持稳定。</li>
@@ -318,7 +366,7 @@
             </section>
 
             <section class="card two-col">
-                <h2 class="section-title">推荐目录边界</h2>
+                <h2 class="section-title" id="sec-dir">&#x1F4C1; 推荐目录边界</h2>
                 <pre class="code-block">module_name/
 ├── run.sh
 ├── scripts/
@@ -342,7 +390,7 @@
             </section>
 
             <section class="card">
-                <h2 class="section-title">哪些内容可以公开，哪些应受保护</h2>
+                <h2 class="section-title" id="sec-scope">&#x1F50D; 哪些内容可以公开，哪些应受保护</h2>
                 <table class="matrix">
                     <thead>
                         <tr>
@@ -397,7 +445,7 @@
             </section>
 
             <section class="card two-col">
-                <h2 class="section-title">run.sh 的保护要求</h2>
+                <h2 class="section-title" id="sec-runsh">&#x1F510; run.sh 的保护要求</h2>
                 <ul class="rule-list">
                     <li><span class="text-red">必须提供清晰的参数入口</span>，优先支持配置文件路径、输入数据路径、输出目录等核心参数。</li>
                     <li><span class="text-red">必须输出可定位问题的日志路径</span>，不把错误完全吞掉。</li>
@@ -410,7 +458,7 @@
             </section>
 
             <section class="card">
-                <h2 class="section-title">run.sh 参数与退出码规范</h2>
+                <h2 class="section-title" id="sec-params">&#x2699;&#xFE0F; run.sh 参数与退出码规范</h2>
                 <table class="matrix">
                     <thead>
                         <tr>
@@ -462,7 +510,7 @@
             </section>
 
             <section class="card two-col">
-                <h2 class="section-title">scripts/ 的保护要求</h2>
+                <h2 class="section-title" id="sec-scripts">&#x1F512; scripts/ 的保护要求</h2>
                 <ul class="rule-list">
                     <li><code>scripts/</code> 视为内部实现目录，可按需要做保护处理（如加密、编译、二进制化、压缩等）或限制访问。</li>
                     <li>保护后仍需保留稳定的日志输出、结果目录结构和配置映射关系。</li>
@@ -476,7 +524,7 @@
             </section>
 
             <section class="card">
-                <h2 class="section-title">保护策略分级建议</h2>
+                <h2 class="section-title" id="sec-level">&#x1F4CA; 保护策略分级建议</h2>
                 <table class="matrix">
                     <thead>
                         <tr>
@@ -509,7 +557,7 @@
             </section>
 
             <section class="card two-col">
-                <h2 class="section-title">具体保护实施方法</h2>
+                <h2 class="section-title" id="sec-impl">&#x1F6E0;&#xFE0F; 具体保护实施方法</h2>
 
                 <h3 style="margin:18px 0 8px;color:#0f172a;">1. 文件权限控制（基础保护 — 所有语言通用）</h3>
                 <pre class="code-block"># 目录：仅所有者和同组可进入
@@ -643,7 +691,7 @@ rm -f scripts/scripts.sh.x.c
             </section>
 
             <section class="card two-col">
-                <h2 class="section-title">推荐交付包结构</h2>
+                <h2 class="section-title" id="sec-package">&#x1F4E6; 推荐交付包结构</h2>
                 <pre class="code-block">deliverable/
 ├── run.sh
 ├── README.md               # 必备（参见《规范》README 必备内容章节）
@@ -666,7 +714,7 @@ rm -f scripts/scripts.sh.x.c
             </section>
 
             <section class="card two-col">
-                <h2 class="section-title">常见问题</h2>
+                <h2 class="section-title" id="sec-faq">&#x2753; 常见问题</h2>
                 <ul class="rule-list">
                     <li><strong>Q：配置模板要不要一起交付？</strong><br> A：要。模板配置属于外部使用接口的一部分，不应因代码保护而缺失。</li>
                     <li><strong>Q：保护处理（如加密、编译等）后报错看不懂怎么办？</strong><br> A：需要在 <code>run.sh</code> 和日志中保留清晰的错误提示，不要把内部异常全部变成无意义的返回码。</li>
@@ -676,7 +724,7 @@ rm -f scripts/scripts.sh.x.c
             </section>
 
             <section class="card">
-                <h2 class="section-title">交付红线清单</h2>
+                <h2 class="section-title" id="sec-redline">&#x1F6AB; 交付红线清单</h2>
                 <table class="matrix">
                     <thead>
                         <tr>
@@ -719,7 +767,7 @@ rm -f scripts/scripts.sh.x.c
             </section>
 
             <section class="card">
-                <h2 class="section-title">保护指南总览流程</h2>
+                <h2 class="section-title" id="sec-overview">&#x1F5FA;&#xFE0F; 保护指南总览流程</h2>
                 <div class="flow-grid">
                     <div class="flow-step">
                         <strong>1. 定义外部接口</strong>
@@ -744,7 +792,7 @@ rm -f scripts/scripts.sh.x.c
             </section>
 
             <section class="card">
-                <h2 class="section-title">交付前检查清单</h2>
+                <h2 class="section-title" id="sec-checklist">&#x2705; 交付前检查清单</h2>
                 <ul class="check-list">
                     <li>确认对外文档只描述 <code>run.sh</code> 的用法，不要求用户直接调用内部脚本。</li>
                     <li>确认 <code>config/</code> 中保留了可读的参数模板，且与当前版本一致。</li>
@@ -761,7 +809,7 @@ rm -f scripts/scripts.sh.x.c
             </section>
 
             <section class="card">
-                <h2 class="section-title">建议的文档分工</h2>
+                <h2 class="section-title" id="sec-docs">&#x1F4DD; 建议的文档分工</h2>
                 <ul class="rule-list">
                     <li><strong>规范页</strong>：讲模块目录、输出命名、日志与追踪关系。</li>
                     <li><strong>保护指南</strong>：讲对外暴露边界、保护策略、禁止事项和交付检查。</li>
@@ -771,5 +819,28 @@ rm -f scripts/scripts.sh.x.c
             </section>
         </div>
         <p class="footer-note"><strong>版本:</strong> v1.1 | <strong>更新日期:</strong> 2026-03-27 | 与《生信开发模块文件与输出规范 v1.3》配套</p>    </div>
+<script>
+    (function() {
+        var links = document.querySelectorAll('.sidebar a[href^="#"]');
+        var ids = [];
+        for (var i = 0; i < links.length; i++) ids.push(links[i].getAttribute('href').slice(1));
+        function update() {
+            var current = ids[0];
+            for (var j = 0; j < ids.length; j++) {
+                var el = document.getElementById(ids[j]);
+                if (el && el.getBoundingClientRect().top <= 120) current = ids[j];
+            }
+            for (var k = 0; k < links.length; k++) {
+                if (links[k].getAttribute('href') === '#' + current) {
+                    links[k].classList.add('active');
+                } else {
+                    links[k].classList.remove('active');
+                }
+            }
+        }
+        window.addEventListener('scroll', update, { passive: true });
+        update();
+    })();
+    </script>
 </body>
 </html>

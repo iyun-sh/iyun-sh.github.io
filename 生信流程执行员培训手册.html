@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生信流程执行员培训手册</title>
+    <style>
+        :root {
+            --bg: #f3f6fb;
+            --card: #ffffff;
+            --text: #223043;
+            --muted: #5b6b80;
+            --primary: #1d4ed8;
+            --primary-soft: #dbeafe;
+            --accent: #0f766e;
+            --accent-soft: #ccfbf1;
+            --warn: #b45309;
+            --warn-soft: #fef3c7;
+            --danger: #b91c1c;
+            --danger-soft: #fee2e2;
+            --success: #15803d;
+            --success-soft: #dcfce7;
+            --border: #d9e2ef;
+            --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(29,78,216,0.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(15,118,110,0.12), transparent 24%),
+                var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin-left: 280px;
+            padding: 32px 20px 56px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 32px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 55%, #ecfeff 100%);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.7);
+            margin-bottom: 24px;
+        }
+        .hero h1 { margin: 0 0 10px; font-size: clamp(2rem,4vw,3rem); line-height: 1.15; color: #0f172a; }
+        .hero p  { margin: 0; max-width: 920px; color: var(--muted); font-size: 1.05rem; }
+
+        .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+        .pill { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 999px; font-size: 0.92rem; font-weight: 600; }
+        .pill.primary { background: var(--primary-soft); color: var(--primary); }
+        .pill.accent  { background: var(--accent-soft);  color: var(--accent); }
+        .pill.warn    { background: var(--warn-soft);    color: var(--warn); }
+        .pill.danger  { background: var(--danger-soft);  color: var(--danger); }
+
+        /* Grid & Card */
+        .grid { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 18px; margin-bottom: 18px; }
+        .card {
+            grid-column: span 12;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 28px rgba(15,23,42,0.05);
+        }
+        .card.two-col { grid-column: span 6; }
+        .card.four-col { grid-column: span 4; }
+
+        .section-title { margin: 0 0 14px; font-size: 1.3rem; color: #0f172a; }
+        h3 { margin: 18px 0 10px; font-size: 1.1rem; color: #1e3a8a; }
+
+        /* Boxes */
+        .lead-box, .warn-box, .danger-box, .success-box { border-radius: 16px; padding: 16px 18px; margin: 14px 0 0; }
+        .lead-box   { background: #f8fafc; border: 1px solid #dbeafe; }
+        .warn-box   { background: var(--warn-soft); border: 1px solid #fcd34d; }
+        .danger-box { background: var(--danger-soft); border: 1px solid #fca5a5; }
+        .success-box { background: var(--success-soft); border: 1px solid #86efac; }
+
+        /* Table (matrix) */
+        .matrix { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; }
+        .matrix th, .matrix td { border: 1px solid var(--border); padding: 12px 14px; text-align: left; vertical-align: top; }
+        .matrix th { background: #eff6ff; color: #1e3a8a; }
+
+        /* Code */
+        code, .code-block { font-family: Consolas, "Courier New", monospace; }
+        code { background: #eef2ff; color: #3730a3; padding: 2px 6px; border-radius: 6px; font-size: 0.9em; }
+        .code-block {
+            display: block; white-space: pre-wrap;
+            background: #0f172a; color: #e2e8f0;
+            border-radius: 16px; padding: 18px; margin: 14px 0 0; overflow-x: auto;
+            font-size: 0.88em; line-height: 1.65;
+        }
+        .code-block .comment { color: #64748b; }
+        .code-block .flag { color: #7dd3fc; }
+        .code-block .path { color: #86efac; }
+        .code-block .value { color: #fbbf24; }
+
+        /* Tabs */
+        .tabs-container { margin: 18px 0 0; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 2px solid var(--primary); }
+        .tab {
+            padding: 10px 16px;
+            background: var(--primary-soft);
+            border: none; border-radius: 12px 12px 0 0;
+            cursor: pointer; font-size: 0.95rem; font-weight: 600;
+            color: var(--primary);
+            transition: background .2s, color .2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .tab:hover { background: #bfdbfe; }
+        .tab.active { background: var(--primary); color: #fff; }
+        .tab-content { display: none; padding: 20px; background: var(--card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 16px 16px; }
+        .tab-content.active { display: block; }
+        .tab-icon { font-size: 1.1em; }
+
+        /* Steps (numbered circles) */
+        .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+        .steps li { position: relative; padding-left: 54px; margin-bottom: 18px; min-height: 38px; }
+        .steps li::before {
+            counter-increment: step; content: counter(step);
+            position: absolute; left: 0; top: 0;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #2563eb, #0f766e);
+            color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;
+        }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.75em; font-weight: 700; margin-left: 6px; white-space: nowrap; }
+        .badge-required { background: var(--danger-soft); color: var(--danger); }
+        .badge-recommended { background: var(--primary-soft); color: var(--primary); }
+        .badge-optional { background: var(--warn-soft); color: var(--warn); }
+        .badge-owner { background: var(--accent-soft); color: var(--accent); }
+
+        /* Emphasis */
+        .text-red { color: var(--danger); font-weight: 700; }
+        .text-green { color: var(--success); font-weight: 700; }
+        .text-bold { font-weight: 700; }
+
+        /* Check list */
+        .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; margin-top: 14px; }
+        .check-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 12px 14px; border-radius: 12px;
+            border: 1px solid var(--border); background: #fafbfd;
+        }
+        .check-item .icon { font-size: 1.3em; flex-shrink: 0; }
+        .check-item .desc { font-size: 0.92rem; }
+
+        /* Flow arrow */
+        .flow-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 18px 0; }
+        .flow-step {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 0.92rem;
+        }
+        .flow-arrow { color: var(--muted); font-size: 1.3em; }
+        .flow-step.data { background: #dbeafe; color: #1d4ed8; }
+        .flow-step.process { background: #ccfbf1; color: #0f766e; }
+        .flow-step.analysis { background: #fef3c7; color: #b45309; }
+        .flow-step.output { background: #dcfce7; color: #15803d; }
+        .flow-step.special { background: #ede9fe; color: #6d28d9; }
+
+        /* TOC */
+        .toc { columns: 2; column-gap: 24px; }
+        .toc a { text-decoration: none; color: var(--primary); display: block; padding: 4px 0; }
+        .toc a:hover { text-decoration: underline; }
+
+        /* Module card */
+        .module-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .module-icon { font-size: 1.6em; }
+        .module-name { font-size: 1.3rem; color: #0f172a; font-weight: 700; }
+        .module-desc { color: var(--muted); font-size: 0.95rem; }
+
+        /* Footer */
+        .footer-note { margin-top: 18px; color: var(--muted); font-size: 0.95rem; text-align: center; }
+
+        /* Lists */
+        ul { padding-left: 22px; }
+        li { margin: 6px 0; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+            .container { margin-left: 0; }
+            .card.two-col { grid-column: span 12; }
+            .card.four-col { grid-column: span 12; }
+            .hero { padding: 24px; }
+            .check-grid { grid-template-columns: 1fr; }
+        }
+        @media print {
+            body { background: #fff; }
+            .sidebar { display: none !important; }
+            .menu-toggle { display: none !important; }
+            .container { margin-left: 0 !important; max-width: 100%; }
+            .matrix { page-break-inside: avoid; }
+            .card { box-shadow: none; page-break-inside: avoid; }
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+            overflow-y: auto; background: #ffffff; border-right: 1px solid var(--border);
+            padding: 24px 16px; z-index: 100; box-shadow: 2px 0 12px rgba(0,0,0,0.06);
+        }
+        .sidebar-title {
+            font-size: 1.05rem; font-weight: 700; color: #0f172a;
+            margin: 0 0 16px; padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+        .sidebar a {
+            display: block; text-decoration: none; color: var(--muted);
+            padding: 6px 10px; border-radius: 8px; font-size: 0.87rem; line-height: 1.5;
+            transition: background .15s, color .15s;
+        }
+        .sidebar a:hover { background: var(--primary-soft); color: var(--primary); }
+        .sidebar a.active { background: var(--primary); color: #fff; font-weight: 600; }
+        .sidebar-toggle {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+            background: #fff; font-size: 1.3em; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Table responsive overflow */
+        .matrix { overflow-x: auto; display: block; max-width: 100%; }
+        table.matrix { display: table; }
+        @media (max-width: 900px) {
+            .matrix { font-size: 0.85em; }
+        }
+
+        /* Anchor offset */
+        [id] { scroll-margin-top: 80px; }
+    
+        /* ══ Training-specific styles ══ */
+        .section {
+            background: var(--card); border-radius: 12px;
+            padding: 28px 32px; margin-bottom: 24px;
+            border: 1px solid var(--border); box-shadow: var(--shadow);
+        }
+        .badge-data { background: var(--primary-soft); color: var(--primary); }
+        .badge-analysis { background: var(--success-soft); color: var(--success); }
+        .badge-causal { background: var(--warn-soft); color: var(--warn); }
+        .badge-danger { background: var(--danger-soft); color: var(--danger); }
+        .badge-day { background: #ede9fe; color: #6d28d9; }
+        .day-card {
+            background: #fafbfc; border: 1px solid var(--border);
+            border-radius: 10px; padding: 20px 24px; margin: 14px 0;
+        }
+        .day-card h4 { color: #6d28d9; margin-top: 0; font-size: 15px; }
+        .checklist { list-style: none; padding-left: 0; }
+        .checklist li { padding: 4px 0; }
+        .checklist li::before { content: "☐ "; color: var(--muted); }
+        .sop-ref {
+            padding: 2px 6px; background: #ede9fe;
+            border-radius: 4px; font-size: 0.9em; color: #6d28d9;
+            text-decoration: none;
+        }
+        .sop-ref:hover { background: #c4b5fd; }
+        .alert {
+            padding: 14px 18px; border-radius: 8px; margin: 12px 0;
+            font-size: 14px; line-height: 1.6;
+        }
+        .alert-danger { background: var(--danger-soft); border-left: 4px solid var(--danger); color: #991b1b; }
+        .alert-success { background: var(--success-soft); border-left: 4px solid var(--success); color: #166534; }
+        .alert-warn { background: var(--warn-soft); border-left: 4px solid var(--warn); color: #92400e; }
+        .alert-info { background: var(--primary-soft); border-left: 4px solid var(--primary); color: #1e40af; }
+        .matrix { overflow-x: auto; }</style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-title">📖 培训导航</div>
+        <a href="#overview">0. 概述</a>
+        <a href="#redline">1. 红线纪律</a>
+        <a href="#linux">2. Linux 速查</a>
+        <a href="#system">3. 系统架构认知</a>
+        <a href="#testdata">4. 测试数据说明</a>
+        <a href="#role-data" class="sub">─ 数据获取</a>
+        <a href="#data-day1">Day 1</a>
+        <a href="#data-day2">Day 2</a>
+        <a href="#data-day3">Day 3</a>
+        <a href="#role-analysis" class="sub">─ 标准分析</a>
+        <a href="#ana-day1">Day 1</a>
+        <a href="#ana-day2">Day 2</a>
+        <a href="#ana-day3">Day 3</a>
+        <a href="#ana-day4">Day 4-5</a>
+        <a href="#role-causal" class="sub">─ 因果推断</a>
+        <a href="#causal-day1">Day 1</a>
+        <a href="#causal-day2">Day 2</a>
+        <a href="#qc">5. 质控标准</a>
+        <a href="#errors">6. 常见错误速查</a>
+        <a href="#exam">7. 考核标准</a>
+            <a href="#feedback" class="sub">附录 A. 反馈表</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🧬 生信流程执行员培训手册</h1>
+            <p>面向标准化分析流程的新人培训方案。不教算法原理，只教标准操作。<br>
+            覆盖 3 个方向 × 7 天速成，配套测试数据与考核标准。</p>
+        </div>
+
+        <!-- ═══════ 0. 概述 ═══════ -->
+        <div class="section" id="overview">
+            <h2>&#x1F4D6; 0. 概述</h2>
+
+            <h3>培训核心思路</h3>
+            <p><strong>不教原理，只教操作；不教分析，只教执行。</strong></p>
+            <p>新人只需做到三件事：</p>
+            <ol>
+                <li>会按 SOP 准备输入文件、调用入口脚本</li>
+                <li>会看日志和报告判断流程是否成功</li>
+                <li>会按质控标准判定结果是否合格</li>
+            </ol>
+
+            <h3>培训方向</h3>
+            <p>根据模块类型和技能要求，分为 3 个方向：</p>
+            <table>
+                <tr>
+                    <th>#</th>
+                    <th>方向</th>
+                    <th>负责模块</th>
+                    <th>核心技能</th>
+                    <th>培训周期</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td><span class="badge badge-data">数据获取</span></td>
+                    <td>gse_download、combine</td>
+                    <td>GEO 数据下载、格式校验、数据合并</td>
+                    <td>3 天</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td><span class="badge badge-analysis">标准分析</span></td>
+                    <td>degs、enrichment、venn、ml、prognosis、nomogram、exprverify、wgcna、ppi、friends、immune、chrplot、depth2、tmb、msi</td>
+                    <td>输入文件准备（F1-F5）、批量执行、报告核查</td>
+                    <td>5 天</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td><span class="badge badge-causal">因果推断</span></td>
+                    <td>mr、tsg</td>
+                    <td>GWAS 数据处理（F9）、MAF 数据（F8）、特殊结果解读</td>
+                    <td>2 天</td>
+                </tr>
+            </table>
+
+            <div class="alert alert-info">
+                <strong>💡 建议路径：</strong>所有新人从「数据获取」Day 1-3 开始 → 考核通过后进入「标准分析」Day 1-5 → 有需要再扩展「因果推断」。
+            </div>
+
+            <h3>方向定位</h3>
+            <p>你是<strong>流程执行者</strong>，不是算法研发。核心职责：</p>
+            <ul>
+                <li>按标准操作准备输入文件、运行脚本</li>
+                <li>查看日志和报告，判断是否成功</li>
+                <li>按质控标准检查结果，不合格的标记处理</li>
+                <li>结果归档交付，记录运行日志</li>
+                <li><strong>不擅自修改参数、不修改脚本代码</strong></li>
+            </ul>
+        </div>
+
+        <!-- ═══════ 1. 红线纪律 ═══════ -->
+        <div class="section" id="redline">
+            <h2>&#x1F6A8; 1. 红线纪律（必须遵守）</h2>
+
+            <div class="alert alert-danger">
+                <strong>🚫 以下行为是绝对红线，违反将严肃处理：</strong>
+            </div>
+
+            <table>
+                <tr>
+                    <th>#</th>
+                    <th>红线行为</th>
+                    <th>后果</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td><strong>擅自修改</strong> <code>/media/share/secure/</code> 下的任何脚本</td>
+                    <td>所有模块受保护，修改可能导致全线瘫痪</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td><strong>擅自修改</strong>入口脚本（<code>run_*.sh</code>）中的参数</td>
+                    <td>参数变更必须经负责人确认</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td><strong>删除原始数据</strong>或 <code>/media/share/Project/</code> 下的关键文件</td>
+                    <td>数据不可恢复</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td><strong>跳过质控</strong>直接交付结果</td>
+                    <td>必须按质控表逐项核对后才能交付</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td><strong>私自拷贝/外传</strong>客户数据、样本信息</td>
+                    <td>涉及数据安全，零容忍</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>不确定时<strong>自行尝试</strong>而不上报</td>
+                    <td>不懂就问，禁止试错式操作</td>
+                </tr>
+            </table>
+
+            <div class="alert alert-warn">
+                <strong>⚠️ 核心原则：</strong>只照做，不创新。参数、路径、文件名严格按手册。不确定就问。
+            </div>
+        </div>
+
+        <!-- ═══════ 2. Linux 速查 ═══════ -->
+        <div class="section" id="linux">
+            <h2>&#x1F427; 2. Linux 基础速查</h2>
+            <p>以下是执行流程时最常用的命令，熟记即可。</p>
+
+            <h3>文件与目录操作</h3>
+            <table>
+                <tr><th>命令</th><th>作用</th><th>示例</th></tr>
+                <tr><td><code>pwd</code></td><td>显示当前目录</td><td><code>pwd</code></td></tr>
+                <tr><td><code>ls -la</code></td><td>列出文件（含隐藏）</td><td><code>ls -la /media/share/Project/</code></td></tr>
+                <tr><td><code>cd</code></td><td>切换目录</td><td><code>cd /media/share/Project/TCGA_LUAD/</code></td></tr>
+                <tr><td><code>cp</code></td><td>复制文件</td><td><code>cp expression.csv /目标路径/</code></td></tr>
+                <tr><td><code>mv</code></td><td>移动/重命名</td><td><code>mv old.csv new.csv</code></td></tr>
+                <tr><td><code>head -5</code></td><td>查看文件前 5 行</td><td><code>head -5 expression.csv</code></td></tr>
+                <tr><td><code>wc -l</code></td><td>统计行数</td><td><code>wc -l expression.csv</code></td></tr>
+                <tr><td><code>du -sh</code></td><td>查看目录大小</td><td><code>du -sh output/</code></td></tr>
+                <tr><td><code>cat</code></td><td>查看完整文件</td><td><code>cat group.csv</code></td></tr>
+            </table>
+
+            <h3>流程运行常用</h3>
+            <table>
+                <tr><th>命令</th><th>作用</th><th>示例</th></tr>
+                <tr><td><code>bash xxx.sh</code></td><td>运行脚本</td><td><code>bash run_download_gse.sh</code></td></tr>
+                <tr><td><code>nohup ... &amp;</code></td><td>后台运行</td><td><code>nohup bash run_ml.sh &amp;</code></td></tr>
+                <tr><td><code>tail -f</code></td><td>实时查看日志</td><td><code>tail -f nohup.out</code></td></tr>
+                <tr><td><code>ps aux | grep R</code></td><td>查看运行中进程</td><td>找 R 进程是否在跑</td></tr>
+                <tr><td><code>kill PID</code></td><td>终止进程</td><td><code>kill 12345</code></td></tr>
+                <tr><td><code>df -h</code></td><td>查看磁盘空间</td><td>检查是否空间不足</td></tr>
+            </table>
+
+            <div class="alert alert-warn">
+                <strong>⚠️ 危险命令：</strong><code>rm -rf</code> 永远不要用在不确定的路径上。删除文件前先 <code>ls</code> 确认。
+            </div>
+        </div>
+
+        <!-- ═══════ 3. 系统架构认知 ═══════ -->
+        <div class="section" id="system">
+            <h2>&#x1F3D7;&#xFE0F; 3. 系统架构认知</h2>
+
+            <h3>目录结构</h3>
+            <div class="code-block">
+<span class="comment"># 脚本目录（受保护，不可修改）</span>
+/media/share/secure/             ← R 脚本源码（加密）
+/media/share/secure/run_*.sh     ← 入口脚本
+
+<span class="comment"># 项目输出目录</span>
+/media/share/Project/
+  └── 项目名/                    ← 每个项目一个目录
+      ├── expression.csv         ← 输入文件
+      ├── group.csv
+      ├── gene.csv
+      ├── survival.csv
+      ├── riskscore.csv
+      ├── output/                ← 分析输出
+      │   ├── DEGs/
+      │   ├── ML/
+      │   ├── report/
+      │   └── ...
+      └── log/                   ← 运行日志
+</div>
+
+            <h3>统一调用模式</h3>
+            <p>所有 20 个模块遵循相同的调用模式：</p>
+            <div class="code-block">
+<span class="comment"># 1. 进入项目目录</span>
+cd /media/share/Project/项目名/
+
+<span class="comment"># 2. 准备输入文件（按格式要求）</span>
+<span class="comment">#    详见 SOP「1.5 通用输入文件格式规范」→ F1-F9</span>
+
+<span class="comment"># 3. 调用入口脚本</span>
+bash /media/share/secure/run_模块名.sh [参数]
+
+<span class="comment"># 4. 检查输出</span>
+ls -la output/模块名/
+</div>
+
+            <h3>核心概念</h3>
+            <table>
+                <tr><th>概念</th><th>说明</th></tr>
+                <tr>
+                    <td><strong>入口脚本</strong></td>
+                    <td>所有模块通过 <code>run_*.sh</code> 入口脚本调用，新人不需要接触 R 代码</td>
+                </tr>
+                <tr>
+                    <td><strong>代码保护</strong></td>
+                    <td>R 源码在 <code>/media/share/secure/</code> 下加密保护，只能通过入口脚本间接调用</td>
+                </tr>
+                <tr>
+                    <td><strong>输入文件</strong></td>
+                    <td>标准化 CSV/TXT 格式，9 种格式编号 F1-F9（详见 <a href="标准化分析流程SOP.html#data-formats" class="sop-ref">SOP 第1.5节</a>）</td>
+                </tr>
+                <tr>
+                    <td><strong>config.ini</strong></td>
+                    <td>部分模块使用 INI 配置文件控制参数，由负责人配置，执行员不修改</td>
+                </tr>
+                <tr>
+                    <td><strong>输出报告</strong></td>
+                    <td>模块自动生成 HTML 报告和图表，用于质控判定</td>
+                </tr>
+            </table>
+
+            <div class="alert alert-info">
+                <strong>📘 详细参考：</strong><a href="标准化分析流程SOP.html" class="sop-ref">标准化分析流程 SOP v1.7</a> — 每个模块的完整操作规程、输入格式、输出文件、参数说明。
+            </div>
+        </div>
+
+        <!-- ═══════ 4. 测试数据说明 ═══════ -->
+        <div class="section" id="testdata">
+            <h2>&#x1F4CA; 4. 测试数据说明</h2>
+            <p>培训期间使用以下内置测试数据。这些文件展示了标准输入格式，可直接用于练习。</p>
+
+            <table>
+                <tr>
+                    <th>文件</th>
+                    <th>格式编号</th>
+                    <th>内容</th>
+                    <th>规格</th>
+                </tr>
+                <tr>
+                    <td><code>expression.csv</code></td>
+                    <td><a href="标准化分析流程SOP.html#fmt-expr" class="sop-ref">F1</a></td>
+                    <td>基因表达矩阵（TCGA 肺腺癌 10 样本）</td>
+                    <td>首列 SYMBOL，其余列为样本数值</td>
+                </tr>
+                <tr>
+                    <td><code>group.csv</code></td>
+                    <td><a href="标准化分析流程SOP.html#fmt-group" class="sop-ref">F2</a></td>
+                    <td>分组信息</td>
+                    <td>sample + group 两列</td>
+                </tr>
+                <tr>
+                    <td><code>gene.csv</code></td>
+                    <td><a href="标准化分析流程SOP.html#fmt-gene" class="sop-ref">F3</a></td>
+                    <td>基因列表</td>
+                    <td>SYMBOL 列，每行一个基因</td>
+                </tr>
+                <tr>
+                    <td><code>survival.csv</code></td>
+                    <td><a href="标准化分析流程SOP.html#fmt-surv" class="sop-ref">F4</a></td>
+                    <td>生存数据</td>
+                    <td>sample + OS.time + OS 三列</td>
+                </tr>
+                <tr>
+                    <td><code>riskscore.csv</code></td>
+                    <td><a href="标准化分析流程SOP.html#fmt-risk" class="sop-ref">F5</a></td>
+                    <td>风险评分结果</td>
+                    <td>sample + riskscore + riskgroup（+ OS.time + OS）</td>
+                </tr>
+            </table>
+
+            <h3>测试数据样例预览</h3>
+            <h4>expression.csv（前 2 行）</h4>
+            <div class="code-block">SYMBOL,TCGA-55-6978-11A,TCGA-38-4626-11A,TCGA-55-6986-11A,...
+MATR3,0.7396,0.2263,0.9354,...</div>
+
+            <h4>group.csv</h4>
+            <div class="code-block">sample,group
+T01,CCl4
+T02,CCl4</div>
+
+            <h4>survival.csv</h4>
+            <div class="code-block">sample,OS.time,OS
+TCGA-04-1331-01A,1336,1
+TCGA-04-1332-01A,1247,1</div>
+
+            <div class="alert alert-success">
+                <strong>✅ 练习方法：</strong>将测试数据复制到项目目录，按 SOP 调用对应模块脚本，验证输出结果与标准答案一致。
+            </div>
+        </div>
+
+        <!-- ═══════ 数据获取 ═══════ -->
+        <div class="section" id="role-data">
+            <h2>&#x1F4E5; <span class="badge badge-data">数据获取</span> 培训计划（3 天）</h2>
+            <p>负责模块：<strong>gse_download</strong>（GEO 数据下载与清洗）、<strong>combine</strong>（数据合并）</p>
+
+            <div class="day-card" id="data-day1">
+                <h4><span class="badge badge-day">Day 1</span> GEO 数据下载</h4>
+                <p><strong>目标：</strong>学会使用 <code>run_download_gse.sh</code> 下载 GEO 数据集，理解输入输出。</p>
+
+                <h4>1.1 准备 gse_list.txt</h4>
+                <p>每行一个 GSE 编号，纯文本格式：</p>
+                <div class="code-block">GSE31210
+GSE50081
+GSE68465</div>
+                <p>格式要求：无空行、无多余空格、编号以 GSE 开头。
+                   <a href="标准化分析流程SOP.html#fmt-gse" class="sop-ref">→ F7 格式</a></p>
+
+                <h4>1.2 执行下载</h4>
+                <div class="code-block"><span class="comment"># 进入项目目录</span>
+cd /media/share/Project/项目名/
+
+<span class="comment"># 确认 gse_list.txt 已放好</span>
+cat gse_list.txt
+
+<span class="comment"># 调用下载脚本</span>
+bash /media/share/secure/run_download_gse.sh</div>
+
+                <h4>1.3 检查输出</h4>
+                <ul>
+                    <li>每个 GSE 应产生 <code>expression.csv</code> + <code>group.csv</code></li>
+                    <li>检查文件是否存在且非空：<code>ls -la output/gse_download/GSE31210/</code></li>
+                    <li>查看日志有无 Error：<code>tail -20 output/gse_download/log.txt</code></li>
+                </ul>
+
+                <h4>1.4 Day 1 考核</h4>
+                <ul class="checklist">
+                    <li>能独立编写 gse_list.txt</li>
+                    <li>能运行下载脚本并等待完成</li>
+                    <li>能检查每个 GSE 的输出文件是否存在</li>
+                    <li>能从日志中判断下载是否成功</li>
+                </ul>
+            </div>
+
+            <div class="day-card" id="data-day2">
+                <h4><span class="badge badge-day">Day 2</span> 数据校验与分组提取</h4>
+                <p><strong>目标：</strong>学会使用 <code>run_extract_groups.sh</code> 提取分组信息，校验数据格式。</p>
+
+                <h4>2.1 分组提取</h4>
+                <div class="code-block"><span class="comment"># 调用分组提取脚本</span>
+bash /media/share/secure/run_extract_groups.sh</div>
+
+                <h4>2.2 数据格式校验</h4>
+                <p>对每个下载的数据集执行以下检查：</p>
+                <table>
+                    <tr><th>#</th><th>检查项</th><th>命令</th><th>合格标准</th></tr>
+                    <tr>
+                        <td>1</td>
+                        <td>expression.csv 首列</td>
+                        <td><code>head -1 expression.csv</code></td>
+                        <td>第一列为 SYMBOL</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>基因数量</td>
+                        <td><code>wc -l expression.csv</code></td>
+                        <td>≥ 10000 行（正常芯片/RNA-seq）</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>group.csv 列名</td>
+                        <td><code>head -1 group.csv</code></td>
+                        <td>包含 sample 和 group 列</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>样本数匹配</td>
+                        <td><code>head -1 expression.csv | tr ',' '\n' | wc -l</code></td>
+                        <td>与 group.csv 行数一致</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>数值范围</td>
+                        <td>查看前几行数值</td>
+                        <td>基因表达通常 0-20 范围（log2 后）</td>
+                    </tr>
+                </table>
+
+                <h4>2.3 Day 2 考核</h4>
+                <ul class="checklist">
+                    <li>能运行分组提取脚本</li>
+                    <li>能对照检查表逐项验证 expression.csv 和 group.csv</li>
+                    <li>能识别格式不合规的文件并标记</li>
+                    <li>能按 <a href="#feedback">附录 A</a> 格式填写数据集反馈表（每个 GSE 的样本分组信息）</li>
+                </ul>
+            </div>
+
+            <div class="day-card" id="data-day3">
+                <h4><span class="badge badge-day">Day 3</span> 数据合并与交付</h4>
+                <p><strong>目标：</strong>学会使用 <code>run_combine.sh</code> 合并多个数据集，完成数据交付。</p>
+
+                <h4>3.1 数据合并</h4>
+                <div class="code-block"><span class="comment"># 调用合并脚本</span>
+bash /media/share/secure/run_combine.sh</div>
+
+                <h4>3.2 验证合并结果</h4>
+                <ul>
+                    <li>合并后的 expression.csv 样本数 = 各数据集样本数之和</li>
+                    <li>group.csv 行数与合并后样本数一致</li>
+                    <li>无重复样本名、无 NA 列</li>
+                </ul>
+
+                <h4>3.3 归档交付</h4>
+                <p>确认以下文件完整后，通知负责人：</p>
+                <ul class="checklist">
+                    <li>合并后的 expression.csv（F1 格式）</li>
+                    <li>合并后的 group.csv（F2 格式）</li>
+                    <li>运行日志无错误</li>
+                    <li>各数据集的原始文件保留完整</li>
+                    <li><strong>数据集反馈表</strong>（详见 <a href="#feedback">附录 A</a>）</li>
+                </ul>
+
+                <div class="alert alert-success">
+                    <strong>🎉 数据获取 3 天培训完成！</strong>考核通过后可进入「标准分析」培训。
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ 标准分析 ═══════ -->
+        <div class="section" id="role-analysis">
+            <h2>&#x1F4CA; <span class="badge badge-analysis">标准分析</span> 培训计划（5 天）</h2>
+            <p>负责模块：degs、enrichment、venn、ml、prognosis、nomogram、exprverify、wgcna、ppi、friends、immune、chrplot、depth2、tmb、msi（共 15 个）</p>
+
+            <div class="alert alert-info">
+                <strong>前置要求：</strong>已完成「数据获取」Day 1-3 培训或具备等价经验。
+            </div>
+
+            <div class="day-card" id="ana-day1">
+                <h4><span class="badge badge-day">Day 1</span> 输入文件准备与基础模块</h4>
+                <p><strong>目标：</strong>熟悉 5 种核心输入文件格式，完成 DEGs 差异分析。</p>
+
+                <h4>1.1 五种核心输入文件</h4>
+                <table>
+                    <tr><th>格式</th><th>文件</th><th>关键要求</th><th>多少模块需要</th></tr>
+                    <tr>
+                        <td><a href="标准化分析流程SOP.html#fmt-expr" class="sop-ref">F1</a></td>
+                        <td>expression.csv</td>
+                        <td>首列 SYMBOL，数值列 ≥ 2 个</td>
+                        <td>几乎全部</td>
+                    </tr>
+                    <tr>
+                        <td><a href="标准化分析流程SOP.html#fmt-group" class="sop-ref">F2</a></td>
+                        <td>group.csv</td>
+                        <td>sample + group 两列，恰好 2 个分组</td>
+                        <td>DEGs、enrichment 等</td>
+                    </tr>
+                    <tr>
+                        <td><a href="标准化分析流程SOP.html#fmt-gene" class="sop-ref">F3</a></td>
+                        <td>gene.csv</td>
+                        <td>SYMBOL 列，一行一基因</td>
+                        <td>ML、PPI、venn 等</td>
+                    </tr>
+                    <tr>
+                        <td><a href="标准化分析流程SOP.html#fmt-surv" class="sop-ref">F4</a></td>
+                        <td>survival.csv</td>
+                        <td>sample + OS.time + OS</td>
+                        <td>prognosis、nomogram</td>
+                    </tr>
+                    <tr>
+                        <td><a href="标准化分析流程SOP.html#fmt-risk" class="sop-ref">F5</a></td>
+                        <td>riskscore.csv</td>
+                        <td>sample + riskscore + riskgroup</td>
+                        <td>ML 输出 → 后续模块输入</td>
+                    </tr>
+                </table>
+
+                <h4>1.2 运行 DEGs 差异分析</h4>
+                <div class="code-block"><span class="comment"># 确认输入文件就位</span>
+ls expression.csv group.csv
+
+<span class="comment"># 调用 DEGs 脚本</span>
+bash /media/share/secure/run_degs.sh
+
+<span class="comment"># 检查输出</span>
+ls output/DEGs/
+head -3 output/DEGs/DEGs_result.csv</div>
+
+                <h4>1.3 Day 1 考核</h4>
+                <ul class="checklist">
+                    <li>能正确描述 F1-F5 各格式的列名要求</li>
+                    <li>能用 <code>head</code> 命令验证输入文件格式是否正确</li>
+                    <li>能成功运行 DEGs 模块</li>
+                    <li>能检查 DEGs 输出文件存在且非空</li>
+                </ul>
+            </div>
+
+            <div class="day-card" id="ana-day2">
+                <h4><span class="badge badge-day">Day 2</span> 功能富集与可视化模块</h4>
+                <p><strong>目标：</strong>完成 enrichment、venn、exprverify 三个模块。</p>
+
+                <h4>2.1 功能富集 (enrichment)</h4>
+                <p>输入：DEGs 输出的差异基因列表（gene.csv, F3 格式）。</p>
+                <div class="code-block">bash /media/share/secure/run_enrichment.sh</div>
+                <p>输出：GO/KEGG 富集结果表 + 气泡图/条形图。</p>
+
+                <h4>2.2 韦恩图 (venn)</h4>
+                <p>输入：多个基因列表。</p>
+                <div class="code-block">bash /media/share/secure/run_venn.sh</div>
+
+                <h4>2.3 表达验证 (exprverify)</h4>
+                <p>输入：expression.csv (F1) + group.csv (F2) + gene.csv (F3)。</p>
+                <div class="code-block">bash /media/share/secure/run_exprverify.sh</div>
+
+                <h4>2.4 Day 2 考核</h4>
+                <ul class="checklist">
+                    <li>3 个模块均成功运行，输出文件完整</li>
+                    <li>能判断富集结果报告是否正常（有 GO/KEGG 条目）</li>
+                    <li>理解模块间的数据流转关系（DEGs → enrichment）</li>
+                </ul>
+            </div>
+
+            <div class="day-card" id="ana-day3">
+                <h4><span class="badge badge-day">Day 3</span> 机器学习建模与预后</h4>
+                <p><strong>目标：</strong>完成 ML 筛选、prognosis、nomogram 三个模块。</p>
+
+                <h4>3.1 机器学习特征筛选 (ml)</h4>
+                <p>输入：expression.csv (F1) + gene.csv (F3) + survival.csv (F4)。</p>
+                <div class="code-block">bash /media/share/secure/run_ml.sh
+
+<span class="comment"># 输出包含 riskscore.csv（可供后续模块使用）</span></div>
+
+                <h4>3.2 预后分析 (prognosis)</h4>
+                <p>输入：expression.csv (F1) + gene.csv (F3) + survival.csv (F4)。</p>
+                <div class="code-block">bash /media/share/secure/run_prognosis.sh</div>
+
+                <h4>3.3 列线图 (nomogram)</h4>
+                <p>输入：expression.csv (F1) + gene.csv (F3) + survival.csv (F4)。</p>
+                <div class="code-block">bash /media/share/secure/run_nomogram.sh</div>
+
+                <h4>3.4 Day 3 考核</h4>
+                <ul class="checklist">
+                    <li>ML 模块输出 riskscore.csv 且格式正确（F5）</li>
+                    <li>prognosis 输出 KM 曲线图</li>
+                    <li>nomogram 输出列线图图片</li>
+                    <li>理解 ML → riskscore → 后续模块 的数据流</li>
+                </ul>
+            </div>
+
+            <div class="day-card" id="ana-day4">
+                <h4><span class="badge badge-day">Day 4-5</span> 网络、免疫与基因组模块</h4>
+                <p><strong>目标：</strong>完成剩余 9 个模块，掌握批量运行技巧。</p>
+
+                <h4>Day 4 模块清单</h4>
+                <table>
+                    <tr><th>模块</th><th>核心输入</th><th>调用命令</th></tr>
+                    <tr><td>wgcna</td><td>F1 + F2</td><td><code>bash /media/share/secure/run_wgcna.sh</code></td></tr>
+                    <tr><td>ppi</td><td>F3</td><td><code>bash /media/share/secure/run_ppi.sh</code></td></tr>
+                    <tr><td>friends</td><td>F1 + F3</td><td><code>bash /media/share/secure/run_friends.sh</code></td></tr>
+                    <tr><td>immune</td><td>F1 + F2 / F5</td><td><code>bash /media/share/secure/run_immune.sh</code></td></tr>
+                </table>
+
+                <h4>Day 5 模块清单</h4>
+                <table>
+                    <tr><th>模块</th><th>核心输入</th><th>调用命令</th></tr>
+                    <tr><td>chrplot</td><td>F3</td><td><code>bash /media/share/secure/run_chrplot.sh</code></td></tr>
+                    <tr><td>depth2</td><td>F1 + F2 + F3</td><td><code>bash /media/share/secure/run_depth2.sh</code></td></tr>
+                    <tr><td>tmb</td><td>F8 (MAF)</td><td><code>bash /media/share/secure/run_tmb.sh</code></td></tr>
+                    <tr><td>msi</td><td>F1 + F2</td><td><code>bash /media/share/secure/run_msi.sh</code></td></tr>
+                </table>
+
+                <div class="alert alert-warn">
+                    <strong>⚠️ 注意：</strong>tmb 模块需要 MAF 格式数据（F8），通常来自 TCGA。如果项目无 MAF 数据，跳过此模块。
+                </div>
+
+                <h4>Day 4-5 考核</h4>
+                <ul class="checklist">
+                    <li>9 个模块全部运行完毕，输出文件齐全</li>
+                    <li>能独立判断哪些模块需要哪些输入文件</li>
+                    <li>能识别缺失输入文件导致的报错</li>
+                    <li>能使用 <code>nohup</code> 后台运行耗时较长的模块</li>
+                </ul>
+
+                <div class="alert alert-success">
+                    <strong>🎉 标准分析 5 天培训完成！</strong>应能独立处理 15 个核心分析模块。
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ 因果推断 ═══════ -->
+        <div class="section" id="role-causal">
+            <h2>&#x1F52C; <span class="badge badge-causal">因果推断</span> 培训计划（2 天）</h2>
+            <p>负责模块：<strong>mr</strong>（孟德尔随机化）、<strong>tsg</strong>（肿瘤抑癌基因分析）</p>
+
+            <div class="alert alert-info">
+                <strong>前置要求：</strong>已完成「标准分析」培训或具备等价经验。这两个模块使用特殊数据源（GWAS、MAF），需要额外了解。
+            </div>
+
+            <div class="day-card" id="causal-day1">
+                <h4><span class="badge badge-day">Day 1</span> 孟德尔随机化 (MR)</h4>
+                <p><strong>目标：</strong>理解 GWAS 汇总数据格式，完成 MR 分析。</p>
+
+                <h4>1.1 GWAS 数据格式 (F9)</h4>
+                <p>MR 分析需要暴露和结局的 GWAS 汇总统计量，TSV 格式：</p>
+                <div class="code-block">SNP     A1  A2  FREQ    BETA    SE      P
+rs123   A   G   0.35    0.12    0.03    1.2e-5
+rs456   T   C   0.22   -0.08    0.02    3.4e-4</div>
+                <p>必须包含列：SNP、A1、A2、FREQ、BETA、SE、P。
+                   <a href="标准化分析流程SOP.html#fmt-gwas" class="sop-ref">→ F9 格式</a></p>
+
+                <h4>1.2 运行 MR</h4>
+                <div class="code-block"><span class="comment"># 准备 GWAS 数据文件</span>
+<span class="comment"># config.ini 中指定暴露/结局数据路径（由负责人配置）</span>
+
+bash /media/share/secure/run_mr.sh</div>
+
+                <h4>1.3 Day 1 考核</h4>
+                <ul class="checklist">
+                    <li>能识别 GWAS 汇总数据的必需列</li>
+                    <li>能运行 MR 脚本</li>
+                    <li>能从输出中判断因果关系的方向和显著性</li>
+                </ul>
+            </div>
+
+            <div class="day-card" id="causal-day2">
+                <h4><span class="badge badge-day">Day 2</span> 肿瘤抑癌基因 (TSG)</h4>
+                <p><strong>目标：</strong>理解 MAF 数据格式，完成 TSG 分析。</p>
+
+                <h4>2.1 MAF 数据格式 (F8)</h4>
+                <p>TCGA 标准 MAF（Mutation Annotation Format）文件，包含体细胞突变信息。</p>
+                <p>通常从 TCGA GDC 下载，包含 Hugo_Symbol、Variant_Classification、Tumor_Sample_Barcode 等标准列。
+                   <a href="标准化分析流程SOP.html#fmt-maf" class="sop-ref">→ F8 格式</a></p>
+
+                <h4>2.2 运行 TSG</h4>
+                <div class="code-block"><span class="comment"># MAF 数据 + gene.csv 准备就绪</span>
+bash /media/share/secure/run_tsg.sh</div>
+
+                <h4>2.3 Day 2 考核</h4>
+                <ul class="checklist">
+                    <li>能识别 MAF 文件的基本结构</li>
+                    <li>能运行 TSG 脚本并检查输出</li>
+                    <li>完成全部考核</li>
+                </ul>
+
+                <div class="alert alert-success">
+                    <strong>🎉 因果推断 2 天培训完成！</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════ 5. 质控标准 ═══════ -->
+        <div class="section" id="qc">
+            <h2>&#x2705; 5. 质控标准</h2>
+            <p>每个模块运行完毕后，必须按以下标准逐项核查。<span class="badge badge-danger">不合格禁止交付。</span></p>
+
+            <h3>5.1 通用质控项（所有模块）</h3>
+            <table>
+                <tr><th>#</th><th>检查项</th><th>方法</th><th>合格标准</th><th>不合格处理</th></tr>
+                <tr>
+                    <td>1</td>
+                    <td>脚本退出状态</td>
+                    <td>查看日志末尾</td>
+                    <td>无 Error、无 Traceback、显示完成</td>
+                    <td>记录错误信息，重跑或上报</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>输出目录存在</td>
+                    <td><code>ls output/模块名/</code></td>
+                    <td>目录存在且非空</td>
+                    <td>检查输入文件是否正确</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>关键文件完整</td>
+                    <td><code>ls -la output/模块名/*.csv *.pdf *.png</code></td>
+                    <td>预期文件全部存在，大小 &gt; 0</td>
+                    <td>对照 SOP 检查遗漏原因</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>图片可打开</td>
+                    <td>下载查看</td>
+                    <td>图片清晰、标注完整、无截断</td>
+                    <td>重跑</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>报告完整</td>
+                    <td>浏览器打开 HTML 报告</td>
+                    <td>所有节均正常渲染，无空白节</td>
+                    <td>重跑</td>
+                </tr>
+            </table>
+
+            <h3>5.2 模块专项质控</h3>
+
+            <h4>DEGs 差异分析</h4>
+            <table>
+                <tr><th>检查项</th><th>合格标准</th></tr>
+                <tr><td>差异基因数量</td><td>上调 + 下调基因总数 ≥ 50（阈值 |logFC| &gt; 1, adj.P &lt; 0.05）</td></tr>
+                <tr><td>火山图</td><td>左右对称散布，有显著标注点</td></tr>
+                <tr><td>热图</td><td>分组有明显差异色块</td></tr>
+            </table>
+
+            <h4>ML 机器学习筛选</h4>
+            <table>
+                <tr><th>检查项</th><th>合格标准</th></tr>
+                <tr><td>riskscore.csv 输出</td><td>存在且格式符合 F5，riskgroup 只有 High/Low</td></tr>
+                <tr><td>筛选基因数</td><td>通常 5-30 个，极端值需确认</td></tr>
+                <tr><td>AUC 值</td><td>训练集 AUC ≥ 0.6</td></tr>
+            </table>
+
+            <h4>Enrichment 功能富集</h4>
+            <table>
+                <tr><th>检查项</th><th>合格标准</th></tr>
+                <tr><td>GO 条目数</td><td>BP/CC/MF 各有结果（≥ 5 条显著）</td></tr>
+                <tr><td>KEGG 通路数</td><td>≥ 3 条显著通路</td></tr>
+                <tr><td>气泡图</td><td>有明确可读的通路名称</td></tr>
+            </table>
+
+            <h4>Prognosis 预后分析</h4>
+            <table>
+                <tr><th>检查项</th><th>合格标准</th></tr>
+                <tr><td>KM 曲线</td><td>高低风险组有明显分离，P &lt; 0.05</td></tr>
+                <tr><td>ROC 曲线</td><td>1/3/5 年 AUC 均有值</td></tr>
+            </table>
+
+            <h4>Immune 免疫浸润</h4>
+            <table>
+                <tr><th>检查项</th><th>合格标准</th></tr>
+                <tr><td>免疫细胞比例</td><td>各样本比例之和 ≈ 1（CIBERSORT）</td></tr>
+                <tr><td>差异箱线图</td><td>至少部分细胞类型有显著差异</td></tr>
+            </table>
+
+            <h4>WGCNA 权重共表达网络</h4>
+            <table>
+                <tr><th>检查项</th><th>合格标准</th></tr>
+                <tr><td>模块数量</td><td>≥ 3 个非灰色模块</td></tr>
+                <tr><td>软阈值</td><td>R² ≥ 0.8 对应的 power 值存在</td></tr>
+            </table>
+
+            <h4>TMB 肿瘤突变负荷</h4>
+            <table>
+                <tr><th>检查项</th><th>合格标准</th></tr>
+                <tr><td>TMB 计算值</td><td>数值范围合理（通常 0.1-100 mutations/Mb）</td></tr>
+                <tr><td>瀑布图</td><td>前 N 基因突变频率可视化正常</td></tr>
+            </table>
+        </div>
+
+        <!-- ═══════ 6. 常见错误速查 ═══════ -->
+        <div class="section" id="errors">
+            <h2>&#x26A0;&#xFE0F; 6. 常见错误速查</h2>
+            <p>遇到错误时先在此表查找，复制粘贴对应解决方案。<strong>解决不了的直接上报，不要自己乱改。</strong></p>
+
+            <table>
+                <tr>
+                    <th>#</th>
+                    <th>错误现象</th>
+                    <th>原因</th>
+                    <th>解决方案</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td><code>No space left on device</code></td>
+                    <td>磁盘空间不足</td>
+                    <td>运行 <code>df -h</code> 确认 → 清理临时文件或通知管理员</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td><code>Permission denied</code></td>
+                    <td>文件权限不足</td>
+                    <td>检查文件所有者，联系管理员授权</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td><code>cannot open file 'expression.csv'</code></td>
+                    <td>输入文件不存在或路径错误</td>
+                    <td>确认 <code>pwd</code> 在正确目录，<code>ls</code> 检查文件存在</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td><code>subscript out of bounds</code></td>
+                    <td>数据行列数不匹配</td>
+                    <td>检查 expression.csv 和 group.csv 的样本名是否一致</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td><code>object 'xxx' not found</code></td>
+                    <td>前置步骤未完成或输入文件缺列</td>
+                    <td>按 SOP 检查输入文件格式（F1-F9 列名要求）</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>脚本运行很久没结束</td>
+                    <td>正常（大数据耗时）或卡死</td>
+                    <td>用 <code>ps aux | grep R</code> 看进程状态；CPU 占用 0% 持续 10 分钟 = 卡死 → <code>kill</code> 后重跑</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td><code>Error in library(xxx)</code></td>
+                    <td>R 包未安装</td>
+                    <td><strong>不要自行安装</strong>，通知管理员处理</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>输出图片空白/截断</td>
+                    <td>数据量太少或格式异常</td>
+                    <td>检查输入数据行数（<code>wc -l</code>），确认不低于最低要求</td>
+                </tr>
+                <tr>
+                    <td>9</td>
+                    <td><code>GEO download failed</code></td>
+                    <td>网络问题或 GEO 服务器不可用</td>
+                    <td>等待 10 分钟后重跑；如持续失败，换网络或上报</td>
+                </tr>
+                <tr>
+                    <td>10</td>
+                    <td>group.csv 分组数 ≠ 2</td>
+                    <td>DEGs/depth2 等需恰好 2 组</td>
+                    <td>检查 group.csv 的 group 列去重后是否恰好 2 个值</td>
+                </tr>
+            </table>
+
+            <div class="alert alert-danger">
+                <strong>🚫 三不原则：</strong>看不懂的错误不猜、自己解不了的不试、涉及脚本/配置的不改 → 截图+日志上报。
+            </div>
+        </div>
+
+        <!-- ═══════ 7. 考核标准 ═══════ -->
+        <div class="section" id="exam">
+            <h2>&#x1F4DD; 7. 考核标准</h2>
+
+            <h3>7.1 数据获取考核（Day 3 完成后）</h3>
+            <table>
+                <tr><th>#</th><th>考核项</th><th>方式</th><th>通过标准</th></tr>
+                <tr>
+                    <td>1</td>
+                    <td>独立下载数据</td>
+                    <td>给定 3 个 GSE 编号，独立完成下载</td>
+                    <td>全部下载成功，md5/文件完整性通过</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>格式校验</td>
+                    <td>给定一份故意有错的 expression.csv</td>
+                    <td>能发现全部格式问题（缺列、空值、格式错误）</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>数据合并</td>
+                    <td>合并两个数据集</td>
+                    <td>合并结果样本数正确、无 NA</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>日志判断</td>
+                    <td>给 3 段日志片段</td>
+                    <td>准确判断成功/失败并说明原因</td>
+                </tr>
+            </table>
+
+            <h3>7.2 标准分析考核（Day 5 完成后）</h3>
+            <table>
+                <tr><th>#</th><th>考核项</th><th>方式</th><th>通过标准</th></tr>
+                <tr>
+                    <td>1</td>
+                    <td>完整流水线</td>
+                    <td>从 expression.csv 开始，跑完 DEGs → enrichment → ML → prognosis 全链路</td>
+                    <td>每个模块输出正确，质控全部通过</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>输入判断</td>
+                    <td>给定一个模块名，说出需要哪些输入文件</td>
+                    <td>15 个模块全部正确</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>错误处理</td>
+                    <td>模拟 3 种常见错误场景</td>
+                    <td>能按速查表独立解决</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>质控判定</td>
+                    <td>给一份模块输出，按质控表检查</td>
+                    <td>逐项核对，正确标记合格/不合格</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>归档交付</td>
+                    <td>整理输出目录结构</td>
+                    <td>文件完整、命名规范、日志保留</td>
+                </tr>
+            </table>
+
+            <h3>7.3 因果推断考核（Day 2 完成后）</h3>
+            <table>
+                <tr><th>#</th><th>考核项</th><th>方式</th><th>通过标准</th></tr>
+                <tr>
+                    <td>1</td>
+                    <td>GWAS 数据识别</td>
+                    <td>判断给定文件是否符合 F9 格式</td>
+                    <td>能识别缺失列和格式错误</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>MR 运行</td>
+                    <td>独立运行一次 MR 分析</td>
+                    <td>输出因果推断结果，能解读方向</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>TSG 运行</td>
+                    <td>独立运行一次 TSG 分析</td>
+                    <td>输出结果正常</td>
+                </tr>
+            </table>
+
+            <h3>7.4 考核通过标准</h3>
+            <div class="alert alert-success">
+                <strong>✅ 通过 = 所有考核项全部达标</strong>
+                <ul>
+                    <li>流程跑完无错</li>
+                    <li>质控全部合格</li>
+                    <li>归档规范、无遗漏文件</li>
+                    <li>遇到错误能按速查表处理或正确上报</li>
+                </ul>
+            </div>
+
+            <div class="alert alert-warn">
+                <strong>⚠️ 独立作业后前 3 次任务：</strong>由负责人复核质控结果，确认无误后方可独立作业。
+            </div>
+        </div>
+
+
+        <!-- ═══════ 数据集反馈表规范 ═══════ -->
+        <div class="section" id="feedback">
+            <h2>&#x1F4CB; 附录 A. 数据集反馈表规范</h2>
+            <p>数据获取完成数据下载清洗后，<strong>必须</strong>输出一份「数据集反馈表」（Excel），用于记录获取的数据集信息、样本构成和分组方案。这是数据交付的标准产物之一。</p>
+
+            <div class="alert alert-danger">
+                <strong>🚫 没有反馈表 = 交付不完整。</strong>每个项目下载完毕后必须填写。
+            </div>
+
+            <h3>A.1 反馈表结构</h3>
+            <p>每份反馈表包含以下 sheet：</p>
+            <table>
+                <tr><th>Sheet</th><th>内容</th><th>必填</th></tr>
+                <tr>
+                    <td><strong>总览</strong>（Sheet1）</td>
+                    <td>所有数据集的概要信息表</td>
+                    <td>✅ 是</td>
+                </tr>
+                <tr>
+                    <td><strong>各数据集详情</strong>（按 GSE 编号命名）</td>
+                    <td>每个数据集一个 sheet，列出样本级详情</td>
+                    <td>✅ 是</td>
+                </tr>
+            </table>
+
+            <h3>A.2 总览表列定义</h3>
+            <table>
+                <tr><th>#</th><th>列名</th><th>说明</th><th>示例</th></tr>
+                <tr><td>1</td><td><strong>编号</strong></td><td>GEO 数据集编号</td><td>GSE65204</td></tr>
+                <tr><td>2</td><td><strong>疾病/组织类型</strong></td><td>研究对象</td><td>儿童哮喘/鼻气道上皮细胞</td></tr>
+                <tr><td>3</td><td><strong>测序技术/平台</strong></td><td>技术平台信息</td><td>Microarray (GPL14550)</td></tr>
+                <tr><td>4</td><td><strong>主要样本构成</strong></td><td>各组样本数量</td><td>36 例 CA + 33 例 Control</td></tr>
+                <tr><td>5</td><td><strong>样本取材类型</strong></td><td>组织来源</td><td>鼻上皮细胞</td></tr>
+                <tr><td>6</td><td><strong>细胞/基因数量</strong></td><td>单细胞填细胞总数；Bulk 填基因数（可选）</td><td>61,596 细胞 / 20,186 基因</td></tr>
+                <tr><td>7</td><td><strong>备注</strong></td><td>分组说明、特殊处理建议</td><td>推荐哮喘组 vs Control 组</td></tr>
+            </table>
+
+            <h3>A.3 数据集详情 Sheet 列定义</h3>
+            <p>每个 GSE 编号对应一个详情 sheet，包含样本级信息：</p>
+            <table>
+                <tr><th>#</th><th>列名</th><th>说明</th><th>示例</th></tr>
+                <tr><td>1</td><td><strong>sample</strong></td><td>GEO 样本编号</td><td>GSM8722221</td></tr>
+                <tr><td>2</td><td><strong>group</strong></td><td>分组标签</td><td>Control</td></tr>
+                <tr><td>3</td><td><strong>source_name</strong></td><td>样本来源描述</td><td>Nasal airway epithelial cells</td></tr>
+                <tr><td>4</td><td><strong>characteristics</strong></td><td>原始特征字段</td><td>asthma: TRUE</td></tr>
+            </table>
+
+            <h3>A.4 填写流程</h3>
+            <ol>
+                <li><strong>下载完成后</strong>：对每个 GSE，从 GEO 页面获取数据集元信息填入总览表</li>
+                <li><strong>分组提取后</strong>：运行 <code>extract_groups</code> 脚本，将输出的 group.csv 内容复制到详情 Sheet</li>
+                <li><strong>格式校验后</strong>：将 expression.csv 行数（基因数）填入总览表</li>
+                <li><strong>确认分组</strong>：在备注列写清楚哪些样本作为实验组、哪些作为对照组</li>
+                <li><strong>提交复核</strong>：反馈表随数据文件一起交付</li>
+            </ol>
+
+            <h3>A.5 示例（来自 26YLM113F 项目）</h3>
+            <h4>总览表</h4>
+            <div class="matrix">
+                <table>
+                    <tr>
+                        <th>编号</th>
+                        <th>疾病/组织类型</th>
+                        <th>测序技术/平台</th>
+                        <th>主要样本构成</th>
+                        <th>细胞/基因数量</th>
+                        <th>备注</th>
+                    </tr>
+                    <tr>
+                        <td>GSE286262</td>
+                        <td>儿童哮喘/鼻气道上皮细胞</td>
+                        <td>scRNA-seq (GPL18573)</td>
+                        <td>2 例 Control + 2 例哮喘 + 3 例 RSV + 2 例喘息/RSV</td>
+                        <td>61,596 细胞</td>
+                        <td>推荐 2 例哮喘 vs 2 例 Control</td>
+                    </tr>
+                    <tr>
+                        <td>GSE65204</td>
+                        <td>儿童哮喘/鼻气道上皮细胞</td>
+                        <td>Microarray (GPL14550)</td>
+                        <td>36 例 CA + 33 例 Control</td>
+                        <td>&mdash;</td>
+                        <td>&mdash;</td>
+                    </tr>
+                    <tr>
+                        <td>GSE19187</td>
+                        <td>儿童哮喘/鼻气道上皮细胞</td>
+                        <td>Microarray (GPL6244)</td>
+                        <td>14 例过敏性鼻炎 + 13 例哮喘 + 11 例 Control</td>
+                        <td>&mdash;</td>
+                        <td>哮喘组 = 未控制 + 控制性哮喘</td>
+                    </tr>
+                </table>
+            </div>
+
+            <h4>详情 Sheet 示例（GSE286262 前 4 行）</h4>
+            <div class="matrix">
+                <table>
+                    <tr><th>sample</th><th>group</th><th>source_name</th></tr>
+                    <tr><td>GSM8722221</td><td>Control</td><td>Nasal airway epithelial cells</td></tr>
+                    <tr><td>GSM8722222</td><td>Control</td><td>Nasal airway epithelial cells</td></tr>
+                    <tr><td>GSM8722223</td><td>Asthma</td><td>Nasal airway epithelial cells</td></tr>
+                    <tr><td>GSM8722224</td><td>Asthma</td><td>Nasal airway epithelial cells</td></tr>
+                </table>
+            </div>
+
+            <div class="alert alert-success">
+                <strong>✅ 反馈表命名规范：</strong><code>项目编号-数据集反馈.xlsx</code>，例如 <code>26YLM113F-数据集反馈.xlsx</code>
+            </div>
+        </div>
+
+        <!-- ═══════ footer ═══════ -->
+        <p class="footer-note">
+            生信流程执行员培训手册 v1.1 &mdash; 最后更新：2026-04-02<br>
+            配套参考：<a href="标准化分析流程SOP.html">标准化分析流程 SOP v1.7</a> &nbsp;|&nbsp;
+            脚本目录：<code>/media/share/secure/</code> &nbsp;|&nbsp; 输出目录：<code>/media/share/Project/</code>
+        </p>
+    </div>
+
+    <script>
+        (() => {
+            const links = [...document.querySelectorAll('.sidebar a')];
+            const ids = links.map(a => a.getAttribute('href').slice(1));
+            function update() {
+                let current = ids[0];
+                for (const id of ids) {
+                    const el = document.getElementById(id);
+                    if (el && el.getBoundingClientRect().top <= 120) current = id;
+                }
+                links.forEach(a => {
+                    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+                });
+            }
+            window.addEventListener('scroll', update, { passive: true });
+            update();
+        })();
+    </script>
+</body>
+</html>
