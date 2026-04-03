@@ -171,15 +171,11 @@
         /* Footer */
         .footer-note { margin-top: 18px; color: var(--muted); font-size: 0.95rem; text-align: center; }
 
-        /* Responsive */
-        @media (max-width: 900px) {
-            .sidebar { transform: translateX(-100%); transition: transform .3s; }
-            .sidebar.open { transform: translateX(0); }
-            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
-            .container { margin-left: 0; }
+        @media (max-width: 1200px) {
             .card.two-col { grid-column: span 12; }
-            .hero { padding: 24px; }
         }
+
+        @media (max-width: 900px) {
         @media print {
             .sidebar { display: none !important; }
             .sidebar-toggle { display: none !important; }

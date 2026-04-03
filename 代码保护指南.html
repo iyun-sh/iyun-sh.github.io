@@ -288,16 +288,11 @@
             font-size: 0.94rem;
         }
 
-        @media (max-width: 900px) {
-            .sidebar { transform: translateX(-100%); transition: transform .3s; }
-            .sidebar.open { transform: translateX(0); }
-            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
-            .container { margin-left: 0; }
+        @media (max-width: 1200px) {
             .card.two-col { grid-column: span 12; }
-            .hero { padding: 24px; }
-            .flow-grid { grid-template-columns: 1fr; }
-            .flow-step::after { display: none; }
         }
+
+        @media (max-width: 900px) {
     
         [id] { scroll-margin-top: 80px; }
 
