@@ -76,11 +76,20 @@
         .page-wrap {
             display: none;
             padding: 0 20px 20px;
+            transition: background-color 0.3s ease;
         }
 
         .page-wrap.active {
             display: block;
         }
+
+        /* 每个大标签的内容区底色 */
+        #standards-page.active { background: #f0f7ff; }
+        #protection-page.active { background: #f0fdf8; }
+        #flow-page.active       { background: #f8f5ff; }
+        #dataprep-page.active   { background: #fffaf0; }
+        #sop-page.active        { background: #fdf5f0; }
+        #training-page.active   { background: #f3fdf5; }
 
         .page-card {
             border: 1px solid #e5e7eb;
@@ -162,7 +171,6 @@
     <div class="container">
         <div class="header">
             <h1>生信规范与代码流程总览</h1>
-            <p>点击上方标签可在各独立规范文件之间快速切换，综合页本身不含内容，仅负责聚合展示。</p>
         </div>
 
         <div class="switcher">
@@ -291,12 +299,38 @@
                 });
             }
 
+            // 各 tab 对应的主题色（激活按钮 + 分隔线跟随变化）
+            var tabAccent = {
+                'standards-page': '#3b82f6',
+                'protection-page': '#10b981',
+                'flow-page':       '#8b5cf6',
+                'dataprep-page':   '#f59e0b',
+                'sop-page':        '#ef4444',
+                'training-page':   '#22c55e'
+            };
+            var switcher = document.querySelector('.switcher');
+
+            function applyAccent(target) {
+                var color = tabAccent[target] || '#3498db';
+                // 激活按钮背景色
+                for (var k = 0; k < btns.length; k++) {
+                    if (btns[k].classList.contains('active')) {
+                        btns[k].style.background = color;
+                    } else {
+                        btns[k].style.background = '';
+                    }
+                }
+                // switcher 底部边框色
+                if (switcher) switcher.style.borderBottomColor = color;
+            }
+
             for (var j = 0; j < btns.length; j++) {
                 btns[j].addEventListener('click', function () {
                     var target = this.getAttribute('data-target');
 
                     for (var k = 0; k < btns.length; k++) {
                         btns[k].classList.remove('active');
+                        btns[k].style.background = '';
                     }
 
                     for (var m = 0; m < pages.length; m++) {
@@ -305,6 +339,7 @@
 
                     this.classList.add('active');
                     document.getElementById(target).classList.add('active');
+                    applyAccent(target);
 
                     var activeFrame = document.querySelector('#' + target + ' .doc-frame');
                     if (activeFrame) {
@@ -312,6 +347,8 @@
                     }
                 });
             }
+            // 初始化第一个 tab 的主题色
+            applyAccent('standards-page');
 
             window.addEventListener('resize', function () {
                 for (var n = 0; n < frames.length; n++) {
