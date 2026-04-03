@@ -1736,6 +1736,16 @@ bash run.sh --plot-only
     </script>
 <script>
 (function () {
+    var grids = document.querySelectorAll('.container > .grid');
+    for (var i = 0; i < grids.length; i++) {
+        if (i % 2 === 1) {
+            grids[i].style.background = 'rgba(219,234,254,0.35)';
+            grids[i].style.borderRadius = '14px';
+            grids[i].style.padding = '6px 8px 14px';
+        }
+    }
+})();
+(function () {
     // 综合页 iframe 嵌入模式：监听外层滚动，让 sidebar 跟随外层视口
     if (window.self === window.top) return;
     var sidebar = document.querySelector('.sidebar');
