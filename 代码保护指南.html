@@ -874,9 +874,10 @@ rm -f scripts/scripts.sh.x.c
     var grids = document.querySelectorAll('.container > .grid');
     for (var i = 0; i < grids.length; i++) {
         if (i % 2 === 1) {
-            grids[i].style.background = 'rgba(219,234,254,0.65)';
-            grids[i].style.borderRadius = '14px';
-            grids[i].style.padding = '6px 8px 14px';
+            var cards = grids[i].querySelectorAll('.card');
+            for (var j = 0; j < cards.length; j++) {
+                cards[j].style.background = '#edf4ff';
+            }
         }
     }
 })();
