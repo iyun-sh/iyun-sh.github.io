@@ -25,29 +25,22 @@
             overflow: hidden;
         }
 
-        .header {
-            text-align: center;
-            padding: 28px 28px 20px;
-            border-bottom: 3px solid #3498db;
-        }
-
-        .header h1 {
-            color: #2c3e50;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: #6b7280;
-            font-size: 1.05em;
-        }
-
         .switcher {
             display: flex;
+            align-items: flex-end;
             gap: 10px;
             padding: 16px 20px 0;
             border-bottom: 2px solid #3498db;
             flex-wrap: wrap;
+        }
+
+        .switcher-title {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: #2c3e50;
+            padding: 10px 14px 12px 4px;
+            white-space: nowrap;
+            line-height: 1;
         }
 
         .switch-btn {
@@ -99,7 +92,7 @@
         }
 
         .page-meta {
-            display: flex;
+            display: none;
             justify-content: space-between;
             align-items: center;
             gap: 12px;
@@ -107,6 +100,28 @@
             border-bottom: 1px solid #e5e7eb;
             padding: 10px 12px;
         }
+
+        .meta-toggle {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 6px 12px;
+            border: none;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .meta-toggle:hover { color: #2563eb; }
+        .meta-toggle .arrow {
+            margin-left: 6px;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        .meta-toggle.open .arrow { transform: rotate(90deg); }
+        .meta-toggle.open + .page-meta { display: flex; }
 
         .page-title {
             display: flex;
@@ -158,8 +173,6 @@
 
         @media (max-width: 768px) {
             body { padding: 12px; }
-            .header { padding: 18px 16px 14px; }
-            .header h1 { font-size: 2em; }
             .switcher { padding: 12px 12px 0; }
             .page-wrap { padding: 0 12px 12px; }
             .page-meta { flex-direction: column; align-items: flex-start; }
@@ -169,11 +182,8 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>生信规范与代码流程总览</h1>
-        </div>
-
         <div class="switcher">
+            <span class="switcher-title">📋 规范总览</span>
             <button class="switch-btn active" type="button" data-target="standards-page">规范手册</button>
             <button class="switch-btn" type="button" data-target="protection-page">保护指南</button>
             <button class="switch-btn" type="button" data-target="flow-page">流程手册</button>
@@ -183,6 +193,7 @@
 
         <section id="standards-page" class="page-wrap active">
             <div class="page-card">
+                <button class="meta-toggle" type="button">📄 页面信息 <span class="arrow">▸</span></button>
                 <div class="page-meta">
                     <span class="page-title">
                         <span>规范手册（生信开发模块文件与输出规范）</span>
@@ -198,6 +209,7 @@
 
         <section id="protection-page" class="page-wrap">
             <div class="page-card">
+                <button class="meta-toggle" type="button">📄 页面信息 <span class="arrow">▸</span></button>
                 <div class="page-meta">
                     <span class="page-title">
                         <span>保护指南（生信模块代码保护指南）</span>
@@ -213,6 +225,7 @@
 
         <section id="flow-page" class="page-wrap">
             <div class="page-card">
+                <button class="meta-toggle" type="button">📄 页面信息 <span class="arrow">▸</span></button>
                 <div class="page-meta">
                     <span class="page-title">
                         <span>流程手册（代码生成与验证流程图）</span>
@@ -228,6 +241,7 @@
 
         <section id="dataprep-page" class="page-wrap">
             <div class="page-card">
+                <button class="meta-toggle" type="button">📄 页面信息 <span class="arrow">▸</span></button>
                 <div class="page-meta">
                     <span class="page-title">
                         <span>数据处理（初步数据处理指南）</span>
@@ -243,6 +257,7 @@
 
         <section id="sop-page" class="page-wrap">
             <div class="page-card">
+                <button class="meta-toggle" type="button">📄 页面信息 <span class="arrow">▸</span></button>
                 <div class="page-meta">
                     <span class="page-title">
                         <span>分析流程SOP（标准化分析流程 SOP）</span>
@@ -257,6 +272,7 @@
         </section>
         <section id="training-page" class="page-wrap">
             <div class="page-card">
+                <button class="meta-toggle" type="button">📄 页面信息 <span class="arrow">▸</span></button>
                 <div class="page-meta">
                     <span class="page-title">
                         <span>培训手册（生信流程执行员培训手册）</span>
@@ -369,6 +385,14 @@
                     } catch (e) {}
                 }
             }
+            // 页面信息折叠切换
+            var toggles = document.querySelectorAll('.meta-toggle');
+            for (var t = 0; t < toggles.length; t++) {
+                toggles[t].addEventListener('click', function () {
+                    this.classList.toggle('open');
+                });
+            }
+
             window.addEventListener('scroll', sendScrollToActiveFrame, { passive: true });
         })();
     </script>

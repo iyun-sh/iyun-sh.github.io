@@ -85,14 +85,15 @@
         .danger-box { background: var(--danger-soft); border: 1px solid #fca5a5; }
         .success-box { background: var(--success-soft); border: 1px solid #86efac; }
 
-        /* Table (matrix + bare table) */
+        /* Table (matrix) */
         .matrix { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; }
         .matrix th, .matrix td { border: 1px solid var(--border); padding: 12px 14px; text-align: left; vertical-align: top; }
-        .matrix th { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
-        table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; }
-        table th, table td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; vertical-align: top; font-size: 0.95em; }
-        table th { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
-        table tr:nth-child(even) td { background: rgba(0,0,0,0.025); }
+        .matrix th { background: #eff6ff; color: #1e3a8a; }
+
+            table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; }
+            table th, table td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; vertical-align: top; font-size: 0.95em; }
+            table th { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+            table tr:nth-child(even) td { background: rgba(0,0,0,0.025); }
 
         /* Code */
         code, .code-block { font-family: Consolas, "Courier New", monospace; }
@@ -190,13 +191,18 @@
         ul { padding-left: 22px; }
         li { margin: 6px 0; }
 
-        @media (max-width: 1200px) {
-            .card.two-col { grid-column: span 12; }
-            .card.four-col { grid-column: span 12; }
-        }
-
         /* Responsive */
         @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+            .container { margin-left: 0; }
+            .card.two-col { grid-column: span 12; }
+            .card.four-col { grid-column: span 12; }
+            .hero { padding: 24px; }
+            .check-grid { grid-template-columns: 1fr; }
+        }
+        @media print {
             body { background: #fff; }
             .sidebar { display: none !important; }
             .menu-toggle { display: none !important; }

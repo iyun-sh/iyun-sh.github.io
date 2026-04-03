@@ -288,11 +288,16 @@
             font-size: 0.94rem;
         }
 
-        @media (max-width: 1200px) {
-            .card.two-col { grid-column: span 12; }
-        }
-
         @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+            .container { margin-left: 0; }
+            .card.two-col { grid-column: span 12; }
+            .hero { padding: 24px; }
+            .flow-grid { grid-template-columns: 1fr; }
+            .flow-step::after { display: none; }
+        }
     
         [id] { scroll-margin-top: 80px; }
 
@@ -579,7 +584,7 @@
                 </div>
             </section>
 
-            <section class="card two-col">
+                <section class="card">
                 <h2 class="section-title" id="sec-impl">&#x1F6E0;&#xFE0F; 具体保护实施方法</h2>
 
                 <h3 style="margin:18px 0 8px;color:#0f172a;">1. 文件权限控制（基础保护 — 所有语言通用）</h3>
