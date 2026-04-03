@@ -162,7 +162,7 @@
     <div class="container">
         <div class="header">
             <h1>生信规范与代码流程总览</h1>
-            <p>综合页仅负责切换展示，实际内容直接来自同目录下的规范手册、保护指南和流程手册三个独立 HTML 文件；其中规范手册 v1.3 已包含路径标准化、脚本开发规范、模块协作与版本管理、质量保证等完整要求；保护指南 v1.1 新增环境依赖交付、具体保护工具推荐、normalizePath 提醒和交叉引用；流程图 v1.1 新增 Step 8 版本锁定、文档交付清单，并将各步骤与规范章节建立引用关联。</p>
+            <p>点击上方标签可在各独立规范文件之间快速切换，综合页本身不含内容，仅负责聚合展示。</p>
         </div>
 
         <div class="switcher">
@@ -318,6 +318,22 @@
                     resizeFrame(frames[n]);
                 }
             });
+
+            // 向活跃 iframe 发送外层滚动位置，使子页面的悬浮目录能跟随外层视口
+            function sendScrollToActiveFrame() {
+                var activeFrame = document.querySelector('.page-wrap.active .doc-frame');
+                if (activeFrame && activeFrame.contentWindow) {
+                    try {
+                        var rect = activeFrame.getBoundingClientRect();
+                        activeFrame.contentWindow.postMessage({
+                            type: 'parentScroll',
+                            scrollY: window.scrollY,
+                            frameDocumentTop: rect.top + window.scrollY
+                        }, '*');
+                    } catch (e) {}
+                }
+            }
+            window.addEventListener('scroll', sendScrollToActiveFrame, { passive: true });
         })();
     </script>
     <p style="margin-top:18px;color:#5b6b80;font-size:0.92rem;text-align:center;"><strong>综合页版本:</strong> v1.3 | 配套：规范手册 v1.3、保护指南 v1.1、流程图 v1.1、数据处理 v1.0、SOP v1.7、培训 v1.1 | 更新日期: 2026-04-02</p>

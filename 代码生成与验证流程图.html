@@ -736,5 +736,26 @@
         update();
     })();
     </script>
+<script>
+(function () {
+    if (window.self === window.top) return;
+    var sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+    window.addEventListener('message', function (e) {
+        if (!e.data || e.data.type !== 'parentScroll') return;
+        var effectiveScrollY = Math.max(0, e.data.scrollY - e.data.frameDocumentTop);
+        sidebar.style.top = (effectiveScrollY + 32) + 'px';
+        var links = document.querySelectorAll('.sidebar a[href^="#"]');
+        var current = links.length ? links[0].getAttribute('href').slice(1) : '';
+        for (var i = 0; i < links.length; i++) {
+            var el = document.getElementById(links[i].getAttribute('href').slice(1));
+            if (el && el.getBoundingClientRect().top <= effectiveScrollY + 120)
+                current = links[i].getAttribute('href').slice(1);
+        }
+        for (var j = 0; j < links.length; j++)
+            links[j].classList.toggle('active', links[j].getAttribute('href') === '#' + current);
+    }, { passive: true });
+})();
+</script>
 </body>
 </html>
