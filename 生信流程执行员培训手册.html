@@ -85,10 +85,14 @@
         .danger-box { background: var(--danger-soft); border: 1px solid #fca5a5; }
         .success-box { background: var(--success-soft); border: 1px solid #86efac; }
 
-        /* Table (matrix) */
+        /* Table (matrix + bare table) */
         .matrix { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; }
         .matrix th, .matrix td { border: 1px solid var(--border); padding: 12px 14px; text-align: left; vertical-align: top; }
-        .matrix th { background: #eff6ff; color: #1e3a8a; }
+        .matrix th { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; }
+        table th, table td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; vertical-align: top; font-size: 0.95em; }
+        table th { background: var(--primary-soft); color: var(--primary); font-weight: 600; }
+        table tr:nth-child(even) td { background: rgba(0,0,0,0.025); }
 
         /* Code */
         code, .code-block { font-family: Consolas, "Courier New", monospace; }
