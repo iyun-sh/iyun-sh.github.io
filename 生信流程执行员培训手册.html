@@ -1391,13 +1391,12 @@ bash /media/share/secure/run_tsg.sh</div>
     </script>
 <script>
 (function () {
+    var sectionColors = ['#fafbff','#edf4ff','#ecfdf5','#f5f3ff','#fef3c7'];
     var grids = document.querySelectorAll('.container > .grid');
     for (var i = 0; i < grids.length; i++) {
-        if (i % 2 === 1) {
-            var cards = grids[i].querySelectorAll('.card');
-            for (var j = 0; j < cards.length; j++) {
-                cards[j].style.background = '#edf4ff';
-            }
+        var cards = grids[i].querySelectorAll('.card');
+        for (var j = 0; j < cards.length; j++) {
+            cards[j].style.background = sectionColors[i % sectionColors.length];
         }
     }
 })();
