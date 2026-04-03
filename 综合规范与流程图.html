@@ -83,13 +83,13 @@
             display: block;
         }
 
-        /* 每个大标签的内容区底色 */
-        #standards-page.active { background: #f0f7ff; }
-        #protection-page.active { background: #f0fdf8; }
-        #flow-page.active       { background: #f8f5ff; }
-        #dataprep-page.active   { background: #fffaf0; }
-        #sop-page.active        { background: #fdf5f0; }
-        #training-page.active   { background: #f3fdf5; }
+        /* 每个大标签的内容区底色（与标签主题色对应的淡化版） */
+        #standards-page.active  { background: #eff6ff; } /* 蓝-50 */
+        #protection-page.active { background: #ecfdf5; } /* 祖母绿-50 */
+        #flow-page.active       { background: #f5f3ff; } /* 紫-50 */
+        #dataprep-page.active   { background: #fffbeb; } /* 琥珀-50 */
+        #sop-page.active        { background: #fef2f2; } /* 红-50 */
+        #training-page.active   { background: #f0fdf4; } /* 草绿-50 */
 
         .page-card {
             border: 1px solid #e5e7eb;
@@ -179,7 +179,6 @@
             <button class="switch-btn" type="button" data-target="flow-page">流程手册</button>
             <button class="switch-btn" type="button" data-target="dataprep-page">数据处理</button>
             <button class="switch-btn" type="button" data-target="sop-page">分析流程SOP</button>
-        
             <button class="switch-btn" type="button" data-target="training-page">培训手册</button></div>
 
         <section id="standards-page" class="page-wrap active">
