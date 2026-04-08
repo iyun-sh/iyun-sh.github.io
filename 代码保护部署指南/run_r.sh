@@ -33,7 +33,7 @@
 TARGET_USER="iyunlyl"                               # 受保护脚本的所有者
 SCRIPT_DIR="/media/share/r_automation"               # 本脚本和 scripts/ 所在目录
 R_SCRIPT="$SCRIPT_DIR/scripts/analysis.R"            # 被保护的 R 源码
-ALLOWED_PREFIX="/media/share/output"                 # --rm 白名单路径前缀
+ALLOWED_PREFIX=$(realpath "/media/share/Project" 2>/dev/null || echo "/media/share/Project")  # --rm 和 chmod 白名单路径前缀
 # --------------------------------------------
 
 # 保存原始参数
@@ -68,6 +68,9 @@ fi
 # ============================================================
 # 以下所有代码均以受保护用户身份运行
 # ============================================================
+
+# 获取实际调用者（SUDO_USER 由 sudo 自动设置，直接运行时 fallback 到 whoami）
+CALLER=${SUDO_USER:-$(whoami)}
 
 # ---------- 安全防护: 清理 R 相关危险环境变量 ----------
 # R_LIBS / R_LIBS_USER: 用户可注入恶意 R 包, 在 library() 时加载
@@ -118,7 +121,6 @@ if [ "$DO_RM" = true ]; then
 
     # 安全校验 3: 身份一致性
     OWNER=$(cat "$OUTPUT_DIR/.owner")
-    CALLER=${SUDO_USER:-$USER}
     if [ "$OWNER" != "$CALLER" ]; then
         echo "错误：只能删除自己创建的目录（创建者: $OWNER，当前: $CALLER）" >&2
         exit 1
@@ -143,12 +145,30 @@ if [ -n "$OUTPUT_DIR" ] && [ -d "$OUTPUT_DIR" ]; then
         echo "错误：输出目录不能是符号链接, 拒绝修改权限" >&2
         exit 1
     fi
-    CALLER=${SUDO_USER:-$USER}
-    echo "$CALLER" > "$OUTPUT_DIR/.owner"
-    chmod -R 777 "$OUTPUT_DIR"
-    chmod +t "$OUTPUT_DIR"
-    chmod 444 "$OUTPUT_DIR/.owner"
-    echo "输出目录权限已设置: $OUTPUT_DIR (创建者: $CALLER)"
+    # 安全检查：路径白名单 + 项目目录保护
+    REAL_OUTPUT=$(realpath "$OUTPUT_DIR" 2>/dev/null || echo "$OUTPUT_DIR")
+    REAL_SCRIPT=$(realpath "$SCRIPT_DIR" 2>/dev/null || echo "$SCRIPT_DIR")
+
+    if [ "$CALLER" = "$TARGET_USER" ]; then
+        # 本人直接运行，不需要开放权限
+        echo "[INFO] 本人($CALLER)运行，输出目录保持默认权限"
+    elif [[ "$REAL_OUTPUT" != "$ALLOWED_PREFIX"* ]]; then
+        # 输出目录不在允许路径下，拒绝 chmod
+        echo "[警告] 输出目录不在允许路径下($ALLOWED_PREFIX/)，跳过 chmod" >&2
+        echo "[警告] 请使用 $ALLOWED_PREFIX/ 下的目录作为输出路径" >&2
+    elif [[ "$REAL_OUTPUT" == "$REAL_SCRIPT"* ]]; then
+        # 输出目录在项目目录内，拒绝 chmod
+        echo "[警告] 输出目录在项目目录内($REAL_SCRIPT)，跳过 chmod" >&2
+    else
+        if [ ! -f "$OUTPUT_DIR/.owner" ]; then
+            echo "$CALLER" > "$OUTPUT_DIR/.owner" 2>/dev/null || true
+        fi
+        chmod -R 777 "$OUTPUT_DIR" 2>/dev/null || true
+        chmod +t "$OUTPUT_DIR" 2>/dev/null || true
+        # .owner 必须在 chmod -R 777 之后重新设为只读
+        chmod 444 "$OUTPUT_DIR/.owner" 2>/dev/null || true
+        echo "[INFO] 输出目录权限已设置为 1777（调用者: $CALLER）: $OUTPUT_DIR"
+    fi
 fi
 
 exit $EXIT_CODE
