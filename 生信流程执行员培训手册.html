@@ -461,7 +461,7 @@
                 <tr><th>命令</th><th>作用</th><th>示例</th></tr>
                 <tr><td><code>pwd</code></td><td>显示当前目录</td><td><code>pwd</code></td></tr>
                 <tr><td><code>ls -la</code></td><td>列出文件（含隐藏）</td><td><code>ls -la /media/share/Project/</code></td></tr>
-                <tr><td><code>cd</code></td><td>切换目录</td><td><code>cd /media/share/Project/TCGA_LUAD/</code></td></tr>
+                <tr><td><code>cd</code></td><td>切换目录</td><td><code>cd /media/share/Project/你的用户名/TCGA_LUAD/</code></td></tr>
                 <tr><td><code>cp</code></td><td>复制文件</td><td><code>cp expression.csv /目标路径/</code></td></tr>
                 <tr><td><code>mv</code></td><td>移动/重命名</td><td><code>mv old.csv new.csv</code></td></tr>
                 <tr><td><code>head -5</code></td><td>查看文件前 5 行</td><td><code>head -5 expression.csv</code></td></tr>
@@ -498,25 +498,39 @@
 
 <span class="comment"># 项目输出目录</span>
 /media/share/Project/
-  └── 项目名/                    ← 每个项目一个目录
-      ├── expression.csv         ← 输入文件
-      ├── group.csv
-      ├── gene.csv
-      ├── survival.csv
-      ├── riskscore.csv
-      ├── output/                ← 分析输出
-      │   ├── DEGs/
-      │   ├── ML/
-      │   ├── report/
-      │   └── ...
-      └── log/                   ← 运行日志
+  └── 你的用户名/                 ← 每人一个用户名目录
+      └── 项目名/                ← 每个项目一个子目录
+          ├── expression.csv     ← 输入文件
+          ├── group.csv
+          ├── gene.csv
+          ├── survival.csv
+          ├── riskscore.csv
+          ├── output/            ← 分析输出
+          │   ├── DEGs/
+          │   ├── ML/
+          │   ├── report/
+          │   └── ...
+          └── log/               ← 运行日志
 </div>
+
+            <h3>项目目录创建与权限</h3>
+            <div class="code-block"><span class="comment"># 首次使用：在 Project/ 下创建自己的目录（只需做一次）</span>
+mkdir -p /media/share/Project/$(whoami)
+
+<span class="comment"># 每个新项目：创建项目目录并设置 1777 权限</span>
+<span class="comment"># 1777 = 所有人可读写 + sticky bit 防止互删文件</span>
+mkdir -p /media/share/Project/$(whoami)/项目名
+chmod 1777 /media/share/Project/$(whoami)/项目名</div>
+            <div class="warn-box" style="margin-top:10px">
+                <strong>⚠️ 为什么需要 chmod 1777？</strong>
+                入口脚本以 <code>iyunlyl</code> 身份运行，需要往你的项目目录写入 output/ 和 log/。如果项目目录没有开放写权限，脚本会因权限不足而失败。
+            </div>
 
             <h3>统一调用模式</h3>
             <p>所有 20 个模块遵循相同的调用模式：</p>
             <div class="code-block">
-<span class="comment"># 1. 进入项目目录</span>
-cd /media/share/Project/项目名/
+<span class="comment"># 1. 进入项目目录（每人在 Project/ 下有自己的用户名目录）</span>
+cd /media/share/Project/你的用户名/项目名/
 
 <span class="comment"># 2. 准备输入文件（按格式要求）</span>
 <span class="comment">#    详见 SOP「1.5 通用输入文件格式规范」→ F1-F9</span>
@@ -640,8 +654,8 @@ GSE68465</div>
                    <a href="标准化分析流程SOP.html#fmt-gse" class="sop-ref">→ F7 格式</a></p>
 
                 <h4>1.2 执行 GSE 下载</h4>
-                <div class="code-block"><span class="comment"># 进入项目目录</span>
-cd /media/share/Project/项目名/
+                <div class="code-block"><span class="comment"># 进入项目目录（每人在 Project/ 下有自己的用户名目录）</span>
+cd /media/share/Project/你的用户名/项目名/
 
 <span class="comment"># 确认 gse_list.txt 已放好</span>
 cat gse_list.txt

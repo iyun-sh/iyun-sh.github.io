@@ -384,7 +384,7 @@
                 <div class="lead-box" style="margin-top:18px">
                     <strong>&#x1F4A1; 项目目录推荐结构</strong>
 <pre style="margin:8px 0 0; font-family:Consolas,monospace; font-size:0.9em; line-height:1.6">
-/media/share/Project/项目名/
+/media/share/Project/你的用户名/项目名/
 ├── 01_GSE/                  &larr; GEO 下载输出
 ├── 02_Combine/              &larr; 合并后数据
 ├── 03_DEGs/                 &larr; 差异表达结果
@@ -405,6 +405,10 @@
 ├── 18_MR/                   &larr; 孟德尔随机化
 └── 19_TSG/                  &larr; 因果推断
 </pre>
+                    <p style="margin-top:8px;font-size:0.92em;">
+                        <strong>目录创建：</strong><code>mkdir -p /media/share/Project/$(whoami)/项目名</code><br>
+                        <strong>权限设置：</strong><code>chmod 1777 /media/share/Project/$(whoami)/项目名</code>（入口脚本以 iyunlyl 身份运行，需要写入权限；1777 = 全开 + sticky bit 防互删）
+                    </p>
                 </div>
 
                 <div class="info-box" style="margin-top:10px">
