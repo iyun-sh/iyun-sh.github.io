@@ -1,0 +1,6 @@
+新人文件/*.exe filter=lfs diff=lfs merge=lfs -text
+新人文件/*.zip filter=lfs diff=lfs merge=lfs -text
+新人文件/*.msi filter=lfs diff=lfs merge=lfs -text
+新人文件/*.7z filter=lfs diff=lfs merge=lfs -text
+新人文件/*.rar filter=lfs diff=lfs merge=lfs -text
+新人文件/*.tar.gz filter=lfs diff=lfs merge=lfs -text
