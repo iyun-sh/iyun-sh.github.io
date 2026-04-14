@@ -993,7 +993,7 @@ smps &lt;- stringr::str_extract(Cells(scRNA_orig), ".*(?=_)")
 group_label &lt;- group$group[match(smps, group$sample)]
 names(group_label) &lt;- Cells(scRNA_orig)
 scRNA_orig &lt;- AddMetaData(scRNA_orig, group_label, col.name = "group")
-qs::qs_save(scRNA_orig, file = paste0(name, "/scRNA_orig.", name, ".qs2"))</div>
+qs2::qs_save(scRNA_orig, file = paste0(name, "/scRNA_orig.", name, ".qs2"))</div>
 
                 <h5>函数速查</h5>
                 <ul>
@@ -1003,7 +1003,7 @@ qs::qs_save(scRNA_orig, file = paste0(name, "/scRNA_orig.", name, ".qs2"))</div>
                     <li><code>merge()</code>：合并多个 Seurat 对象</li>
                     <li><code>PercentageFeatureSet()</code>：算 QC 指标</li>
                     <li><code>AddMetaData()</code>：加分组信息</li>
-                    <li><code>qs::qs_save()</code>：高效保存</li>
+                    <li><code>qs2::qs_save()</code>：高效保存</li>
                     <li>本阶段只做建对象+QC+加分组+保存，不做 PCA/UMAP/聚类</li>
                 </ul>
 
@@ -1016,7 +1016,7 @@ qs::qs_save(scRNA_orig, file = paste0(name, "/scRNA_orig.", name, ".qs2"))</div>
                     <li>能用 <code>Read10X()</code> 读取至少 2 个样本，使用 <code>RenameCells()</code> 避免 barcode 冲突，并用 <code>merge()</code> 合并</li>
                     <li>能使用 <code>PercentageFeatureSet()</code> 计算 <code>percent.mt</code> 和 <code>percent.hb</code></li>
                     <li>能从 <code>group.csv</code> 匹配分组信息并用 <code>AddMetaData()</code> 写入对象</li>
-                    <li>能用 <code>qs::qs_save()</code> 保存，并报告合并后的细胞数和基因数</li>
+                    <li>能用 <code>qs2::qs_save()</code> 保存，并报告合并后的细胞数和基因数</li>
                     <li>确认本阶段只做建对象+QC+加分组+保存，不进入 PCA/UMAP/聚类</li>
                 </ul>
             </div>
