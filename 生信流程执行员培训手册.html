@@ -979,6 +979,15 @@ scRNA_orig[["percent.mt"]] &lt;- PercentageFeatureSet(scRNA_orig, pattern = "^MT
 scRNA_orig[["percent.hb"]] &lt;- PercentageFeatureSet(scRNA_orig, pattern = "^HB[^(P|E|S)]")</div>
 
                 <h5>2.3.4 添加分组并保存</h5>
+                <div class="alert alert-info">
+                    <strong>⚠️ group.csv 需要手动整理：</strong>单细胞数据的 group.csv 无法用 <code>run_extract_groups.sh</code> 自动生成。你需要从 GEO 页面或文献中查找每个 GSM 样本对应的分组信息，手动创建 <code>group.csv</code>（两列：<code>sample</code> 和 <code>group</code>），其中 <code>sample</code> 列的值必须与 GSM 子目录名一致。示例：
+                </div>
+                <div class="code-block"><span class="comment"># group.csv 内容示例（手动整理）</span>
+sample,group
+GSM5601534,Tumor
+GSM5601535,Tumor
+GSM5601536,Normal
+GSM5601537,Normal</div>
                 <div class="code-block">group &lt;- fread(paste0("../00_RawData/", name, ".group.csv"))
 smps &lt;- stringr::str_extract(Cells(scRNA_orig), ".*(?=_)")
 group_label &lt;- group$group[match(smps, group$sample)]
