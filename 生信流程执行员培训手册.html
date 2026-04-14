@@ -654,49 +654,185 @@ GSE68465</div>
                    <a href="标准化分析流程SOP.html#fmt-gse" class="sop-ref">→ F7 格式</a></p>
 
                 <h4>1.2 执行 GSE 下载</h4>
-                <div class="code-block"><span class="comment"># 进入项目目录（每人在 Project/ 下有自己的用户名目录）</span>
+                <p>脚本位于 <code>/media/share/secure/gse_download_and_cleaning/run_download_gse.sh</code>，支持两种模式：</p>
+
+                <h5>方式一：单个数据集下载（<code>-g</code> 参数）</h5>
+                <div class="code-block"><span class="comment"># 进入项目目录</span>
 cd /media/share/Project/你的用户名/项目名/
 
-<span class="comment"># 确认 gse_list.txt 已放好</span>
+<span class="comment"># 下载单个 GSE，指定输出目录</span>
+/media/share/secure/gse_download_and_cleaning/run_download_gse.sh \
+  -g GSE126124 \
+  -o /media/share/Project/你的用户名/项目名/01_GSE/GSE126124</div>
+
+                <h5>方式二：批量下载（<code>-l</code> 参数，推荐）</h5>
+                <div class="code-block"><span class="comment"># 确认 gse_list.txt 已放好</span>
 cat gse_list.txt
 
-<span class="comment"># 调用下载脚本</span>
-bash /media/share/secure/run_download_gse.sh</div>
+<span class="comment"># 批量下载，脚本会自动为每个 GSE 创建子目录</span>
+/media/share/secure/gse_download_and_cleaning/run_download_gse.sh \
+  -l gse_list.txt \
+  -o /media/share/Project/你的用户名/项目名/01_GSE</div>
 
-                <h4>1.3 单细胞数据下载与目录整理</h4>
-                <ul>
-                    <li>学会从 GEO supplementary files 下载 10X 文件：<code>barcodes.tsv.gz</code>、<code>features.tsv.gz</code>、<code>matrix.mtx.gz</code> 或 <code>.h5</code></li>
-                    <li>学会区分 bulk 与单细胞数据：看 GEO 页面描述、平台信息、补充文件类型</li>
-                    <li>整理目录：每个 GSM 一个子目录，保证 10X 文件成套存在</li>
-                </ul>
+                <h5>参数速查表</h5>
+                <table>
+                    <tr><th>参数</th><th>说明</th><th>默认值</th><th>注意</th></tr>
+                    <tr><td><code>-g GSE_ID</code></td><td>单个 GSE 编号</td><td>—</td><td>与 <code>-l</code> 二选一</td></tr>
+                    <tr><td><code>-l LIST_FILE</code></td><td>GSE ID 列表文件</td><td>—</td><td>与 <code>-g</code> 二选一；批量推荐</td></tr>
+                    <tr><td><code>-o OUTPUT_DIR</code></td><td>输出目录</td><td>—</td><td>必填</td></tr>
+                    <tr><td><code>--no-geochina</code></td><td>不使用 geoChina 镜像</td><td>使用镜像</td><td>下载慢时可关闭镜像试试</td></tr>
+                    <tr><td><code>--no-tpm</code></td><td>高通量数据输出 Counts 而非 TPM</td><td>TPM</td><td>仅对 RNA-seq 有效</td></tr>
+                    <tr><td><code>--skip-gpl</code></td><td>跳过 GPL 探针注释</td><td>不跳过</td><td>⚠️ <strong>芯片数据禁用</strong>，否则无基因映射</td></tr>
+                </table>
+
+                <h5>输出文件结构</h5>
+                <div class="code-block">output/01_GSE/GSE126124/
+├── GSE126124_cleaned_expression.csv   <span class="comment"># 表达矩阵（基因 × 样本）</span>
+├── GSE126124_counts.csv               <span class="comment"># Count 矩阵（仅 RNA-seq Count 时生成）</span>
+├── GSE126124_pdata.csv                <span class="comment"># 样本元信息（用于 run_extract_groups.sh）</span>
+├── GSE126124_fdata.csv                <span class="comment"># 探针/基因注释</span>
+├── GSE126124_data.qs2                 <span class="comment"># 完整数据（qs2 格式）</span>
+└── GSE126124_report.txt               <span class="comment"># 数据质量报告（必看！）</span></div>
+                <div class="alert alert-info">
+                    <strong>💡 关键文件：</strong><code>*_cleaned_expression.csv</code> 和 <code>*_pdata.csv</code> 是后续步骤的输入。如果这两个文件不存在或为空，说明下载失败，需查看日志排查。
+                </div>
+
+                <h4>1.3 分组提取</h4>
+                <p>下载完成后，使用 <code>run_extract_groups.sh</code> 从 <code>*_pdata.csv</code> 中提取分组信息。这是一个<strong>命令行参数式</strong>工具（非交互式菜单），建议分三步操作：</p>
+
+                <h5>参数说明</h5>
+                <table>
+                    <tr><th>参数</th><th>说明</th><th>默认值</th></tr>
+                    <tr><td><code>-f / --file</code></td><td>pdata.csv 文件路径（必需）</td><td>—</td></tr>
+                    <tr><td><code>-c / --column</code></td><td>指定分组列名（如 <code>"disease:ch1"</code>）</td><td>—</td></tr>
+                    <tr><td><code>-a / --auto-detect</code></td><td>自动检测分组列</td><td>TRUE</td></tr>
+                    <tr><td><code>--no-auto-detect</code></td><td>禁用自动检测，仅使用 <code>-c</code> 指定的列</td><td>—</td></tr>
+                    <tr><td><code>--map</code></td><td>分组映射，格式 <code>"原值=新值"</code>，可重复指定多个（如 <code>--map "HC=Control" --map "NASH=Disease"</code>）</td><td>—</td></tr>
+                    <tr><td><code>--mapped-only</code></td><td>仅保留被 <code>--map</code> 映射过的样本，未被映射到的分组会被丢弃。例如 pdata 有 3 个分组 A/B/C，你只 <code>--map "A=Tumor" --map "B=Normal"</code>，则 C 组样本会被排除。设为 FALSE 则保留所有样本（未映射的保持原值）</td><td>TRUE</td></tr>
+                    <tr><td><code>-o / --output</code></td><td>输出文件路径（不指定则仅预览，不写文件）</td><td>—</td></tr>
+                    <tr><td><code>--output-cols</code></td><td>输出列：<code>all</code> / <code>sample_id</code> / <code>groups_only</code></td><td>all</td></tr>
+                    <tr><td><code>--show-values</code></td><td>显示每个分组列的唯一值</td><td>FALSE</td></tr>
+                    <tr><td><code>--max-unique</code></td><td>分组列最大唯一值数量，超过的列被跳过</td><td>10</td></tr>
+                    <tr><td><code>--max-values</code></td><td>显示唯一值的最大数量</td><td>20</td></tr>
+                    <tr><td><code>--min-common-len</code></td><td>最小公共部分长度</td><td>2</td></tr>
+                    <tr><td><code>-q / --quiet</code></td><td>静默模式，不打印详细信息</td><td>FALSE</td></tr>
+                    <tr><td><code>-h / --help</code></td><td>显示帮助信息</td><td>—</td></tr>
+                </table>
+
+                <h5>操作步骤详解（三步法）</h5>
+
+                <p><strong>第一步：浏览可用分组列（只看不写）</strong></p>
+                <p>只传 <code>-f</code>，脚本自动检测所有可能的分组列，打印每列的唯一值和样本数：</p>
+                <div class="code-block"><span class="comment"># 浏览 pdata 中的分组候选列</span>
+/media/share/secure/gse_download_and_cleaning/run_extract_groups.sh \
+  -f 01_GSE/GSE31210/GSE31210_pdata.csv
+
+<span class="comment"># 输出示例：</span>
+<span class="comment"># === Candidate group columns ===</span>
+<span class="comment"># [disease_state] (2 unique values)</span>
+<span class="comment">#   "lung adenocarcinoma"  (n=206)</span>
+<span class="comment">#   "adjacent normal"      (n=20)</span>
+<span class="comment"># [tissue] (1 unique values)</span>
+<span class="comment">#   "lung"                 (n=226)</span></div>
+                <p>根据输出，确定要用哪一列（本例选 <code>disease_state</code>），以及原始值需要映射成什么。</p>
+
+                <p><strong>第二步：指定列 + 映射，预览结果（仍不写文件）</strong></p>
+                <p>加上 <code>-c</code> 和 <code>--map</code>，但<strong>不加 <code>-o</code></strong>，脚本只在屏幕上打印映射结果，方便确认。<code>--map</code> 可重复指定多个：</p>
+                <div class="code-block"><span class="comment"># 预览映射结果（不加 -o，不会写文件）</span>
+/media/share/secure/gse_download_and_cleaning/run_extract_groups.sh \
+  -f 01_GSE/GSE31210/GSE31210_pdata.csv \
+  -c "disease_state" \
+  --map "lung adenocarcinoma=Tumor" \
+  --map "adjacent normal=Normal"
+
+<span class="comment"># 输出示例：</span>
+<span class="comment"># === Preview ===</span>
+<span class="comment"># GSM773533 → Tumor</span>
+<span class="comment"># GSM773534 → Tumor</span>
+<span class="comment"># ...</span>
+<span class="comment"># GSM773758 → Normal</span>
+<span class="comment"># Total: 206 Tumor, 20 Normal</span></div>
+
+                <p><strong>第三步：确认无误后加 <code>-o</code> 输出到文件</strong></p>
+                <div class="code-block"><span class="comment"># 确认无误，加 -o 写入 groups.csv</span>
+/media/share/secure/gse_download_and_cleaning/run_extract_groups.sh \
+  -f 01_GSE/GSE31210/GSE31210_pdata.csv \
+  -c "disease_state" \
+  --map "lung adenocarcinoma=Tumor" \
+  --map "adjacent normal=Normal" \
+  -o 01_GSE/GSE31210/groups.csv</div>
+
+                <h5>常见场景与应对</h5>
+                <table>
+                    <tr><th>场景</th><th>pdata 示例</th><th>处理方式</th></tr>
+                    <tr>
+                        <td>简单二分组</td>
+                        <td><code>disease_state: "cancer" / "normal"</code></td>
+                        <td><code>--map "cancer=Tumor" --map "normal=Normal"</code></td>
+                    </tr>
+                    <tr>
+                        <td>多分组需合并</td>
+                        <td><code>"stage I" / "stage II" / "stage III" / "normal"</code></td>
+                        <td><code>--map "stage I=Tumor" --map "stage II=Tumor" --map "stage III=Tumor" --map "normal=Normal"</code></td>
+                    </tr>
+                    <tr>
+                        <td>分组信息藏在描述中</td>
+                        <td><code>"tissue: lung, status: cancer, age: 55"</code></td>
+                        <td>换一列（用 <code>-c</code> 指定其他列）或联系负责人确认；不要自行猜测</td>
+                    </tr>
+                    <tr>
+                        <td>无明确分组列</td>
+                        <td>pdata 全是技术信息</td>
+                        <td>标记为“分组信息缺失”，联系负责人补充</td>
+                    </tr>
+                </table>
+
+                <div class="alert alert-info">
+                    <strong>💡 关键原则：</strong>分组提取的核心是把每个样本映射为 <code>Tumor</code>/<code>Normal</code>（或 <code>Treatment</code>/<code>Control</code> 等）。始终先浏览（只 <code>-f</code>）再预览（加 <code>-c --map</code>）最后输出（加 <code>-o</code>），<strong>三步走，不要一步到位</strong>。如果分组信息不清晰或有多种分法，<strong>不要自行判断，联系负责人确认</strong>。
+                </div>
 
                 <h4>1.4 检查输出</h4>
                 <ul>
-                    <li>每个 GSE 应产生 <code>expression.csv</code> + <code>group.csv</code></li>
-                    <li>检查文件是否存在且非空：<code>ls -la output/gse_download/GSE31210/</code></li>
-                    <li>查看日志有无 Error：<code>tail -20 output/gse_download/log.txt</code></li>
-                    <li>单细胞原始目录中应存在完整的 10X 三件套或 h5 文件</li>
+                    <li>每个 GSE 应产生 <code>*_cleaned_expression.csv</code> + <code>*_pdata.csv</code></li>
+                    <li>检查文件是否存在且非空：<code>ls -la 01_GSE/GSE31210/</code></li>
+                    <li>查看质量报告：<code>cat 01_GSE/GSE31210/GSE31210_report.txt</code></li>
+                    <li>查看日志有无 Error：<code>tail -30 01_GSE/GSE31210/*.log</code></li>
                 </ul>
+
+                <h5>日志判读示例</h5>
+                <p><strong>✅ 成功日志：</strong></p>
+                <div class="code-block"><span class="comment">[INFO] Downloading GSE31210 ...</span>
+<span class="comment">[INFO] Platform: GPL570 (HG-U133_Plus_2)</span>
+<span class="comment">[INFO] Probe mapping: 54675 probes → 21297 genes (mean aggregation)</span>
+<span class="comment">[INFO] Log2 scale detected: YES (max=14.2, median=6.8)</span>
+<span class="comment">[INFO] Samples: 226 (Normal: 20, Tumor: 206)</span>
+<span class="comment">[INFO] Output: GSE31210_cleaned_expression.csv (21297 genes × 226 samples)</span>
+<span class="comment">[INFO] GSE31210 completed successfully.</span></div>
+                <p><strong>❌ 失败日志（常见）：</strong></p>
+                <div class="code-block"><span class="comment">[ERROR] GSE99999: Failed to download from GEO.</span>
+<span class="comment">[ERROR] Possible causes:</span>
+<span class="comment">  - GSE ID does not exist or is superseded</span>
+<span class="comment">  - Network timeout (try --no-geochina)</span>
+<span class="comment">  - GEO server temporary unavailability</span></div>
+                <p><strong>⚠️ 警告日志（需人工确认）：</strong></p>
+                <div class="code-block"><span class="comment">[WARN] GSE50081: Only 8932 genes after probe mapping (expected ≥10000).</span>
+<span class="comment">[WARN] Check if --skip-gpl was used incorrectly for microarray data.</span></div>
 
                 <h4>1.5 Day 1 考核</h4>
                 <ul class="checklist">
-                    <li>给定 3 个数据集时，至少能正确判断 3/3 的数据类型（bulk 或单细胞）</li>
                     <li>能独立编写 gse_list.txt 并成功完成 1 次 bulk 下载</li>
-                    <li>能整理 1 份单细胞原始目录，保证 10X 三件套或 h5 文件完整可读</li>
-                    <li>能指出下载目录中的关键输出文件，并说明哪些文件缺失会导致后续无法继续</li>
+                    <li>能说出下载产生的关键输出文件名称和用途（<code>*_cleaned_expression.csv</code>、<code>*_pdata.csv</code>）</li>
+                    <li>能独立运行分组提取脚本，完成列选择和分组映射，输出正确的 groups.csv</li>
+                    <li>能说清楚分组提取时“选了哪一列”和“怎么映射的”</li>
                     <li>能根据日志判断成功/失败；3 段示例日志至少判断正确 2 段</li>
                 </ul>
             </div>
 
             <div class="day-card" id="data-day2">
-                <h4><span class="badge badge-day">Day 2</span> 预处理 + Seurat 对象构建</h4>
-                <p><strong>目标：</strong>完成 bulk GSE 预处理，并把单细胞原始矩阵构建成可用的 Seurat 对象；本日不要求做单细胞下游分析。</p>
+                <h4><span class="badge badge-day">Day 2</span> 数据校验 + 单细胞数据处理</h4>
+                <p><strong>目标：</strong>Bulk GSE 数据格式校验；单细胞原始数据下载、目录整理和 Seurat 对象构建；本日不要求做单细胞下游分析。</p>
 
-                <h4>2.1 GSE 预处理：分组提取</h4>
-                <div class="code-block"><span class="comment"># 调用分组提取脚本</span>
-bash /media/share/secure/run_extract_groups.sh</div>
-
-                <h4>2.2 GSE 预处理：数据格式校验</h4>
+                <h4>2.1 Bulk 数据格式校验</h4>
                 <p>对每个下载的数据集执行以下检查，确认可进入后续分析：</p>
                 <table>
                     <tr><th>#</th><th>检查项</th><th>命令</th><th>合格标准</th></tr>
@@ -732,37 +868,147 @@ bash /media/share/secure/run_extract_groups.sh</div>
                     </tr>
                 </table>
 
+                <h4>2.2 单细胞数据下载与目录整理</h4>
+                <p>单细胞数据可以用 <code>run_download_gse.sh</code> 的 <code>--select-suppl</code> 参数下载 GEO 附件，但脚本<strong>不会自动处理</strong>单细胞数据（不做探针映射、log2 检测等），下载后需要手动整理目录并用 R 构建 Seurat 对象。</p>
+                <h5>2.2.1 下载原始文件</h5>
+                <div class="code-block"><span class="comment"># 用 --select-suppl 模糊搜索并下载 GEO 附件（单细胞原始文件）</span>
+<span class="comment"># 参数值为模糊搜索关键词，匹配附件文件名，只能指定一次</span>
+/media/share/secure/gse_download_and_cleaning/run_download_gse.sh \
+  -g GSE184880 \
+  -o 01_GSE/GSE184880 \
+  --select-suppl "matrix"
+
+<span class="comment"># 需要匹配多个关键词时，用正则 OR</span>
+  --select-suppl "snRNA|bulk"</div>
+                <p>下载后检查附件，常见三种格式：</p>
+                <ul>
+                    <li>10X 三件套：<code>barcodes.tsv.gz</code> + <code>features.tsv.gz</code>（旧版 <code>genes.tsv.gz</code>） + <code>matrix.mtx.gz</code></li>
+                    <li>h5 文件：<code>filtered_feature_bc_matrix.h5</code></li>
+                    <li>文本矩阵：<code>*_counts.txt.gz</code></li>
+                </ul>
+                <p>文件名通常带 GSM 前缀，如 <code>GSM5601534_barcodes.tsv.gz</code>。</p>
+
+                <h5>2.2.2 目录整理（关键步骤）</h5>
+                <p>下载后的文件通常平铺在同一目录，需<strong>按 GSM 分组整理到子目录</strong>，去掉文件名中的 GSM 前缀，旧版 <code>genes.tsv.gz</code> 重命名为 <code>features.tsv.gz</code>：</p>
+                <div class="code-block"><span class="comment"># 整理前（下载直接解压的平铺状态）</span>
+GSE184880_raw/
+├── GSM5601534_barcodes.tsv.gz
+├── GSM5601534_genes.tsv.gz      <span class="comment"># 旧版命名</span>
+├── GSM5601534_matrix.mtx.gz
+├── GSM5601535_barcodes.tsv.gz
+├── GSM5601535_features.tsv.gz
+└── GSM5601535_matrix.mtx.gz
+
+<span class="comment"># 整理后（按 GSM 分到子目录，去前缀，统一文件名）</span>
+GSE184880_raw/
+├── GSM5601534/
+│   ├── barcodes.tsv.gz
+│   ├── features.tsv.gz          <span class="comment"># genes.tsv.gz → features.tsv.gz</span>
+│   └── matrix.mtx.gz
+└── GSM5601535/
+    ├── barcodes.tsv.gz
+    ├── features.tsv.gz
+    └── matrix.mtx.gz</div>
+                <p><strong>整理要点：</strong></p>
+                <ul>
+                    <li>每个 GSM 单独一个子目录</li>
+                    <li>文件名去掉 <code>GSM*_</code> 前缀</li>
+                    <li><code>genes.tsv.gz</code> 统一重命名为 <code>features.tsv.gz</code>（Seurat v5 的 <code>Read10X()</code> 只认 features）</li>
+                    <li>h5 文件直接放入对应 GSM 子目录即可</li>
+                </ul>
+                <div class="alert alert-info">
+                    <strong>💡 如何判断数据类型：</strong>如果 GEO 页面显示平台为 10x Chromium 或补充文件为“三件套”格式，则为单细胞数据。如果是 GPL570、HG-U133 等芯片平台或 Illumina HiSeq 并提供表达矩阵，则为 bulk 数据。
+                </div>
+
                 <h4>2.3 单细胞 Seurat 对象构建</h4>
+                <p>目录整理完成后，将每个样本读入 R 构建 Seurat 对象。实际项目通常有多个 GSM 样本，需要逐一读取后合并。</p>
+
+                <h5>2.3.1 读取数据（多格式兼容）</h5>
                 <div class="code-block">library(Seurat)
+library(data.table)
 
-<span class="comment"># 10X 目录格式</span>
-data_10x &lt;- Read10X(data.dir = "raw_data/GSMXXXXXXX/")
+name &lt;- "GSE184880"
+if (!dir.exists(name)) dir.create(name)
 
-<span class="comment"># 或 h5 格式</span>
-data_h5 &lt;- Read10X_h5("raw_data/GSMXXXXXXX_filtered_feature_bc_matrix.h5")
-
-obj &lt;- CreateSeuratObject(
-    counts = data_10x,
-    project = "GSE_SC",
-    min.cells = 3,
-    min.features = 200
+<span class="comment"># 列出所有 GSM 子目录</span>
+sample_dirs &lt;- list.files(
+    paste0("../00_RawData/", name),
+    pattern = "GSM\\d+", full.names = TRUE
 )
 
-dim(obj)
-head(obj@meta.data)</div>
+<span class="comment"># 逐样本读取并建对象</span>
+scList &lt;- list()
+for (i in seq_along(sample_dirs)) {
+    project_name &lt;- basename(sample_dirs[i])
+
+    if (dir.exists(sample_dirs[i])) {
+        <span class="comment"># 10X 三件套目录</span>
+        counts &lt;- Read10X(sample_dirs[i], gene.column = 2)
+    } else if (grepl("txt.gz$", sample_dirs[i])) {
+        <span class="comment"># 文本计数矩阵</span>
+        counts &lt;- fread(sample_dirs[i], check.names = FALSE)
+        counts &lt;- tibble::column_to_rownames(counts, "V1")
+    }
+
+    obj &lt;- CreateSeuratObject(
+        counts = counts, min.cells = 3,
+        min.features = 200, project = project_name
+    )
+    <span class="comment"># 关键：重命名 barcode 防冲突</span>
+    scList[[i]] &lt;- RenameCells(obj, add.cell.id = project_name)
+}</div>
+
+                <div class="alert alert-info">
+                    <strong>为什么要 RenameCells？</strong>不同样本可能有相同的 barcode，合并时会冲突。<code>RenameCells(add.cell.id)</code> 在 barcode 前加样本名前缀确保唯一。
+                </div>
+
+                <h5>2.3.2 合并多样本</h5>
+                <div class="code-block"><span class="comment"># 确认全部成功</span>
+identical(length(sample_dirs), length(scList))
+<span class="comment"># 合并</span>
+scRNA_orig &lt;- merge(scList[[1]], y = scList[2:length(scList)])
+<span class="comment"># 基本检查</span>
+table(scRNA_orig$orig.ident)
+length(colnames(scRNA_orig))
+length(rownames(scRNA_orig))</div>
+
+                <h5>2.3.3 QC 指标计算</h5>
+                <div class="code-block"><span class="comment"># 线粒体（人 ^MT-，鼠 ^mt-）</span>
+scRNA_orig[["percent.mt"]] &lt;- PercentageFeatureSet(scRNA_orig, pattern = "^MT-")
+<span class="comment"># 血红蛋白</span>
+scRNA_orig[["percent.hb"]] &lt;- PercentageFeatureSet(scRNA_orig, pattern = "^HB[^(P|E|S)]")</div>
+
+                <h5>2.3.4 添加分组并保存</h5>
+                <div class="code-block">group &lt;- fread(paste0("../00_RawData/", name, ".group.csv"))
+smps &lt;- stringr::str_extract(Cells(scRNA_orig), ".*(?=_)")
+group_label &lt;- group$group[match(smps, group$sample)]
+names(group_label) &lt;- Cells(scRNA_orig)
+scRNA_orig &lt;- AddMetaData(scRNA_orig, group_label, col.name = "group")
+qs::qs_save(scRNA_orig, file = paste0(name, "/scRNA_orig.", name, ".qs2"))</div>
+
+                <h5>函数速查</h5>
                 <ul>
-                    <li>要求理解输入文件格式，能解释 <code>Read10X()</code>、<code>Read10X_h5()</code>、<code>CreateSeuratObject()</code> 的作用</li>
-                    <li>要求能说清楚对象构建后最基本的检查项：细胞数、基因数、meta.data 是否存在</li>
-                    <li>本阶段只要求“建对象”，不要求做 PCA、UMAP、聚类等分析</li>
+                    <li><code>Read10X()</code>：读取 10X 三件套</li>
+                    <li><code>CreateSeuratObject(min.cells=3, min.features=200)</code>：建对象</li>
+                    <li><code>RenameCells()</code>：barcode 加前缀防冲突</li>
+                    <li><code>merge()</code>：合并多个 Seurat 对象</li>
+                    <li><code>PercentageFeatureSet()</code>：算 QC 指标</li>
+                    <li><code>AddMetaData()</code>：加分组信息</li>
+                    <li><code>qs::qs_save()</code>：高效保存</li>
+                    <li>本阶段只做建对象+QC+加分组+保存，不做 PCA/UMAP/聚类</li>
                 </ul>
 
                 <h4>2.4 Day 2 考核</h4>
                 <ul class="checklist">
-                    <li>能独立运行分组提取脚本，并说清楚使用的列名和映射规则</li>
-                    <li>能对照检查表完成 5/5 项 GSE 格式校验，不漏掉样本数匹配和列名检查</li>
+                    <li>能对照检查表完成 5/5 项 bulk 数据格式校验，不漏掉样本数匹配和列名检查</li>
                     <li>遇到不合规的 expression.csv 或 group.csv，能明确标注错误位置和错误类型</li>
-                    <li>能从单细胞原始矩阵独立构建出 1 个 Seurat 对象，命令可复现</li>
-                    <li>能报告 Seurat 对象的细胞数、基因数、输入文件来源，并确认本日不进入 PCA/UMAP/聚类</li>
+                    <li>给定 3 个数据集时，能正确判断哪些是 bulk、哪些是单细胞</li>
+                    <li>能将平铺的单细胞文件整理为按 GSM 分组的目录结构，完成 <code>genes→features</code> 重命名</li>
+                    <li>能用 <code>Read10X()</code> 读取至少 2 个样本，使用 <code>RenameCells()</code> 避免 barcode 冲突，并用 <code>merge()</code> 合并</li>
+                    <li>能使用 <code>PercentageFeatureSet()</code> 计算 <code>percent.mt</code> 和 <code>percent.hb</code></li>
+                    <li>能从 <code>group.csv</code> 匹配分组信息并用 <code>AddMetaData()</code> 写入对象</li>
+                    <li>能用 <code>qs::qs_save()</code> 保存，并报告合并后的细胞数和基因数</li>
+                    <li>确认本阶段只做建对象+QC+加分组+保存，不进入 PCA/UMAP/聚类</li>
                 </ul>
             </div>
 
