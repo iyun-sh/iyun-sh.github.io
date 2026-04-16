@@ -235,57 +235,18 @@
             </div>
         </section>
         <section id="download-page" class="page-wrap">
-            <div class="page-card" style="padding:24px;">
-                <h2 style="margin-bottom:16px;color:#2c3e50;">📦 资源下载</h2>
-                <p style="color:#6b7280;margin-bottom:20px;">将文件放入仓库 <code>新人文件/</code> 目录后自动出现在此列表。</p>
-                <div id="download-list" style="display:flex;flex-direction:column;gap:10px;">
-                    <p style="color:#9ca3af;font-style:italic;">正在加载文件列表…</p>
+            <div class="page-card">
+                <button class="meta-toggle" type="button">📄 页面信息 <span class="arrow">▸</span></button>
+                <div class="page-meta">
+                    <span class="page-title">
+                        <span>资源下载（新人必装软件与资料）</span>
+                        <small>来源文件：资源下载.html</small>
+                    </span>
+                    <span class="page-links">
+                        <a class="page-link" href="资源下载.html" target="_blank" rel="noopener noreferrer">单独打开</a>
+                    </span>
                 </div>
-
-                <h2 style="margin-top:36px;margin-bottom:16px;color:#2c3e50;">📖 安装与使用说明</h2>
-
-                <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:16px;">
-                    <div style="background:#f0f9ff;padding:12px 16px;border-bottom:1px solid #e5e7eb;">
-                        <strong style="color:#1e40af;">📊 XshellPlus 7.0</strong>
-                        <span style="color:#6b7280;font-size:0.85em;margin-left:8px;">— SSH 远程连接工具</span>
-                    </div>
-                    <div style="padding:16px;line-height:1.8;">
-                        <p><strong>用途：</strong>通过 SSH 连接到 Linux 分析服务器，执行生信分析任务。</p>
-                        <p style="margin-top:8px;"><strong>安装步骤：</strong></p>
-                        <ol style="margin:8px 0 0 20px;">
-                            <li>下载 <code>XshellPlus 7.0.0010 mod.zip</code> 并解压</li>
-                            <li>运行安装程序，按提示完成安装</li>
-                            <li>打开 Xshell，新建会话：<code>文件 → 新建</code></li>
-                            <li>填写服务器信息：
-                                <ul style="margin:4px 0 4px 20px;">
-                                    <li><strong>主机：</strong>由管理员提供的服务器 IP</li>
-                                    <li><strong>端口：</strong>22（默认）</li>
-                                    <li><strong>用户名/密码：</strong>由管理员分配</li>
-                                </ul>
-                            </li>
-                            <li>连接成功后即可开始操作</li>
-                        </ol>
-                        <p style="margin-top:8px;color:#92400e;font-size:0.9em;">⚠️ 如果安装前提示缺少运行库，请先安装下方的 VC++ 运行库。</p>
-                    </div>
-                </div>
-
-                <div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:16px;">
-                    <div style="background:#fefce8;padding:12px 16px;border-bottom:1px solid #e5e7eb;">
-                        <strong style="color:#854d0e;">⚙️ 微软 VC++ 运行库合集</strong>
-                        <span style="color:#6b7280;font-size:0.85em;margin-left:8px;">— 系统运行库依赖</span>
-                    </div>
-                    <div style="padding:16px;line-height:1.8;">
-                        <p><strong>用途：</strong>许多 Windows 应用（包括 Xshell、R、Python 等）依赖 Visual C++ 运行库。一次性安装所有版本，避免后续报错。</p>
-                        <p style="margin-top:8px;"><strong>安装步骤：</strong></p>
-                        <ol style="margin:8px 0 0 20px;">
-                            <li>下载 <code>微软VC++运行库合集_2023.11.13.exe</code></li>
-                            <li>右键 → <strong>以管理员身份运行</strong></li>
-                            <li>勾选所有组件，点击"安装"</li>
-                            <li>安装完成后建议重启电脑</li>
-                        </ol>
-                        <p style="margin-top:8px;color:#166534;font-size:0.9em;">✅ 建议在安装其他软件之前先装好此运行库。</p>
-                    </div>
-                </div>
+                <iframe id="download-frame" class="doc-frame" title="资源下载" src="资源下载.html"></iframe>
             </div>
         </section>
     </div>
@@ -390,52 +351,8 @@
             }
 
             window.addEventListener('scroll', sendScrollToActiveFrame, { passive: true });
-
-            // 动态加载 downloads/ 目录文件列表
-            (function loadDownloads() {
-                var listEl = document.getElementById('download-list');
-                if (!listEl) return;
-                var apiUrl = 'https://api.github.com/repos/iyun-sh/iyun-sh.github.io/contents/新人文件';
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', apiUrl, true);
-                xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
-                xhr.onload = function () {
-                    if (xhr.status !== 200) {
-                        listEl.innerHTML = '<p style="color:#9ca3af;">暂无可下载文件。</p>';
-                        return;
-                    }
-                    var files = JSON.parse(xhr.responseText).filter(function (f) {
-                        return f.type === 'file' && f.name !== '.gitkeep';
-                    });
-                    if (files.length === 0) {
-                        listEl.innerHTML = '<p style="color:#9ca3af;">暂无可下载文件。</p>';
-                        return;
-                    }
-                    var html = '';
-                    var icons = { csv: '📊', xlsx: '📊', xls: '📊', pdf: '📄', zip: '📦', gz: '📦', tar: '📦', R: '📜', r: '📜', sh: '📜', py: '📜', txt: '📝', md: '📝', html: '🌐', RData: '💾', rds: '💾' };
-                    files.forEach(function (f) {
-                        var ext = f.name.split('.').pop();
-                        var icon = icons[ext] || '📎';
-                        var sizeKB = (f.size / 1024).toFixed(1);
-                        var sizeStr = f.size > 1048576 ? (f.size / 1048576).toFixed(1) + ' MB' : sizeKB + ' KB';
-                        html += '<a href="新人文件/' + encodeURIComponent(f.name) + '" download '
-                            + 'style="display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid #e5e7eb;border-radius:8px;text-decoration:none;color:#333;transition:background .15s;"'
-                            + ' onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'\'">'
-                            + '<span style="font-size:1.5em;">' + icon + '</span>'
-                            + '<span style="flex:1;font-weight:500;">' + f.name + '</span>'
-                            + '<span style="color:#9ca3af;font-size:0.85em;">' + sizeStr + '</span>'
-                            + '<span style="color:#3b82f6;font-size:0.85em;font-weight:600;">下载</span>'
-                            + '</a>';
-                    });
-                    listEl.innerHTML = html;
-                };
-                xhr.onerror = function () {
-                    listEl.innerHTML = '<p style="color:#9ca3af;">加载失败，请刷新重试。</p>';
-                };
-                xhr.send();
-            })();
         })();
     </script>
-    <p style="margin-top:18px;color:#5b6b80;font-size:0.92rem;text-align:center;"><strong>新人指南版本:</strong> v1.0 | 配套：培训 v1.1、数据处理 v1.0、SOP v1.7 | 更新日期: 2026-04-13</p>
+    <p style="margin-top:18px;color:#5b6b80;font-size:0.92rem;text-align:center;"><strong>新人指南版本:</strong> v1.0 | 配套：培训 v1.1、数据处理 v1.0、SOP v1.7 | 更新日期: 2026-04-16</p>
 </body>
 </html>

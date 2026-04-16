@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源下载 — 新人必装软件与资料</title>
+    <style>
+        :root {
+            --bg: #eff6ff;
+            --card: #ffffff;
+            --text: #223043;
+            --muted: #5b6b80;
+            --primary: #3b82f6;
+            --primary-soft: #dbeafe;
+            --border: #d9e2ef;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.6em;
+            margin-bottom: 8px;
+            color: #1e40af;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin-bottom: 24px;
+            font-size: 0.95em;
+        }
+
+        h2 {
+            font-size: 1.25em;
+            color: #2c3e50;
+            margin: 32px 0 16px;
+        }
+
+        h2:first-of-type {
+            margin-top: 0;
+        }
+
+        #download-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .dl-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            background: var(--card);
+            transition: background 0.15s;
+        }
+
+        .dl-item:hover {
+            background: #eff6ff;
+        }
+
+        .dl-icon { font-size: 1.5em; }
+        .dl-name { flex: 1; font-weight: 500; }
+        .dl-size { color: #9ca3af; font-size: 0.85em; }
+        .dl-action { color: #3b82f6; font-size: 0.85em; font-weight: 600; }
+
+        .install-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            background: var(--card);
+        }
+
+        .install-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .install-header strong {
+            font-size: 1em;
+        }
+
+        .install-header .desc {
+            color: #6b7280;
+            font-size: 0.85em;
+            margin-left: 8px;
+        }
+
+        .install-body {
+            padding: 16px;
+            line-height: 1.8;
+        }
+
+        .install-body ol {
+            margin: 8px 0 0 20px;
+        }
+
+        .install-body ul {
+            margin: 4px 0 4px 20px;
+        }
+
+        .note-warn {
+            margin-top: 8px;
+            color: #92400e;
+            font-size: 0.9em;
+        }
+
+        .note-ok {
+            margin-top: 8px;
+            color: #166534;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 资源下载</h1>
+        <p class="subtitle">将文件放入仓库 <code>新人文件/</code> 目录后自动出现在此列表。</p>
+
+        <div id="download-list">
+            <p style="color:#9ca3af;font-style:italic;">正在加载文件列表…</p>
+        </div>
+
+        <h2>📖 安装与使用说明</h2>
+
+        <div class="install-card">
+            <div class="install-header" style="background:#f0f9ff;">
+                <strong style="color:#1e40af;">📊 XshellPlus 7.0</strong>
+                <span class="desc">— SSH 远程连接工具</span>
+            </div>
+            <div class="install-body">
+                <p><strong>用途：</strong>通过 SSH 连接到 Linux 分析服务器，执行生信分析任务。</p>
+                <p style="margin-top:8px;"><strong>安装步骤：</strong></p>
+                <ol>
+                    <li>下载 <code>XshellPlus 7.0.0010 mod.zip</code> 并解压</li>
+                    <li>运行安装程序，按提示完成安装</li>
+                    <li>打开 Xshell，新建会话：<code>文件 → 新建</code></li>
+                    <li>填写服务器信息：
+                        <ul>
+                            <li><strong>主机：</strong>由管理员提供的服务器 IP</li>
+                            <li><strong>端口：</strong>22（默认）</li>
+                            <li><strong>用户名/密码：</strong>由管理员分配</li>
+                        </ul>
+                    </li>
+                    <li>连接成功后即可开始操作</li>
+                </ol>
+                <p class="note-warn">⚠️ 如果安装前提示缺少运行库，请先安装下方的 VC++ 运行库。</p>
+            </div>
+        </div>
+
+        <div class="install-card">
+            <div class="install-header" style="background:#fefce8;">
+                <strong style="color:#854d0e;">⚙️ 微软 VC++ 运行库合集</strong>
+                <span class="desc">— 系统运行库依赖</span>
+            </div>
+            <div class="install-body">
+                <p><strong>用途：</strong>许多 Windows 应用（包括 Xshell、R、Python 等）依赖 Visual C++ 运行库。一次性安装所有版本，避免后续报错。</p>
+                <p style="margin-top:8px;"><strong>安装步骤：</strong></p>
+                <ol>
+                    <li>下载 <code>微软VC++运行库合集_2023.11.13.exe</code></li>
+                    <li>右键 → <strong>以管理员身份运行</strong></li>
+                    <li>勾选所有组件，点击"安装"</li>
+                    <li>安装完成后建议重启电脑</li>
+                </ol>
+                <p class="note-ok">✅ 建议在安装其他软件之前先装好此运行库。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function loadDownloads() {
+            var listEl = document.getElementById('download-list');
+            if (!listEl) return;
+            var apiUrl = 'https://api.github.com/repos/iyun-sh/iyun-sh.github.io/contents/新人文件';
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', apiUrl, true);
+            xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+            xhr.onload = function () {
+                if (xhr.status !== 200) {
+                    listEl.innerHTML = '<p style="color:#9ca3af;">暂无可下载文件。</p>';
+                    return;
+                }
+                var files = JSON.parse(xhr.responseText).filter(function (f) {
+                    return f.type === 'file' && f.name !== '.gitkeep';
+                });
+                if (files.length === 0) {
+                    listEl.innerHTML = '<p style="color:#9ca3af;">暂无可下载文件。</p>';
+                    return;
+                }
+                var html = '';
+                var icons = { csv: '📊', xlsx: '📊', xls: '📊', pdf: '📄', zip: '📦', gz: '📦', tar: '📦', R: '📜', r: '📜', sh: '📜', py: '📜', txt: '📝', md: '📝', html: '🌐', RData: '💾', rds: '💾', exe: '⚙️' };
+                files.forEach(function (f) {
+                    var ext = f.name.split('.').pop();
+                    var icon = icons[ext] || '📎';
+                    var sizeStr = f.size > 1048576 ? (f.size / 1048576).toFixed(1) + ' MB' : (f.size / 1024).toFixed(1) + ' KB';
+                    html += '<a class="dl-item" href="新人文件/' + encodeURIComponent(f.name) + '" download>'
+                        + '<span class="dl-icon">' + icon + '</span>'
+                        + '<span class="dl-name">' + f.name + '</span>'
+                        + '<span class="dl-size">' + sizeStr + '</span>'
+                        + '<span class="dl-action">下载</span>'
+                        + '</a>';
+                });
+                listEl.innerHTML = html;
+            };
+            xhr.onerror = function () {
+                listEl.innerHTML = '<p style="color:#9ca3af;">加载失败，请刷新重试。</p>';
+            };
+            xhr.send();
+        })();
+    </script>
+</body>
+</html>
