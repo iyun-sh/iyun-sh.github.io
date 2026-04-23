@@ -1,0 +1,12 @@
+# 仅保留空目录结构；本地运行生成内容不提交
+results/*
+!results/.gitkeep
+report/*
+!report/.gitkeep
+logs/*
+!logs/.gitkeep
+
+Rplots.pdf
+*.qs2
+*.qs
+.20*
