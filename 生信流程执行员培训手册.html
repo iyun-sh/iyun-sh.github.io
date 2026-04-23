@@ -1223,7 +1223,7 @@ head -3 output/DEGs/01.DEG_all.csv</div>
         <!-- ═══════ 因果推断 ═══════ -->
         <div class="section" id="role-causal">
             <h2>&#x1F52C; <span class="badge badge-causal">因果推断</span> 培训计划（2 天）</h2>
-            <p>负责模块：<strong>mr</strong>（孟德尔随机化）、<strong>tsg</strong>（肿瘤抑癌基因分析）</p>
+            <p>负责模块：<strong>mr</strong>（孟德尔随机化）、<strong>coloc</strong>（共定位分析）、<strong>tsg</strong>（肿瘤抑癌基因分析）</p>
 
             <div class="alert alert-info">
                 <strong>前置要求：</strong>已完成「标准分析」培训或具备等价经验。这两个模块使用特殊数据源（GWAS、MAF），需要额外了解。
@@ -1247,10 +1247,16 @@ rs456   T   C   0.22   -0.08    0.02    3.4e-4</div>
 
 bash /media/share/secure/MR/run_mr.sh</div>
 
-                <h4>1.3 Day 1 考核</h4>
+                <h4>1.3 运行 coloc</h4>
+                <p>当项目需要判断 GWAS 信号与 eQTL / pQTL 信号是否共享同一因果位点时，使用独立的 <code>coloc</code> 模块，而不是继续把 coloc 当作 MR 的附属开关处理。</p>
+                <div class="code-block"><span class="comment"># 先查看 coloc 模块帮助与配置要求</span>
+bash /media/share/secure/coloc/run_coloc.sh --help</div>
+
+                <h4>1.4 Day 1 考核</h4>
                 <ul class="checklist">
                     <li>能识别 GWAS 汇总数据的必需列</li>
                     <li>能运行 MR 脚本</li>
+                    <li>知道 coloc 是独立模块，能定位 <code>run_coloc.sh</code> 入口</li>
                     <li>能从输出中判断因果关系的方向和显著性</li>
                 </ul>
             </div>
@@ -1574,6 +1580,12 @@ bash /media/share/secure/TSG/run_tsg.sh</div>
                 </tr>
                 <tr>
                     <td>3</td>
+                    <td>coloc 入口识别</td>
+                    <td>说明何时使用 <code>bash /media/share/secure/coloc/run_coloc.sh --help</code></td>
+                    <td>能区分 MR 与 coloc 的职责边界</td>
+                </tr>
+                <tr>
+                    <td>4</td>
                     <td>TSG 运行</td>
                     <td>独立运行一次 TSG 分析</td>
                     <td>输出结果正常</td>

@@ -293,17 +293,18 @@
         <a href="#m-tmb">18. TMB</a>
         <a href="#m-msi">19. MSI</a>
         <a href="#m-mr">20. MR</a>
-        <a href="#m-tsg">21. TSG</a>
-        <a href="#troubleshoot">22. 故障排除</a>
+        <a href="#m-coloc">21. coloc</a>
+        <a href="#m-tsg">22. TSG</a>
+        <a href="#troubleshoot">23. 故障排除</a>
     </nav>
     <div class="container">
 
         <!-- ========== Hero ========== -->
         <div class="hero">
             <h1>&#x1F9EC; 标准化分析流程 SOP</h1>
-            <p>涵盖 20 个生物信息学分析模块的标准操作流程，从 GEO 数据下载到因果推断全链路覆盖。所有模块统一通过入口脚本调用，代码受保护，多用户共享。</p>
+            <p>涵盖 21 个生物信息学分析模块的标准操作流程，从 GEO 数据下载到因果推断全链路覆盖。所有模块统一通过入口脚本调用，代码受保护，多用户共享。</p>
             <div class="pill-row">
-                <span class="pill primary">&#x1F4CB; 20 个分析模块</span>
+                <span class="pill primary">&#x1F4CB; 21 个分析模块</span>
                 <span class="pill accent">&#x1F512; 代码保护机制</span>
                 <span class="pill warn">&#x1F4C4; 自动报告生成</span>
                 <span class="pill danger">&#x26A0;&#xFE0F; 只用入口脚本运行</span>
@@ -353,7 +354,7 @@
         <div class="grid" id="workflow">
             <div class="card">
                 <h2 class="section-title">&#x1F5FA;&#xFE0F; 1. 全流程总览</h2>
-                <p>以下 20 个模块可根据项目需求<strong>灵活组合</strong>，不存在固定的执行顺序。每个模块只要满足其<strong>前置数据需求</strong>即可独立运行。</p>
+                <p>以下 21 个模块可根据项目需求<strong>灵活组合</strong>，不存在固定的执行顺序。每个模块只要满足其<strong>前置数据需求</strong>即可独立运行。</p>
 
                 <table class="matrix">
                     <thead><tr><th style="width:30px">#</th><th>模块</th><th>功能</th><th>前置数据需求</th><th style="min-width:60px;text-align:center">类型</th></tr></thead>
@@ -377,7 +378,8 @@
                         <tr><td>17</td><td>MSI 微卫星不稳定</td><td>MSI 状态分析与风险关联</td><td>MSI 数据 + riskscore（Prognosis 输出）</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
                         <tr><td>18</td><td>DEPTH2</td><td>拷贝数 / 甲基化 / 免疫联合分析</td><td>Prognosis 输出 + TCGA 数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
                         <tr><td>19</td><td>MR 孟德尔随机化</td><td>因果推断（GWAS 数据驱动）</td><td>GWAS 汇总统计数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>20</td><td>TSG (TWAS+SMR+MR)</td><td>多组学因果推断</td><td>GWAS + eQTL 数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>20</td><td>coloc 共定位</td><td>独立共定位分析流程，评估 GWAS 与 eQTL/pQTL 信号是否共享因果位点</td><td>GWAS 汇总统计 + eQTL/pQTL 区域数据或 coloc 配置</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>21</td><td>TSG (TWAS+SMR+MR)</td><td>多组学因果推断</td><td>GWAS + eQTL 数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
                     </tbody>
                 </table>
 
@@ -403,7 +405,8 @@
 ├── 16_MSI/                  &larr; 微卫星不稳定性
 ├── 17_DEPTH2/               &larr; DEPTH2
 ├── 18_MR/                   &larr; 孟德尔随机化
-└── 19_TSG/                  &larr; 因果推断
+├── 19_coloc/                &larr; 共定位分析
+└── 20_TSG/                  &larr; 因果推断
 </pre>
                     <p style="margin-top:8px;font-size:0.92em;">
                         <strong>目录创建：</strong><code>mkdir -p /media/share/Project/$(whoami)/项目名</code><br>
@@ -471,7 +474,7 @@
                     <tbody>
                         <tr>
                             <td><code>iyunlyl</code></td>
-                            <td>gse_download_and_cleaning、Combine、DEGs、MachineLearn、Expression_verify、Prognosis、Nomogram、DEPTH2、wgcna、friends、PPI、immune_infiltration、chromosome_plot、TMB、MSI、MR</td>
+                            <td>gse_download_and_cleaning、Combine、DEGs、MachineLearn、Expression_verify、Prognosis、Nomogram、DEPTH2、wgcna、friends、PPI、immune_infiltration、chromosome_plot、TMB、MSI、MR、coloc</td>
                         </tr>
                         <tr>
                             <td><code>iyunlpf</code></td>
@@ -1559,7 +1562,7 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
                     <span class="module-icon">&#x1F52E;</span>
                     <div>
                         <div class="module-name">20. 孟德尔随机化 (MR) <span class="badge badge-owner">iyunlyl</span></div>
-                        <div class="module-desc">eQTL / pQTL / Traditional MR + 共定位分析 (Coloc)，支持交互式和命令行模式</div>
+                        <div class="module-desc">eQTL / pQTL / Traditional MR，支持交互式和命令行模式</div>
                     </div>
                 </div>
 
@@ -1581,7 +1584,7 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
   <span class="flag">-i</span> <span class="path">genes.csv</span> \
   <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/18_MR/MR_eqtl</span>
 
-<span class="comment"># pQTL + 共定位</span>
+<span class="comment"># pQTL 分析</span>
 /media/share/secure/MR/run_mr.sh \
   <span class="flag">-t</span> <span class="value">pqtl</span> \
   <span class="flag">-i</span> <span class="path">genes.csv</span> \
@@ -1618,7 +1621,7 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
                         <tr><td><code>-t</code></td><td>分析类型：<code>eqtl</code>（表达 QTL）/ <code>pqtl</code>（蛋白 QTL）/ <code>traditional</code>（传统 MR）/ <code>eqtl_pqtl</code>（联合分析）</td><td>交互选择</td></tr>
                         <tr><td><code>-i</code></td><td>基因列表 CSV（含 gene 列头），eQTL/pQTL 必填，traditional 模式不需要</td><td>—</td></tr>
                         <tr><td><code>-o</code></td><td>输出目录</td><td>—</td></tr>
-                        <tr><td><code>-c</code></td><td>是否进行共定位分析（Coloc）：<code>1</code>=是，<code>0</code>=否。仅 pQTL / eqtl_pqtl 模式有效</td><td>0</td></tr>
+                        <tr><td><code>-c</code></td><td>是否联动执行共定位分析：<code>1</code>=是，<code>0</code>=否。仅 pQTL / eqtl_pqtl 模式有效；当前推荐直接使用独立的 <code>coloc</code> 模块</td><td>0</td></tr>
                     </tbody>
                 </table>
 
@@ -1628,13 +1631,48 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
             </div>
         </div>
 
-        <!-- ========== 21. TSG ========== -->
+        <!-- ========== 21. coloc ========== -->
+        <div class="grid" id="m-coloc">
+            <div class="card">
+                <div class="module-header">
+                    <span class="module-icon">&#x1F9ED;</span>
+                    <div>
+                        <div class="module-name">21. 共定位分析 (coloc) <span class="badge badge-owner">iyunlyl</span></div>
+                        <div class="module-desc">独立 coloc 流程，用于验证 GWAS 与 eQTL / pQTL 信号是否共享因果位点</div>
+                    </div>
+                </div>
+
+                <h3>操作步骤</h3>
+                <div class="code-block"><span class="comment"># 查看 coloc 模块帮助</span>
+/media/share/secure/coloc/run_coloc.sh --help
+
+<span class="comment"># 按模块 README / --help 准备配置后运行</span>
+/media/share/secure/coloc/run_coloc.sh \
+  <span class="flag">--config</span> <span class="path">config/coloc.example.ini</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/19_coloc</span></div>
+
+                <h3>适用场景</h3>
+                <table class="matrix">
+                    <thead><tr><th>场景</th><th>说明</th><th>典型输入</th></tr></thead>
+                    <tbody>
+                        <tr><td>GWAS + eQTL</td><td>评估疾病关联位点与基因表达调控是否来自同一信号</td><td><a href="#fmt-gwas">F9</a> + eQTL 区域数据</td></tr>
+                        <tr><td>GWAS + pQTL</td><td>评估疾病关联位点与蛋白丰度调控是否共定位</td><td><a href="#fmt-gwas">F9</a> + pQTL 区域数据</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="lead-box" style="margin-top:14px">
+                    <strong>&#x1F4CC; 同步说明</strong>：<code>secure</code> 主仓库 README 已将 <code>coloc</code> 定义为独立模块，入口脚本为 <code>run_coloc.sh</code>。当前 SOP 以该入口为准；详细参数请优先查看模块自身 <code>README.md</code> 与 <code>--help</code>。
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 22. TSG ========== -->
         <div class="grid" id="m-tsg">
             <div class="card">
                 <div class="module-header">
                     <span class="module-icon">&#x1F52E;</span>
                     <div>
-                        <div class="module-name">21. 因果推断 (TSG) <span class="badge badge-owner">iyunlpf</span></div>
+                        <div class="module-name">22. 因果推断 (TSG) <span class="badge badge-owner">iyunlpf</span></div>
                         <div class="module-desc">TWAS + SMR + HEIDI + MR 整合因果推断流水线</div>
                     </div>
                 </div>
@@ -1784,8 +1822,9 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
                         <tr><td>16</td><td>染色体图</td><td><code>run_chromosome_plot.sh</code></td><td>iyunlyl</td><td>genes.csv</td><td>Circos 环形图</td></tr>
                         <tr><td>17</td><td>TMB</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>riskscore + genes</td><td>突变景观 + KM</td></tr>
                         <tr><td>18</td><td>MSI</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>riskscore + clinical</td><td>MSI 分析图</td></tr>
-                        <tr><td>19</td><td>MR</td><td><code>run_mr.sh</code></td><td>iyunlyl</td><td>genes.csv + config</td><td>MR + Coloc 报告</td></tr>
-                        <tr><td>20</td><td>TSG</td><td><code>run_tsg.sh</code></td><td>iyunlpf</td><td>config.ini</td><td>TWAS+SMR+MR 报告</td></tr>
+                        <tr><td>19</td><td>MR</td><td><code>run_mr.sh</code></td><td>iyunlyl</td><td>genes.csv + config</td><td>MR 报告</td></tr>
+                        <tr><td>20</td><td>coloc</td><td><code>run_coloc.sh</code></td><td>iyunlyl</td><td>GWAS + eQTL/pQTL 配置</td><td>共定位结果与报告</td></tr>
+                        <tr><td>21</td><td>TSG</td><td><code>run_tsg.sh</code></td><td>iyunlpf</td><td>config.ini</td><td>TWAS+SMR+MR 报告</td></tr>
                     </tbody>
                 </table>
             </div>
