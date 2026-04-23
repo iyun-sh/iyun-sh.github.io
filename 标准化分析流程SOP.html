@@ -507,7 +507,7 @@
                     <thead><tr><th>脚本</th><th>用途</th></tr></thead>
                     <tbody>
                         <tr><td><code>run_download_gse.sh</code></td><td>下载 GSE 数据集（支持单个或批量列表）</td></tr>
-                        <tr><td><code>run_extract_groups.sh</code></td><td>交互式提取 pdata 中的分组信息</td></tr>
+                        <tr><td><code>run_extract_groups.sh</code></td><td>命令行提取 pdata 中的分组信息，支持自动检测、映射和预览</td></tr>
                     </tbody>
                 </table>
 
@@ -528,8 +528,23 @@
                     </li>
                     <li>
                         <strong>提取分组信息</strong>
-                        <div class="code-block">/media/share/secure/gse_download_and_cleaning/run_extract_groups.sh \
+                        <div class="code-block"><span class="comment"># 第一步：只浏览候选列</span>
+/media/share/secure/gse_download_and_cleaning/run_extract_groups.sh \
+  <span class="flag">-f</span> <span class="path">GSE126124_pdata.csv</span>
+
+<span class="comment"># 第二步：指定列并预览映射</span>
+/media/share/secure/gse_download_and_cleaning/run_extract_groups.sh \
   <span class="flag">-f</span> <span class="path">GSE126124_pdata.csv</span> \
+  <span class="flag">-c</span> <span class="value">"disease_state"</span> \
+  <span class="flag">--map</span> <span class="value">"tumor=Tumor"</span> \
+  <span class="flag">--map</span> <span class="value">"normal=Normal"</span>
+
+<span class="comment"># 第三步：确认后输出到文件</span>
+/media/share/secure/gse_download_and_cleaning/run_extract_groups.sh \
+  <span class="flag">-f</span> <span class="path">GSE126124_pdata.csv</span> \
+  <span class="flag">-c</span> <span class="value">"disease_state"</span> \
+  <span class="flag">--map</span> <span class="value">"tumor=Tumor"</span> \
+  <span class="flag">--map</span> <span class="value">"normal=Normal"</span> \
   <span class="flag">-o</span> <span class="path">groups.csv</span></div>
                     </li>
                 </ol>
@@ -544,6 +559,7 @@
                         <tr><td><code>--no-geochina</code></td><td>不使用 geoChina 镜像</td><td>使用镜像</td></tr>
                         <tr><td><code>--no-tpm</code></td><td>高通量数据用 Counts 而非 TPM</td><td>TPM</td></tr>
                         <tr><td><code>--skip-gpl</code></td><td>跳过 GPL 探针注释（仅高通量数据可用，芯片数据不要跳过否则无基因映射）</td><td>不跳过</td></tr>
+                        <tr><td><code>--select-suppl PATTERN</code></td><td>按模式模糊匹配并下载附件，不走完整处理流程</td><td>—</td></tr>
                     </tbody>
                 </table>
 
@@ -671,9 +687,12 @@
                         <tr><td><code>-m, --method</code></td><td>分析方法：auto（根据数据自动选择）/ DESeq2（counts 数据）/ limma（log2/TPM）</td><td>auto</td></tr>
                         <tr><td><code>-c, --comparison</code></td><td>比较组："group1,group2"</td><td>自动检测</td></tr>
                         <tr><td><code>--ref-group</code></td><td>参考组名</td><td>Control</td></tr>
+                        <tr><td><code>--batch</code></td><td>批次列名（来自 group.csv / df.group）</td><td>—</td></tr>
                         <tr><td><code>--logfc-cutoff</code></td><td>logFC 阈值</td><td>1</td></tr>
                         <tr><td><code>--pvalue-cutoff</code></td><td>p 值阈值</td><td>0.05</td></tr>
                         <tr><td><code>--pvalue-type</code></td><td>显著性筛选依据：<code>padj</code>=用 BH 校正后 p 值（推荐）；<code>pvalue</code>=用原始 p 值</td><td>padj</td></tr>
+                        <tr><td><code>--quarto-report</code></td><td>生成 Quarto 报告</td><td>关闭</td></tr>
+                        <tr><td><code>--quarto-format</code></td><td>Quarto 报告格式：docx / html / pdf</td><td>docx</td></tr>
                     </tbody>
                 </table>
 

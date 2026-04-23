@@ -395,7 +395,7 @@
 
             <section class="card two-col">
                 <h2 class="section-title" id="sec-dir">&#x1F4C1; 推荐目录边界</h2>
-                <pre class="code-block">module_name/
+                <pre class="code-block">module_name/            # 脚本模块
 ├── run.sh
 ├── scripts/
 │   ├── scripts.sh
@@ -403,17 +403,19 @@
 │   └── DEGs.py
 ├── config/
 │   └── DEGs.config.example.ini/yaml
-├── logs/
-├── result/
-├── report/
 ├── README.md           # 必备（参见《规范》README 必备内容章节）
 ├── tests/              # 冒烟/回归测试（参见《规范》质量保证章节）
 ├── CHANGELOG.md        # 版本变更记录
 ├── cleanup.sh          # 临时文件清理脚本
 ├── requirements.txt    # Python 依赖锁定
-└── renv.lock           # R 依赖锁定（二选一或同时保有）</pre>
+└── renv.lock           # R 依赖锁定（二选一或同时保有）
+
+module_output/          # 模块结果目录
+├── logs/
+├── result/
+└── report/</pre>
                 <div class="lead-box">
-                    <strong>推荐做法：</strong> 对外文档只讲清楚 <code>run.sh</code> 的用法、输入、输出和错误定位方式；<code>scripts/</code> 仅作为内部实现目录维护。
+                    <strong>推荐做法：</strong> 对外文档只讲清楚 <code>run.sh</code> 的用法、输入、输出和错误定位方式；<code>scripts/</code> 仅作为内部实现目录维护，<code>logs/</code> / <code>result/</code> / <code>report/</code> 应落在独立的模块结果目录而不是脚本模块根目录。
                 </div>
             </section>
 
@@ -720,7 +722,7 @@ rm -f scripts/scripts.sh.x.c
 
             <section class="card two-col">
                 <h2 class="section-title" id="sec-package">&#x1F4E6; 推荐交付包结构</h2>
-                <pre class="code-block">deliverable/
+                <pre class="code-block">deliverable/                 # 交付的脚本模块
 ├── run.sh
 ├── README.md               # 必备（参见《规范》README 必备内容章节）
 ├── CHANGELOG.md            # 版本变更记录
@@ -729,14 +731,17 @@ rm -f scripts/scripts.sh.x.c
 ├── config/
 │   └── DEGs.config.example.ini/yaml
 ├── tests/                  # 冒烟测试用例
+├── requirements.txt        # Python 依赖（如适用）
+└── renv.lock               # R 依赖（如适用）
+
+output/                     # 运行后生成的模块结果目录
 ├── logs/
 ├── result/
-├── report/
-├── requirements.txt        # Python 依赖（如适用）
-└── renv.lock               # R 依赖（如适用）</pre>
+└── report/</pre>
                 <ul class="rule-list" style="margin-top: 14px;">
                     <li><code>README.md</code> 只说明运行方式、输入输出要求和常见错误定位。</li>
                     <li><code>scripts/protected_runtime/</code> 可以是受保护产物（如加密脚本、编译产物、二进制文件等）目录。</li>
+                    <li><span class="text-red">不要把运行生成的 logs/result/report 打包回脚本模块目录</span>，它们应作为独立结果目录存在。</li>
                     <li>如果不需要对外暴露源码，避免把原始 <code>.R</code>、<code>.py</code> 文件直接放入交付包。</li>
                 </ul>
             </section>

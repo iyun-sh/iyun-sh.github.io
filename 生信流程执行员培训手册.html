@@ -473,8 +473,8 @@
             <h3>流程运行常用</h3>
             <table>
                 <tr><th>命令</th><th>作用</th><th>示例</th></tr>
-                <tr><td><code>bash xxx.sh</code></td><td>运行脚本</td><td><code>bash run_download_gse.sh</code></td></tr>
-                <tr><td><code>nohup ... &amp;</code></td><td>后台运行</td><td><code>nohup bash run_ml.sh &amp;</code></td></tr>
+                <tr><td><code>bash xxx.sh</code></td><td>运行脚本</td><td><code>bash /media/share/secure/gse_download_and_cleaning/run_download_gse.sh</code></td></tr>
+                <tr><td><code>nohup ... &amp;</code></td><td>后台运行</td><td><code>nohup bash /media/share/secure/MachineLearn/run_analysis.sh &amp;</code></td></tr>
                 <tr><td><code>tail -f</code></td><td>实时查看日志</td><td><code>tail -f nohup.out</code></td></tr>
                 <tr><td><code>ps aux | grep R</code></td><td>查看运行中进程</td><td>找 R 进程是否在跑</td></tr>
                 <tr><td><code>kill PID</code></td><td>终止进程</td><td><code>kill 12345</code></td></tr>
@@ -494,7 +494,7 @@
             <div class="code-block">
 <span class="comment"># 脚本目录（受保护，不可修改）</span>
 /media/share/secure/             ← R 脚本源码（加密）
-/media/share/secure/run_*.sh     ← 入口脚本
+/media/share/secure/模块目录/run_*.sh     ← 入口脚本
 
 <span class="comment"># 项目输出目录</span>
 /media/share/Project/
@@ -536,7 +536,7 @@ cd /media/share/Project/你的用户名/项目名/
 <span class="comment">#    详见 SOP「1.5 通用输入文件格式规范」→ F1-F9</span>
 
 <span class="comment"># 3. 调用入口脚本</span>
-bash /media/share/secure/run_模块名.sh [参数]
+bash /media/share/secure/模块目录/run_*.sh [参数]
 
 <span class="comment"># 4. 检查输出</span>
 ls -la output/模块名/
@@ -1027,7 +1027,7 @@ qs2::qs_save(scRNA_orig, file = paste0(name, "/scRNA_orig.", name, ".qs2"))</div
 
                 <h4>3.1 数据合并</h4>
                 <div class="code-block"><span class="comment"># 调用合并脚本</span>
-bash /media/share/secure/run_combine.sh</div>
+bash /media/share/secure/Combine/run_combine.sh</div>
 
                 <h4>3.2 验证合并结果</h4>
                 <ul>
@@ -1113,11 +1113,11 @@ bash /media/share/secure/run_combine.sh</div>
 ls expression.csv group.csv
 
 <span class="comment"># 调用 DEGs 脚本</span>
-bash /media/share/secure/run_degs.sh
+bash /media/share/secure/DEGs/run_degs.sh
 
 <span class="comment"># 检查输出</span>
 ls output/DEGs/
-head -3 output/DEGs/DEGs_result.csv</div>
+head -3 output/DEGs/01.DEG_all.csv</div>
 
                 <h4>1.3 Day 1 考核</h4>
                 <ul class="checklist">
@@ -1134,16 +1134,16 @@ head -3 output/DEGs/DEGs_result.csv</div>
 
                 <h4>2.1 功能富集 (enrichment)</h4>
                 <p>输入：DEGs 输出的差异基因列表（gene.csv, F3 格式）。</p>
-                <div class="code-block">bash /media/share/secure/run_enrichment.sh</div>
+                <div class="code-block">bash /media/share/secure/unified_enrichment/run_unified_enrichment.sh</div>
                 <p>输出：GO/KEGG 富集结果表 + 气泡图/条形图。</p>
 
                 <h4>2.2 韦恩图 (venn)</h4>
                 <p>输入：多个基因列表。</p>
-                <div class="code-block">bash /media/share/secure/run_venn.sh</div>
+                <div class="code-block">bash /media/share/secure/venn_plot/run_venn_plot.sh</div>
 
                 <h4>2.3 表达验证 (exprverify)</h4>
                 <p>输入：expression.csv (F1) + group.csv (F2) + gene.csv (F3)。</p>
-                <div class="code-block">bash /media/share/secure/run_exprverify.sh</div>
+                <div class="code-block">bash /media/share/secure/Expression_verify/run_expression_verify.sh</div>
 
                 <h4>2.4 Day 2 考核</h4>
                 <ul class="checklist">
@@ -1159,17 +1159,17 @@ head -3 output/DEGs/DEGs_result.csv</div>
 
                 <h4>3.1 机器学习特征筛选 (ml)</h4>
                 <p>输入：expression.csv (F1) + gene.csv (F3) + survival.csv (F4)。</p>
-                <div class="code-block">bash /media/share/secure/run_ml.sh
+                <div class="code-block">bash /media/share/secure/MachineLearn/run_analysis.sh
 
 <span class="comment"># 输出包含 riskscore.csv（可供后续模块使用）</span></div>
 
                 <h4>3.2 预后分析 (prognosis)</h4>
                 <p>输入：expression.csv (F1) + gene.csv (F3) + survival.csv (F4)。</p>
-                <div class="code-block">bash /media/share/secure/run_prognosis.sh</div>
+                <div class="code-block">bash /media/share/secure/Prognosis/run_prognosis.sh</div>
 
                 <h4>3.3 列线图 (nomogram)</h4>
                 <p>输入：expression.csv (F1) + gene.csv (F3) + survival.csv (F4)。</p>
-                <div class="code-block">bash /media/share/secure/run_nomogram.sh</div>
+                <div class="code-block">bash /media/share/secure/Nomogram/run_nomogram.sh</div>
 
                 <h4>3.4 Day 3 考核</h4>
                 <ul class="checklist">
@@ -1187,19 +1187,19 @@ head -3 output/DEGs/DEGs_result.csv</div>
                 <h4>Day 4 模块清单</h4>
                 <table>
                     <tr><th>模块</th><th>核心输入</th><th>调用命令</th></tr>
-                    <tr><td>wgcna</td><td>F1 + F2</td><td><code>bash /media/share/secure/run_wgcna.sh</code></td></tr>
-                    <tr><td>ppi</td><td>F3</td><td><code>bash /media/share/secure/run_ppi.sh</code></td></tr>
-                    <tr><td>friends</td><td>F1 + F3</td><td><code>bash /media/share/secure/run_friends.sh</code></td></tr>
-                    <tr><td>immune</td><td>F1 + F2 / F5</td><td><code>bash /media/share/secure/run_immune.sh</code></td></tr>
+                    <tr><td>wgcna</td><td>F1 + F2</td><td><code>bash /media/share/secure/wgcna/run_analysis.sh</code></td></tr>
+                    <tr><td>ppi</td><td>F3</td><td><code>bash /media/share/secure/PPI/run_ppi.sh</code></td></tr>
+                    <tr><td>friends</td><td>F1 + F3</td><td><code>bash /media/share/secure/friends/run_analysis.sh</code></td></tr>
+                    <tr><td>immune</td><td>F1 + F2 / F5</td><td><code>bash /media/share/secure/immune_infiltration/run_immune_infiltration.sh</code></td></tr>
                 </table>
 
                 <h4>Day 5 模块清单</h4>
                 <table>
                     <tr><th>模块</th><th>核心输入</th><th>调用命令</th></tr>
-                    <tr><td>chrplot</td><td>F3</td><td><code>bash /media/share/secure/run_chrplot.sh</code></td></tr>
-                    <tr><td>depth2</td><td>F1 + F2 + F3</td><td><code>bash /media/share/secure/run_depth2.sh</code></td></tr>
-                    <tr><td>tmb</td><td>F8 (MAF)</td><td><code>bash /media/share/secure/run_tmb.sh</code></td></tr>
-                    <tr><td>msi</td><td>F1 + F2</td><td><code>bash /media/share/secure/run_msi.sh</code></td></tr>
+                    <tr><td>chrplot</td><td>F3</td><td><code>bash /media/share/secure/chromosome_plot/run_chromosome_plot.sh</code></td></tr>
+                    <tr><td>depth2</td><td>F1 + F2 + F3</td><td><code>bash /media/share/secure/DEPTH2/run_analysis.sh</code></td></tr>
+                    <tr><td>tmb</td><td>F8 (MAF)</td><td><code>bash /media/share/secure/TMB/run_analysis.sh</code></td></tr>
+                    <tr><td>msi</td><td>F1 + F2</td><td><code>bash /media/share/secure/MSI/run_analysis.sh</code></td></tr>
                 </table>
 
                 <div class="alert alert-warn">
@@ -1245,7 +1245,7 @@ rs456   T   C   0.22   -0.08    0.02    3.4e-4</div>
                 <div class="code-block"><span class="comment"># 准备 GWAS 数据文件</span>
 <span class="comment"># config.ini 中指定暴露/结局数据路径（由负责人配置）</span>
 
-bash /media/share/secure/run_mr.sh</div>
+bash /media/share/secure/MR/run_mr.sh</div>
 
                 <h4>1.3 Day 1 考核</h4>
                 <ul class="checklist">
@@ -1266,7 +1266,7 @@ bash /media/share/secure/run_mr.sh</div>
 
                 <h4>2.2 运行 TSG</h4>
                 <div class="code-block"><span class="comment"># MAF 数据 + gene.csv 准备就绪</span>
-bash /media/share/secure/run_tsg.sh</div>
+bash /media/share/secure/TSG/run_tsg.sh</div>
 
                 <h4>2.3 Day 2 考核</h4>
                 <ul class="checklist">

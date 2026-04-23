@@ -542,22 +542,28 @@ str(rs_dat)
                         </div>
 
                         <pre class="code-block"># ---- 单个 GSE 数据集下载 ----
-run_download_gse.sh -g GSE65204 -o /media/share/output/GSE65204
+run_download_gse.sh -g GSE65204 -o /media/share/Project/myproject/01_GSE/GSE65204
 
-# ---- 使用代理下载 ----
-run_download_gse.sh -g GSE65204 -o /media/share/output/GSE65204 --proxy
+# ---- 使用代理下载（显式传入代理地址）----
+run_download_gse.sh -g GSE65204 -o /media/share/Project/myproject/01_GSE/GSE65204 \
+    --proxy http://127.0.0.1:7890
 
 # ---- RNA-seq 数据，使用 Counts 而非 TPM ----
-run_download_gse.sh -g GSE126848 -o /media/share/output/GSE126848 --no-tpm
+run_download_gse.sh -g GSE126848 -o /media/share/Project/myproject/01_GSE/GSE126848 --no-tpm
 
-# ---- 跳过附件（附件列名不标准时）----
-run_download_gse.sh -g GSE19187 -o /media/share/output/GSE19187 --skip-suppl
+# ---- 跳过 GEO 附件，直接使用 NCBI 整理文件 ----
+run_download_gse.sh -g GSE19187 -o /media/share/Project/myproject/01_GSE/GSE19187 --skip-suppl
 
 # ---- 批量下载（GSE ID 列表文件，每行一个）----
-run_download_gse.sh -l config/gse_list.txt -o /media/share/output/batch -t 8
+run_download_gse.sh -l config/gse_list.txt -o /media/share/Project/myproject/01_GSE -t 8
 
-# ---- 强制重新处理（保留下载缓存，只重跑分析）----
-run_download_gse.sh -g GSE65204 -o /media/share/output/GSE65204 --force</pre>
+# ---- 只下载匹配到的附件（例如单细胞原始文件）----
+run_download_gse.sh -g GSE126124 -o /media/share/Project/myproject/01_GSE/GSE126124 --select-suppl "matrix"
+
+# ---- 强制重新处理或刷新缓存 ----
+run_download_gse.sh -g GSE65204 -o /media/share/Project/myproject/01_GSE/GSE65204 --force
+run_download_gse.sh -g GSE65204 -o /media/share/Project/myproject/01_GSE/GSE65204 --re-download
+run_download_gse.sh -g GSE65204 -o /media/share/Project/myproject/01_GSE/GSE65204 --refresh-gpl</pre>
 
                         <div class="lead-box">
                             <strong>📌 参数说明：</strong>
@@ -567,13 +573,20 @@ run_download_gse.sh -g GSE65204 -o /media/share/output/GSE65204 --force</pre>
                                     <tr><td><code>-g / --gse</code></td><td>单个 GSE 编号</td><td>—</td></tr>
                                     <tr><td><code>-l / --list</code></td><td>GSE 编号列表文件（与 -g 互斥）</td><td>—</td></tr>
                                     <tr><td><code>-o / --output</code></td><td>输出目录</td><td>—</td></tr>
-                                    <tr><td><code>--no-geochina</code></td><td>不使用 geoChina 镜像</td><td>FALSE</td></tr>
+                                    <tr><td><code>--no-geochina</code></td><td>不使用 geoChina 镜像，直接从 GEO 下载</td><td>FALSE</td></tr>
+                                    <tr><td><code>--annot-file</code></td><td>本地注释文件路径（用于高通量数据）</td><td>—</td></tr>
                                     <tr><td><code>--no-tpm</code></td><td>RNA-seq 用 Counts 而非 TPM</td><td>FALSE</td></tr>
-                                    <tr><td><code>--skip-gpl</code></td><td>跳过 GPL 注释，使用探针数据</td><td>FALSE</td></tr>
-                                    <tr><td><code>--skip-suppl</code></td><td>跳过 GEO 附件，用 NCBI TPM/Counts</td><td>FALSE</td></tr>
-                                    <tr><td><code>--symbol-agg-method</code></td><td>SYMBOL 聚合: mean / max_row_sum</td><td>mean</td></tr>
-                                    <tr><td><code>--force</code></td><td>强制重新处理（保留缓存）</td><td>FALSE</td></tr>
-                                    <tr><td><code>--proxy</code></td><td>使用代理 http://127.0.0.1:7890</td><td>—</td></tr>
+                                    <tr><td><code>--skip-gpl</code></td><td>跳过 GPL 注释，保留探针级数据</td><td>FALSE</td></tr>
+                                    <tr><td><code>--skip-suppl</code></td><td>跳过 GEO 附件，直接使用 NCBI 整理文件</td><td>FALSE</td></tr>
+                                    <tr><td><code>--symbol-agg-method</code></td><td>SYMBOL 聚合: <code>mean</code> / <code>max_row_sum</code></td><td>mean</td></tr>
+                                    <tr><td><code>--force</code></td><td>强制重新处理（保留下载缓存）</td><td>FALSE</td></tr>
+                                    <tr><td><code>--re-download</code></td><td>强制重新下载当前 GSE 缓存</td><td>FALSE</td></tr>
+                                    <tr><td><code>--refresh-gpl</code></td><td>强制刷新当前 GSE 对应 GPL 缓存</td><td>FALSE</td></tr>
+                                    <tr><td><code>--cache</code></td><td>GEO 原始数据缓存目录</td><td><code>/media/share/Project/GEO_data</code></td></tr>
+                                    <tr><td><code>--quarto-format</code></td><td>Quarto 报告格式：docx / html / pdf</td><td>docx</td></tr>
+                                    <tr><td><code>--quarto-author</code></td><td>报告作者</td><td>IKL</td></tr>
+                                    <tr><td><code>--proxy</code></td><td>显式指定代理地址，如 <code>http://127.0.0.1:7890</code></td><td>—</td></tr>
+                                    <tr><td><code>--select-suppl</code></td><td>模糊匹配下载附件，不走完整处理流程</td><td>—</td></tr>
                                     <tr><td><code>-t / --threads</code></td><td>并行线程数</td><td>4</td></tr>
                                     <tr><td><code>--timeout</code></td><td>操作超时（秒）</td><td>1800</td></tr>
                                 </tbody>
@@ -599,33 +612,42 @@ data_h5 &lt;- Read10X_h5("raw_data/GSMXXXXXXX_filtered_feature_bc_matrix.h5")</p
                         <strong>推荐工作流（三步）：</strong>
 
                         <pre class="code-block"># ─── 第 1 步：浏览可用分组列（只看不写）───
-run_extract_groups.sh -i output/GSE65204/GSE65204_pdata.csv
+run_extract_groups.sh -f /media/share/Project/myproject/01_GSE/GSE65204/GSE65204_pdata.csv
 # → 自动检测所有可能的分组列，打印每列的唯一值和样本数
 
 # ─── 第 2 步：选定列 + 映射/重命名分组（确认结果正确再输出）───
-run_extract_groups.sh -i output/GSE65204/GSE65204_pdata.csv \
+run_extract_groups.sh -f /media/share/Project/myproject/01_GSE/GSE65204/GSE65204_pdata.csv \
     -c "asthma:ch1" \
-    --map "TRUE=CA,FALSE=Control"
+    --map "TRUE=Disease" \
+    --map "FALSE=Control"
 # → 屏幕预览映射结果，不加 -o 不会写文件
 
 # ─── 第 3 步：确认无误后输出到文件 ───
-run_extract_groups.sh -i output/GSE65204/GSE65204_pdata.csv \
+run_extract_groups.sh -f /media/share/Project/myproject/01_GSE/GSE65204/GSE65204_pdata.csv \
     -c "asthma:ch1" \
-    --map "TRUE=CA,FALSE=Control" \
-    -o output/GSE65204/groups.csv</pre>
+    --map "TRUE=Disease" \
+    --map "FALSE=Control" \
+    -o /media/share/Project/myproject/01_GSE/GSE65204/groups.csv</pre>
 
                         <div class="lead-box">
                             <strong>📌 参数说明：</strong>
                             <table class="matrix" style="margin-top:8px;">
                                 <thead><tr><th>参数</th><th>说明</th><th>默认值</th></tr></thead>
                                 <tbody>
-                                    <tr><td><code>-i / --input</code></td><td>pdata.csv 文件路径</td><td>—</td></tr>
+                                    <tr><td><code>-f / --file</code></td><td>pdata.csv 文件路径</td><td>—</td></tr>
                                     <tr><td><code>-c / --column</code></td><td>指定分组列名（如 "disease:ch1"）</td><td>自动检测</td></tr>
-                                    <tr><td><code>--map</code></td><td>分组映射："原值1=新值1,原值2=新值2"</td><td>—</td></tr>
+                                    <tr><td><code>-a / --auto-detect</code></td><td>自动检测分组列</td><td>TRUE</td></tr>
+                                    <tr><td><code>--no-auto-detect</code></td><td>禁用自动检测，仅使用指定列</td><td>FALSE</td></tr>
+                                    <tr><td><code>--map</code></td><td>分组映射：每对映射单独一个 <code>--map "原值=新值"</code></td><td>—</td></tr>
                                     <tr><td><code>--mapped-only</code></td><td>仅保留被映射的样本</td><td>TRUE</td></tr>
                                     <tr><td><code>-o / --output</code></td><td>输出文件（不指定则仅预览）</td><td>—</td></tr>
+                                    <tr><td><code>--output-cols</code></td><td>输出列：all / sample_id / groups_only</td><td>all</td></tr>
                                     <tr><td><code>--show-values</code></td><td>显示每个分组列的唯一值</td><td>FALSE</td></tr>
                                     <tr><td><code>--max-unique</code></td><td>分组列最大唯一值数量</td><td>10</td></tr>
+                                    <tr><td><code>--max-values</code></td><td>每列展示的唯一值上限</td><td>20</td></tr>
+                                    <tr><td><code>--min-common-len</code></td><td>自动提取时的最小公共部分长度</td><td>2</td></tr>
+                                    <tr><td><code>-q / --quiet</code></td><td>静默模式</td><td>FALSE</td></tr>
+                                    <tr><td><code>-h / --help</code></td><td>显示帮助</td><td>—</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -729,29 +751,33 @@ stopifnot("sample 不匹配" = length(setdiff(group_samples, expr_samples)) == 0
                         <pre class="code-block"># ---- 典型工作流（两步完成）----
 
 # Step 1: 下载并清洗表达矩阵
-run_download_gse.sh -g GSE65204 -o /media/share/output/GSE65204
+run_download_gse.sh -g GSE65204 -o /media/share/Project/myproject/01_GSE/GSE65204
 
 # Step 2: 提取分组信息（先浏览 → 再映射 → 最后输出）
-run_extract_groups.sh -i /media/share/output/GSE65204/GSE65204_pdata.csv
-run_extract_groups.sh -i /media/share/output/GSE65204/GSE65204_pdata.csv \
-    -c "asthma:ch1" --map "TRUE=Disease,FALSE=Control"
-run_extract_groups.sh -i /media/share/output/GSE65204/GSE65204_pdata.csv \
-    -c "asthma:ch1" --map "TRUE=Disease,FALSE=Control" \
-    -o /media/share/output/GSE65204/groups.csv
+run_extract_groups.sh -f /media/share/Project/myproject/01_GSE/GSE65204/GSE65204_pdata.csv
+run_extract_groups.sh -f /media/share/Project/myproject/01_GSE/GSE65204/GSE65204_pdata.csv \
+    -c "asthma:ch1" --map "TRUE=Disease" --map "FALSE=Control"
+run_extract_groups.sh -f /media/share/Project/myproject/01_GSE/GSE65204/GSE65204_pdata.csv \
+    -c "asthma:ch1" --map "TRUE=Disease" --map "FALSE=Control" \
+    -o /media/share/Project/myproject/01_GSE/GSE65204/groups.csv
 
 # ---- 常用选项组合 ----
 
 # RNA-seq 数据用 Count
-run_download_gse.sh -g GSE126848 -o output/GSE126848 --no-tpm
+run_download_gse.sh -g GSE126848 -o /media/share/Project/myproject/01_GSE/GSE126848 --no-tpm
 
 # 附件列名不标准，跳过附件
-run_download_gse.sh -g GSE19187 -o output/GSE19187 --skip-suppl
+run_download_gse.sh -g GSE19187 -o /media/share/Project/myproject/01_GSE/GSE19187 --skip-suppl
 
 # 使用代理 + 8 线程批量下载
-run_download_gse.sh -l config/gse_list.txt -o output/ --proxy -t 8
+run_download_gse.sh -l config/gse_list.txt -o /media/share/Project/myproject/01_GSE \
+    --proxy http://127.0.0.1:7890 -t 8
 
 # 强制重新处理（保留下载缓存）
-run_download_gse.sh -g GSE65204 -o output/GSE65204 --force</pre>
+run_download_gse.sh -g GSE65204 -o /media/share/Project/myproject/01_GSE/GSE65204 --force
+
+# 模糊下载 GEO 附件（例如单细胞原始矩阵）
+run_download_gse.sh -g GSE126124 -o /media/share/Project/myproject/01_GSE/GSE126124 --select-suppl "matrix"</pre>
 
                         <div class="lead-box">
                             <strong>📌 输出文件：</strong>
@@ -769,26 +795,33 @@ run_download_gse.sh -g GSE65204 -o output/GSE65204 --force</pre>
                     <div id="cmd-degs" class="tab-content">
                         <h4>📊 DEGs 模块 — 差异表达分析</h4>
                         <pre class="code-block"># ---- 基础用法 ----
-bash run.sh \
-    --module DEGs \
-    --expression expression.csv \
-    --group group.csv \
-    --method DESeq2 \
-    --pvalue 0.05 \
-    --log2fc 1 \
-    --output result/DEGs/
+/media/share/secure/DEGs/run_degs.sh \
+    -d /media/share/Project/myproject/02_Combine/combat.dat.csv \
+    -g /media/share/Project/myproject/02_Combine/combat.group.csv \
+    -o /media/share/Project/myproject/03_DEGs
 
-# ---- 仅重新作图（不重跑计算）----
-bash run.sh \
-    --module DEGs \
-    --plot-only \
-    --output result/DEGs/
+# ---- 指定比较组与参考组 ----
+/media/share/secure/DEGs/run_degs.sh \
+    -d /media/share/Project/myproject/02_Combine/combat.dat.csv \
+    -g /media/share/Project/myproject/02_Combine/combat.group.csv \
+    -c "Normal,Tumor" \
+    --ref-group Normal \
+    -o /media/share/Project/myproject/03_DEGs
 
-# ---- 参数说明 ----
-# --method     : DESeq2 / edgeR / limma（根据数据类型选择）
-# --pvalue     : 显著性阈值
-# --log2fc     : log2 倍数变化阈值
-# --plot-only  : 仅重新生成图表</pre>
+# ---- 只基于已有结果生成报告 ----
+/media/share/secure/DEGs/run_degs.sh \
+    --report-only \
+    --results-dir /media/share/Project/myproject/03_DEGs \
+    --quarto-format docx
+
+# ---- 常用参数 ----
+# -m/--method          : auto / DESeq2 / limma
+# --batch              : 指定 df.group 中的批次列名
+# --logfc-cutoff       : logFC 阈值
+# --pvalue-cutoff      : p 值或 padj 阈值
+# --pvalue-type        : padj / pvalue
+# --quarto-report      : 生成 Quarto 报告
+# --quarto-format      : docx / html / pdf</pre>
                     </div>
 
                     <div id="cmd-enrich" class="tab-content">
@@ -820,19 +853,19 @@ bash run.sh \
                         </div>
 
                         <pre class="code-block"># ---- 合并两个数据集 ----
-bash run_combine.sh \
+/media/share/secure/Combine/run_combine.sh \
     -d /path/GSE65204_dat.csv,/path/GSE19187_dat.csv \
     -g /path/GSE65204_group.csv,/path/GSE19187_group.csv \
     -n GSE65204,GSE19187 \
-    -o /media/share/output/project/combine
+    -o /media/share/Project/myproject/02_Combine
 
 # ---- 自定义输出前缀名 ----
-bash run_combine.sh \
+/media/share/secure/Combine/run_combine.sh \
     -d dat1.csv,dat2.csv,dat3.csv \
     -g group1.csv,group2.csv,group3.csv \
     -n Dataset1,Dataset2,Dataset3 \
     --output-name merged \
-    -o output/combine</pre>
+    -o /media/share/Project/myproject/02_Combine</pre>
 
                         <div class="lead-box" style="margin-top:14px;">
                             <strong>📌 参数说明：</strong>
@@ -842,7 +875,7 @@ bash run_combine.sh \
                                     <tr><td><code>-d / --data-files</code></td><td>表达矩阵 CSV，逗号分隔（至少 2 个）</td><td>—</td></tr>
                                     <tr><td><code>-g / --group-files</code></td><td>对应的分组 CSV，逗号分隔</td><td>—</td></tr>
                                     <tr><td><code>-n / --dataset-names</code></td><td>数据集名称，逗号分隔</td><td>文件名</td></tr>
-                                    <tr><td><code>-o / --output-dir</code></td><td>输出目录</td><td>./output</td></tr>
+                                    <tr><td><code>-o / --output-dir</code></td><td>输出目录（必填）</td><td>—</td></tr>
                                     <tr><td><code>--output-name</code></td><td>输出文件前缀名</td><td>combat</td></tr>
                                     <tr><td><code>--gene-col</code></td><td>基因列名</td><td>SYMBOL</td></tr>
                                     <tr><td><code>-w / --width</code></td><td>图片宽度（英寸）</td><td>9</td></tr>
@@ -885,7 +918,7 @@ bash run_combine.sh \
 # ---- Step 1: GEO 数据下载 ----
 # 数据集: GSEXXXXX
 # 平台: GPLXXXXX
-run_download_gse.sh -g GSEXXXXX -o /media/share/output/GSEXXXXX
+run_download_gse.sh -g GSEXXXXX -o /media/share/Project/项目名/01_GSE/GSEXXXXX
 # 状态: ✅ 完成 / ❌ 失败
 # 样本数: XX | 基因数: XXXXX
 # 备注: 
@@ -893,10 +926,10 @@ run_download_gse.sh -g GSEXXXXX -o /media/share/output/GSEXXXXX
 # ---- Step 2: 分组提取 ----
 # 分组列: "disease:ch1"
 # 映射规则: "HC=Control,Disease=Disease"
-run_extract_groups.sh -i output/GSEXXXXX/GSEXXXXX_pdata.csv \
+run_extract_groups.sh -f /media/share/Project/项目名/01_GSE/GSEXXXXX/GSEXXXXX_pdata.csv \
     -c "disease:ch1" \
-    --map "HC=Control,Disease=Disease" \
-    -o output/GSEXXXXX/groups.csv
+    --map "HC=Control" --map "Disease=Disease" \
+    -o /media/share/Project/项目名/01_GSE/GSEXXXXX/groups.csv
 # 状态: ✅ 完成 / ❌ 失败
 # 分组: XX 例 Disease + XX 例 Control
 # 备注: 
@@ -910,13 +943,13 @@ run_extract_groups.sh -i output/GSEXXXXX/GSEXXXXX_pdata.csv \
 # ---- Step 4: DEGs 分析 ----
 # 方法: DESeq2 / limma
 # 阈值: p&lt;0.05, |log2FC|&gt;1
-bash run.sh --module DEGs --expression expression.csv --group group.csv --output result/DEGs/
+/media/share/secure/DEGs/run_degs.sh -d expression.csv -g group.csv -o /media/share/Project/项目名/03_DEGs
 # 状态: ✅ 完成 / ❌ 失败
 # 上调基因: XXX 个 | 下调基因: XXX 个
 # 备注: 
 
 # ---- Step 5: 富集分析 ----
-bash run.sh --module Enrichment --gene gene.csv --output result/Enrichment/
+/media/share/secure/unified_enrichment/run_unified_enrichment.sh --help
 # 状态: ✅ 完成 / ❌ 失败
 # 备注: </pre>
                         <div class="success-box">
