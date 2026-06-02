@@ -268,7 +268,7 @@
             <h1>📋 生信开发模块文件与输出规范</h1>
             <p>本规范适用于生信分析模块开发（如 RawData 处理、差异分析、富集分析等），用于统一脚本组织、参数记录、结果追溯与报告产出。</p>
             <div class="pill-row">
-                <span class="pill primary">⏰ 精确到秒的时间戳标识</span>
+                <span class="pill primary">🆔 .run_id 运行标识</span>
                 <span class="pill accent">📁 统一目录结构</span>
                 <span class="pill warn">📄 日志优先追溯</span>
                 <span class="pill danger">🛠️ 脚本开发规范</span>
@@ -284,51 +284,40 @@
 
                 <div class="lead-box">
                     <strong>📁 模块目录组织示例：</strong>
-                    <div style="margin-top:8px;">这里要明确分成两部分：<span class="text-red">脚本模块</span>只放代码与测试；<span class="text-red">模块结果目录</span>只放运行产物。不要把 <code>logs/</code>、<code>result/</code>、<code>report/</code> 混进脚本模块根目录。</div>
+                    <div style="margin-top:8px;">这里要明确分成两部分：<span class="text-red">脚本模块</span>只放入口、配置模板、真实业务脚本和 demo 输入；<span class="text-red">模块结果目录</span>只放运行产物。不要把 <code>log/</code>、<code>cache/</code>、<code>result/</code>、<code>report/</code> 混进脚本模块根目录。</div>
                 </div>
 
-                <pre class="file-tree"><span class="folder">module_name/</span>  <span class="hidden-file"># 脚本模块</span>
+                <pre class="file-tree"><span class="folder">chromosome_plot/</span>  <span class="hidden-file"># 脚本模块示例</span>
 ├── <span class="file">run.sh</span>                
 ├── <span class="file">README.md</span>
 ├── <span class="file">CHANGELOG.md</span>
 ├── <span class="folder">scripts/</span>
-│   ├── <span class="file">RawData.R</span>
-│   ├── <span class="file">DEGs_analysis.R</span>
-│   ├── <span class="file">DEGs_plot.R</span>
-│   ├── <span class="file">scripts.sh</span>
-│   └── <span class="file">cleanup.sh</span>
+│   ├── <span class="file">main.R</span>
+│   ├── <span class="folder">calculate/</span>
+│   │   └── <span class="file">lookup_gene_positions.R</span>
+│   ├── <span class="folder">plot/</span>
+│   │   ├── <span class="file">plot_circos.R</span>
+│   │   └── <span class="file">plot_from_cache.R</span>
+│   └── <span class="folder">report/</span>
+│       └── <span class="file">generate_report.R</span>
 ├── <span class="folder">config/</span>
-│   └── <span class="config-file">DEGs.config.example.ini/yaml</span>
-└── <span class="folder">tests/</span>
-    ├── <span class="file">smoke_test.sh</span>
-    ├── <span class="folder">data/</span>
-    │   ├── <span class="file">expression.csv</span>
-    │   ├── <span class="file">group.csv</span>
-    │   └── <span class="config-file">test_config.yaml</span>
-    └── <span class="folder">golden/</span>
-        └── <span class="file">01.DEGs.csv</span>
+│   └── <span class="config-file">chromosome_plot_config.ini</span>
+└── <span class="folder">demo/</span>
+    └── <span class="folder">data/</span>  <span class="hidden-file"># 只放 demo 输入数据，不放输出结果或历史结果</span>
 
-<span class="folder">module_output/</span>  <span class="hidden-file"># 模块结果目录</span>
-├── <span class="folder">logs/</span>
-│   ├── <span class="log-file">RawData.20260306_143022.log</span>
-│   └── <span class="log-file">RawData.20260306_161545.log</span>
+<span class="folder">module_output/</span>  <span class="hidden-file"># 模块结果目录，以 chromosome_plot full 阶段为例</span>
+├── <span class="hidden-file">.run_id</span>  <span class="hidden-file"># 文件内容记录本次 run_id，如 20260306_1430</span>
+├── <span class="folder">cache/</span>
+│   └── <span class="file">00.gene_positions.qs2</span>
+├── <span class="folder">log/</span>
+│   ├── <span class="config-file">chromosome_plot_config.ini</span>
+│   └── <span class="log-file">full.log</span>
 ├── <span class="folder">result/</span>
-│   ├── <span class="folder">RawData/</span>
-│   │   ├── <span class="file">01.GSEXXX_count.csv</span>
-│   │   └── <span class="hidden-file">.20260306_161545</span>
-│   └── <span class="folder">DEGs/</span>
-│       ├── <span class="file">01.DEGs.csv</span>
-│       ├── <span class="file">02.heatmap.png</span>
-│       ├── <span class="file">02.heatmap.pdf</span>
-│       ├── <span class="file">03.volcano.png</span>
-│       ├── <span class="file">03.volcano.pdf</span>
-│       ├── <span class="config-file">DEGs.config.ini/yaml</span>
-│       └── <span class="hidden-file">.20260306_161545</span>
-└── <span class="folder">report/</span>
-    ├── <span class="folder">RawData/</span>
-    │   └── <span class="file">20260306_143022.docx</span>
-    └── <span class="folder">DEGs/</span>
-        └── <span class="file">20260306_161545.docx</span></pre>
+│   ├── <span class="file">01_gene_positions.tsv</span>
+│   ├── <span class="file">02_circos.pdf</span>
+│   ├── <span class="file">02_circos.png</span>
+│   └── <span class="file">chromosome_plot_report.docx</span>
+└── <span class="folder">report/</span>  <span class="hidden-file"># 如模块另设报告目录，需在 README 中明确；正式报告也可归入 result/</span></pre>
 
                 <div class="lead-box" style="margin-top:18px;">
                     <strong>📌 使用约定：</strong>
@@ -349,7 +338,7 @@
                             <span class="tab-icon">📂</span> scripts/
                         </button>
                         <button class="tab" onclick="showTab('dir-logs', event)">
-                            <span class="tab-icon">📄</span> output/logs/
+                            <span class="tab-icon">📄</span> output/log/
                             <span class="badge badge-required">核心</span>
                         </button>
                         <button class="tab" onclick="showTab('dir-result', event)">
@@ -386,7 +375,7 @@
                         <div class="lead-box">
                             <strong>💡 计算与作图分离 — 实施约定</strong>
                             <ul style="margin-top:8px; padding-left:20px;">
-                                <li><strong>中间结果格式</strong>：计算脚本将分析结果保存为 <code>.qs2</code>（R）或 <code>.csv</code>（通用），<span class="text-red">作图脚本直接读取中间结果文件，不重复执行计算逻辑</span></li>
+                                <li><strong>中间结果格式</strong>：计算脚本将分析结果保存为 <code>.qs2</code>（R）或 <code>.tsv</code>/<code>.csv</code>（通用表格，新增输出优先 TSV），<span class="text-red">作图脚本直接读取中间结果文件，不重复执行计算逻辑</span></li>
                                 <li><strong>中间结果位置</strong>：中间结果统一输出到模块结果目录（如 <code>module_output/result/分析点/</code>），与最终结果同层，命名建议加 <code>_intermediate</code> 后缀或放入 <code>_tmp/</code> 子目录以便区分</li>
                                 <li><strong>命名规范</strong>：计算脚本以 <code>_analysis</code> 结尾，作图脚本以 <code>_plot</code> 结尾，如 <code>DEGs_analysis.R</code> / <code>DEGs_plot.R</code>、<code>GSEA_analysis.R</code> / <code>GSEA_plot.R</code></li>
                                 <li><strong>调度串联</strong>：<code>scripts.sh</code> 或 <code>run.sh</code> 中先调用计算脚本再调用作图脚本，<span class="text-red">支持通过参数单独运行作图脚本而不触发计算</span>（如 <code>run.sh --plot-only</code>）</li>
@@ -398,7 +387,7 @@
                         <strong style="display:block; margin-top:18px;">📝 计算脚本示例（DEGs_analysis.R）：</strong>
                         <pre class="code-block"># DEGs_analysis.R — 差异表达计算脚本
 # 输入：表达矩阵 + 分组信息
-# 输出：中间结果 .qs2 + 最终 CSV
+# 输出：中间结果 .qs2 + 最终 TSV（CSV 仅在适用场景使用）
 
 library(data.table)
 library(DESeq2)
@@ -421,8 +410,8 @@ res &lt;- results(dds, alpha = p_cutoff)
 # ---- 保存中间结果（供作图脚本直接读取） ----
 qs2::qs_save(res, file.path(output_dir, "DEGs_intermediate.qs2"))
 
-# ---- 保存最终 CSV ----
-fwrite(as.data.frame(res), file.path(output_dir, "01.DEGs.csv"))</pre>
+# ---- 保存最终 TSV ----
+fwrite(as.data.frame(res), file.path(output_dir, "01.DEGs.tsv"), sep = "\t")</pre>
 
                         <strong style="display:block; margin-top:18px;">🎨 作图脚本示例（DEGs_plot.R）：</strong>
                         <pre class="code-block"># DEGs_plot.R — 差异表达可视化脚本
@@ -491,12 +480,12 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                     </div>
 
                     <div id="dir-logs" class="tab-content">
-                        <h4>📄 logs/ - 日志文件夹 <span class="badge badge-required">核心</span></h4>
+                        <h4>📄 log/ - 日志文件夹 <span class="badge badge-required">核心</span></h4>
                         <ul>
-                            <li>存放各分析点或模块入口的运行日志</li>
-                            <li>日志文件命名格式：<code>分析点名.YYYYMMDD_HHMMSS.log</code></li>
-                            <li><strong>时间戳精确到秒</strong>：格式为 <code>YYYYMMDD_HHMMSS</code>（如 20260306_143022），<span class="text-red">即可同时满足唯一标识与自然排序</span></li>
-                            <li><strong>快速定位</strong>：无需打开文件即可知道分析运行时间</li>
+                            <li>存放各阶段或模块入口的运行日志，推荐使用单数目录 <code>log/</code>，与 <code>chromosome_plot</code> 示例保持一致</li>
+                            <li>日志文件命名优先使用阶段名：<code>&lt;stage&gt;.log</code>，如 <code>calculate.log</code>、<code>plot.log</code>、<code>report.log</code>、<code>full.log</code></li>
+                            <li><strong>运行标识</strong>：本次运行的时间戳或 run_id 写入模块结果目录下的隐藏文件 <code>.run_id</code>，日志内容同时记录 <code>run_id</code>、命令、输出目录和退出码</li>
+                            <li><strong>避免双时间戳</strong>：不要同时用多个时间戳日志文件表达同一次运行；同一次运行应由 <code>.run_id</code> 与日志字段关联</li>
                             <li><strong>支持中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
                         </ul>
                     </div>
@@ -504,19 +493,17 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                     <div id="dir-result" class="tab-content">
                         <h4>📊 result/ - 结果文件夹</h4>
                         <ul>
-                            <li>按分析点创建子文件夹（如 RawData/, DEGs/）</li>
-                            <li>每个分析点文件夹内存放该分析的所有结果文件</li>
-                            <li>结果文件使用数字前缀排序（01., 02., 03.）</li>
-                            <li>包含隐藏文件 <code>.YYYYMMDD_HHMMSS</code> 用于追踪对应的日志</li>
-                            <li><strong>配置文件</strong>：使用 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code> 格式</li>
-                            <li>配置文件会被每次运行覆盖，记录最新参数</li>
+                            <li>存放正式用户结果：表格、图和最终报告；可复用对象放 <code>cache/</code>，日志和配置副本放 <code>log/</code></li>
+                            <li>结果文件使用数字前缀排序（01_, 02_, 03_ 或 01., 02., 03.），文件名表达业务含义</li>
+                            <li>模块结果目录顶层包含隐藏文件 <code>.run_id</code>，文件内容写入本次 run_id（如 <code>20260306_1430</code>），不要把时间戳写进隐藏文件名</li>
+                            <li><strong>配置文件</strong>：本次使用的配置副本放入 <code>log/</code>，如 <code>log/chromosome_plot_config.ini</code></li>
                             <li><strong>图表文件</strong>：<span class="text-red">每个图表必须同时保存 .png 和 .pdf 格式</span></li>
                             <li>示例：
                                 <ul>
-                                    <li><code>01.DEGs.csv</code> - 差异基因列表</li>
-                                    <li><code>02.heatmap.png</code> + <code>02.heatmap.pdf</code> - 热图（双格式）</li>
-                                    <li><code>DEGs.config.ini</code> - 配置文件</li>
-                                    <li><code>.20260306_161545</code> - 追踪文件</li>
+                                    <li><code>01_gene_positions.tsv</code> - 表格结果（新增表格推荐 TSV，CSV 仅在适用场景使用）</li>
+                                    <li><code>02_circos.png</code> + <code>02_circos.pdf</code> - 图表（双格式）</li>
+                                    <li><code>chromosome_plot_report.docx</code> - 正式报告</li>
+                                    <li><code>.run_id</code> - 隐藏运行标识文件，内容是本次 run_id</li>
                                 </ul>
                             </li>
                         </ul>
@@ -526,16 +513,16 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                         <h4>📝 report/ - 报告文件夹</h4>
                         <ul>
                             <li>按分析点创建子文件夹</li>
-                            <li>每个分析点的报告以 <code>YYYYMMDD_HHMMSS.docx</code> 格式命名</li>
-                            <li>报告文件名与日志文件名的时间戳对应</li>
+                            <li>报告文件名应表达模块或报告含义，如 <code>chromosome_plot_report.docx</code></li>
+                            <li>报告路径和对应 run_id 写入日志，由 <code>.run_id</code> 与日志字段追溯</li>
                             <li>便于追溯某次分析的具体结果和参数</li>
                             <li><strong>查找最新版本</strong>：文件按时间排序，最后一个即为最新</li>
                             <li><strong>默认格式</strong>：报告默认使用 .docx 格式</li>
                             <li><strong>推荐工具</strong>：推荐使用 <code>Quarto</code> 生成报告</li>
                             <li>示例：
                                 <ul>
-                                    <li><code>20260306_143022.docx</code> - 14:30的分析报告（默认）</li>
-                                    <li><code>20260306_161545.docx</code> - 16:15的分析报告</li>
+                                    <li><code>chromosome_plot_report.docx</code> - chromosome_plot 正式报告（默认）</li>
+                                    <li><code>DEGs_report.docx</code> - DEGs 模块正式报告</li>
                                 </ul>
                             </li>
                         </ul>
@@ -562,7 +549,7 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                 <div class="tabs-container">
                     <div class="tabs">
                         <button class="tab active" onclick="showTab('name-timestamp', event)">
-                            <span class="tab-icon">⏰</span> 时间戳格式
+                            <span class="tab-icon">⏰</span> run_id 格式
                         </button>
                         <button class="tab" onclick="showTab('name-formats', event)">
                             <span class="tab-icon">📝</span> 命名格式
@@ -579,19 +566,20 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                     </div>
 
                     <div id="name-timestamp" class="tab-content active">
-                        <h4>⏰ 时间戳格式</h4>
+                        <h4>⏰ run_id 内容格式</h4>
                         <table class="matrix">
                             <thead><tr><th>格式</th><th>示例</th><th>说明</th></tr></thead>
                             <tbody>
-                                <tr><td><code>YYYYMMDD_HHMMSS</code></td><td><code>20260306_143022</code></td><td>2026年3月6日 14:30:22</td></tr>
+                                <tr><td><code>YYYYMMDD_HHMM</code></td><td><code>20260306_1430</code></td><td>推荐写入 <code>.run_id</code> 的内容，表示 2026年3月6日 14:30</td></tr>
+                                <tr><td><code>YYYYMMDD_HHMMSS</code></td><td><code>20260306_143022</code></td><td>需要秒级区分时允许使用</td></tr>
                             </tbody>
                         </table>
                         <div class="lead-box">
-                            <strong>💡 使用时间戳作为唯一ID的优势：</strong>
+                            <strong>💡 使用 <code>.run_id</code> 作为运行标识的优势：</strong>
                             <ul style="margin-top:8px; padding-left:20px;">
-                                <li><strong>一码多用</strong>：同时承担唯一标识、时间表达和版本排序</li>
-                                <li><strong>精确到秒</strong>：在常规分析场景下足以避免重名冲突</li>
-                                <li><strong>便于追溯</strong>：可快速串联日志、结果和报告</li>
+                                <li><strong>文件名固定</strong>：隐藏文件始终命名为 <code>.run_id</code>，不要把时间戳写进文件名</li>
+                                <li><strong>内容可读</strong>：文件内容写入 <code>YYYYMMDD_HHMM</code> 或等价 run_id，必要时可精确到秒</li>
+                                <li><strong>便于追溯</strong>：日志、缓存、结果和报告都通过同一个 run_id 串联</li>
                             </ul>
                         </div>
                     </div>
@@ -601,12 +589,12 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                         <table class="matrix">
                             <thead><tr><th>文件类型</th><th>命名格式</th><th>示例</th><th>说明</th></tr></thead>
                             <tbody>
-                                <tr><td>入口与内部脚本</td><td><code>功能名.扩展名</code></td><td><code>run.sh</code>, <code>scripts/RawData.R</code>, <code>scripts/DEGs.py</code></td><td>顶层入口固定为 <code>run.sh</code>，内部脚本放在 <code>scripts/</code> 下并使用驼峰命名</td></tr>
-                                <tr><td>日志文件</td><td><code>分析点名.时间戳.log</code></td><td><code>RawData.20260306_143022.log</code></td><td>带时间戳</td></tr>
-                                <tr><td>结果文件</td><td><code>序号.描述.扩展名</code></td><td><code>01.DEGs.csv</code>, <code>02.heatmap.png</code></td><td>数字前缀排序</td></tr>
-                                <tr><td>配置文件</td><td><code>分析点.config.ini</code> 或 <code>.yaml</code></td><td><code>DEGs.config.ini</code>, <code>DEGs.config.yaml</code></td><td>每次运行覆盖</td></tr>
-                                <tr><td>追踪文件</td><td><code>.时间戳</code></td><td><code>.20260306_143022</code></td><td>隐藏文件，标识本次运行</td></tr>
-                                <tr><td>报告文件</td><td><code>时间戳.docx</code></td><td><code>20260306_143022.docx</code></td><td>带时间戳</td></tr>
+                                <tr><td>入口与内部脚本</td><td><code>功能名.扩展名</code></td><td><code>run.sh</code>, <code>scripts/main.R</code>, <code>scripts/plot/plot_from_cache.R</code></td><td>顶层入口固定为 <code>run.sh</code>，内部脚本放在 <code>scripts/</code> 下并清晰表达阶段或功能</td></tr>
+                                <tr><td>日志文件</td><td><code>&lt;stage&gt;.log</code></td><td><code>full.log</code>, <code>calculate.log</code></td><td>日志内记录 run_id；不要靠文件名堆叠多个时间戳</td></tr>
+                                <tr><td>结果文件</td><td><code>序号_描述.扩展名</code></td><td><code>01_gene_positions.tsv</code>, <code>02_circos.png</code></td><td>数字前缀排序；表格新增输出优先 TSV</td></tr>
+                                <tr><td>配置副本</td><td><code>log/模块配置名.ini</code> 或 <code>.yaml</code></td><td><code>log/chromosome_plot_config.ini</code></td><td>记录本次使用参数，随运行输出保存</td></tr>
+                                <tr><td>运行标识文件</td><td><code>.run_id</code></td><td><code>.run_id</code> 内容为 <code>20260306_1430</code></td><td>隐藏文件名固定，时间戳/run_id 写在文件内容里</td></tr>
+                                <tr><td>报告文件</td><td><code>描述.docx</code></td><td><code>chromosome_plot_report.docx</code></td><td>正式报告名表达模块和业务含义</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -624,18 +612,18 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                             <strong>💡 选择建议：</strong> 根据项目需求选择。配置简单用 .ini，配置复杂用 .yaml。两种格式都是可选的，日志文件才是参数记录的核心。
                         </div>
                         <div class="lead-box" style="margin-top:12px;">
-                            <strong>📌 设计原则：</strong> 配置文件保持"单份最新"，追溯历史以日志为准（通过 <code>.时间戳</code> 关联）。
+                            <strong>📌 设计原则：</strong> 配置模板保持在 <code>config/</code>，本次运行配置副本写入 <code>log/</code>；追溯历史以日志和 <code>.run_id</code> 为准，run_id 内容记录时间戳或等价运行标识。
                         </div>
                     </div>
 
                     <div id="name-example" class="tab-content">
-                        <h4>📋 时间戳示例对比</h4>
+                        <h4>📋 run_id 内容示例对比</h4>
                         <table class="matrix">
-                            <thead><tr><th>场景</th><th>仅日期（不推荐）</th><th>精确到秒（推荐）</th></tr></thead>
+                            <thead><tr><th>场景</th><th>仅日期（不推荐）</th><th>run_id 内容（推荐）</th></tr></thead>
                             <tbody>
-                                <tr><td>第一次运行</td><td><code>20260306</code> ⚠️ 不够精确</td><td><code>20260306_143022</code> ✅ 14:30:22运行</td></tr>
-                                <tr><td>第二次运行（下午）</td><td><code>20260306</code> ⚠️ 文件名重复！</td><td><code>20260306_161545</code> ✅ 16:15:45运行</td></tr>
-                                <tr><td>第三次运行（晚上）</td><td><code>20260306</code> ⚠️ 无法区分</td><td><code>20260306_213810</code> ✅ 21:38:10运行</td></tr>
+                                <tr><td>第一次运行</td><td><code>20260306</code> ⚠️ 不够精确</td><td><code>20260306_1430</code> ✅ 14:30运行</td></tr>
+                                <tr><td>第二次运行（下午）</td><td><code>20260306</code> ⚠️ 文件名重复！</td><td><code>20260306_1615</code> ✅ 16:15运行</td></tr>
+                                <tr><td>第三次运行（晚上）</td><td><code>20260306</code> ⚠️ 无法区分</td><td><code>20260306_2138</code> ✅ 21:38运行</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -694,7 +682,7 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                                 <tr><td><strong>运行信息</strong></td><td>时间戳、入口脚本、版本、运行环境</td><td><code>2026-03-06 14:30:22 | run.sh v1.2 | Python 3.9</code></td></tr>
                                 <tr><td><strong>输入参数</strong></td><td>所有分析参数（阈值、方法、条件等）</td><td><code>p_value_cutoff=0.05, log2fc_cutoff=1, method=DESeq2</code></td></tr>
                                 <tr><td><strong>输入文件</strong></td><td>数据来源、文件路径、样本信息</td><td><code>Input: ../RawData/01.GSEXXX_count.csv (150 samples)</code></td></tr>
-                                <tr><td><strong>输出文件</strong></td><td>生成的结果文件路径和名称</td><td><code>Output: 01.DEGs.csv, 02.heatmap.png, 02.heatmap.pdf</code></td></tr>
+                                <tr><td><strong>输出文件</strong></td><td>生成的结果文件路径和名称</td><td><code>Output: 01.DEGs.tsv, 02.heatmap.png, 02.heatmap.pdf</code></td></tr>
                                 <tr><td><strong>统计信息</strong></td><td>样本数、基因数、筛选后的数量等</td><td><code>Total genes: 25000 | After filtering: 18500 | DEGs: 1234</code></td></tr>
                                 <tr><td><strong>运行过程</strong></td><td>关键步骤、警告、错误</td><td><code>[WARN] 50 samples have low counts | [ERROR] Sample S99 missing</code></td></tr>
                             </tbody>
@@ -755,16 +743,16 @@ Cook距离过滤: 是
 ----------------------------------------
 输出文件
 ----------------------------------------
-01.DEGs.csv - 1234个差异表达基因
+01.DEGs.tsv - 1234个差异表达基因
 02.heatmap.png / 02.heatmap.pdf - Top 100基因热图
 03.volcano.png / 03.volcano.pdf - 火山图
 
 ----------------------------------------
 追溯信息
 ----------------------------------------
-日志文件: RawData.20260306_143022.log
-配置文件: DEGs.config.ini
-报告文件: 20260306_143022.docx
+日志文件: log/full.log
+配置文件: log/chromosome_plot_config.ini
+报告文件: result/chromosome_plot_report.docx
 
 ================================================================================
 分析成功完成
@@ -776,7 +764,7 @@ Cook距离过滤: 是
                         <table class="matrix">
                             <thead><tr><th>对比项</th><th>日志文件</th><th>配置文件</th></tr></thead>
                             <tbody>
-                                <tr><td><strong>文件名</strong></td><td><code>分析点名.时间戳.log</code></td><td><code>分析点.config.ini/yaml</code></td></tr>
+                                <tr><td><strong>文件名</strong></td><td><code>log/&lt;stage&gt;.log</code></td><td><code>log/分析点.config.ini/yaml</code></td></tr>
                                 <tr><td><strong>是否覆盖</strong></td><td>每次运行创建新文件</td><td>每次运行覆盖旧文件</td></tr>
                                 <tr><td><strong>内容</strong></td><td>参数 + 过程 + 统计 + 警告</td><td>主要是参数和路径</td></tr>
                                 <tr><td><strong>可读性</strong></td><td>文本格式，易于人工阅读</td><td>结构化格式，便于程序解析</td></tr>
@@ -795,7 +783,7 @@ Cook距离过滤: 是
                 <h2 class="section-title" id="sec-track">🔗 结果追踪机制</h2>
 
                 <div class="lead-box" style="background:#ecfdf5; border-color:#6ee7b7;">
-                    <strong>✨ 核心设计：</strong> 程序开始时生成时间戳，日志和报告使用时间戳命名，结果文件夹使用隐藏文件标识时间戳，配置文件保持简洁。
+                    <strong>✨ 核心设计：</strong> 程序开始时生成 run_id，写入模块结果目录顶层 <code>.run_id</code>；日志记录 run_id、命令、配置副本和输出路径；报告用业务含义命名，追溯依赖日志字段而不是文件名时间戳。
                 </div>
 
                 <div class="tabs-container">
@@ -812,23 +800,26 @@ Cook距离过滤: 是
                     </div>
 
                     <div id="track-flow" class="tab-content active">
-                        <h4>🔄 时间戳生成和使用流程</h4>
+                        <h4>🔄 run_id 生成和使用流程</h4>
                         <ol class="steps">
-                            <li><strong>程序启动</strong>：生成时间戳 <code>YYYYMMDD_HHMMSS</code>（精确到秒）</li>
-                            <li><strong>记录日志</strong>：由 <code>run.sh</code> 驱动分析并创建 <code>分析点名.时间戳.log</code>，在日志开头记录该时间戳</li>
-                            <li><strong>保存结果</strong>：在结果文件夹创建 <code>.时间戳</code> 隐藏文件，同时保存图表的 .png 和 .pdf 格式</li>
-                            <li><strong>更新配置</strong>（可选）：覆盖 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code></li>
-                            <li><strong>生成报告</strong>：创建 <code>时间戳.docx</code> 报告文件（默认使用 Quarto 生成）</li>
+                            <li><strong>程序启动</strong>：生成 <code>run_id</code>，写入模块结果目录顶层 <code>.run_id</code>（推荐内容格式 <code>YYYYMMDD_HHMM</code>，必要时可到秒），后续日志、缓存、结果和报告均使用同一标识</li>
+                            <li><strong>阶段编排</strong>：由 <code>run.sh</code> 统一解析参数、执行安全检查并调度初始化、计算、作图、报告或全流程阶段；业务算法仍保留在内部脚本中</li>
+                            <li><strong>记录日志</strong>：由 <code>run.sh</code> 创建阶段日志，在开头记录命令、配置副本、运行目录、输出目录和上游引用</li>
+                            <li><strong>保存结果</strong>：正式用户结果写入 <code>result/</code>；阶段复用对象、报告输入副本和中间快照写入 <code>cache/</code>；二者不能混放</li>
+                            <li><strong>更新配置</strong>（可选）：覆盖 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code>；配置只描述业务参数，不记录本次输出目录</li>
+                            <li><strong>生成报告</strong>：报告文件写入正式结果目录，并在日志中记录报告路径、输入结果和所用配置</li>
                         </ol>
                     </div>
 
                     <div id="track-relations" class="tab-content">
                         <h4>🔗 追溯关系</h4>
                         <ul>
-                            <li><strong>结果 → 日志</strong>：通过隐藏文件 <code>.时间戳</code> 找到对应的日志文件</li>
+                            <li><strong>结果 → 日志</strong>：通过模块结果目录顶层隐藏文件 <code>.run_id</code> 读取本次 run_id，再在日志字段中定位对应运行</li>
                             <li><strong>结果 → 参数</strong>：通过日志文件（首选）或配置文件查看分析参数</li>
-                            <li><strong>日志 → 报告</strong>：通过时间戳匹配找到对应的分析报告</li>
-                            <li><strong>完整链条</strong>：run.sh → 内部脚本/配置 → 日志 → 结果（.png+.pdf） → 报告</li>
+                            <li><strong>日志 → 报告</strong>：通过日志中的 run_id 和报告路径找到对应的分析报告</li>
+                            <li><strong>完整链条</strong>：run.sh → 配置副本 → 内部脚本 → 日志 → cache 阶段产物 → result 正式结果 → 报告</li>
+                            <li><strong>阶段引用</strong>：后一阶段只能读取前一阶段公开约定的标准产物，不应扫描临时目录或依赖未文档化的内部文件</li>
+                            <li><strong>命名一致</strong>：单阶段运行与 full 全流程运行应生成同名同义的正式结果，避免下游因运行方式不同而改解析规则</li>
                             <li><strong>查找最新版本</strong>：在 logs 文件夹按名称排序，最后一个即为最新运行</li>
                         </ul>
                     </div>
@@ -857,7 +848,7 @@ total_samples=150
 total_genes=25000
 
 [Output]
-deg_file=01.DEGs.csv
+deg_file=01.DEGs.tsv
 heatmap_png=02.heatmap.png
 heatmap_pdf=02.heatmap.pdf
 volcano_png=03.volcano.png
@@ -885,7 +876,7 @@ Input:
   total_genes: 25000
 
 Output:
-  deg_file: 01.DEGs.csv
+  deg_file: 01.DEGs.tsv
   heatmap_png: 02.heatmap.png
   heatmap_pdf: 02.heatmap.pdf
   volcano_png: 03.volcano.png
@@ -939,7 +930,7 @@ Output:
                         <h4>🧪 必须使用 normalizePath 的场景</h4>
                         <ul>
                             <li><strong>读取输入文件</strong>：如 <code>group.csv</code>、<code>expression.csv</code>、<code>gene.csv</code>、<code>survival.csv</code>、参考注释文件等</li>
-                            <li><strong>写出结果文件</strong>：如 <code>result/</code>、<code>report/</code>、<code>logs/</code> 下的所有输出</li>
+                            <li><strong>写出结果文件</strong>：如 <code>result/</code>、<code>report/</code>、<code>log/</code> 下的所有输出</li>
                             <li><strong>读取配置参数</strong>：配置文件中的路径字段读取后必须立即标准化，不能原样透传到后续流程</li>
                             <li><strong>跨语言调用</strong>：<code>run.sh</code> 调用 R/Python/其他脚本时，传递前先做标准化，避免脚本间路径口径不一致</li>
                             <li><strong>文件关联追溯</strong>：隐藏追踪文件、日志文件、报告文件之间的路径引用必须基于同一套标准化结果</li>
@@ -1052,6 +1043,8 @@ except Exception as e:
                                 <tr><td><strong>变量引用</strong></td><td>变量必须用双引号包裹：<code>"$VAR"</code></td><td>防止空格/特殊字符引发错误</td></tr>
                                 <tr><td><strong>临时文件</strong></td><td>使用 <code>mktemp</code> 创建，配合 <code>trap</code> 在退出时清理</td><td><code>TMP=$(mktemp); trap "rm -f $TMP" EXIT</code></td></tr>
                                 <tr><td><strong>日志重定向</strong></td><td>stdout/stderr 分别重定向到日志文件</td><td><code>exec &gt; &gt;(tee -a "$LOG") 2&gt;&amp;1</code></td></tr>
+                                <tr><td><strong>入口职责</strong></td><td><code>run.sh</code> 只负责参数解析、安全检查、阶段编排、日志元数据和退出码</td><td>不得在入口脚本中重写统计、绘图、注释查询或报告生成等业务算法</td></tr>
+                                <tr><td><strong>阶段帮助</strong></td><td>多阶段模块的每个阶段都应支持独立帮助或清晰参数说明</td><td>例如初始化、计算、作图、报告、全流程阶段均能说明输入、输出和依赖</td></tr>
                             </tbody>
                         </table>
 
@@ -1090,10 +1083,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# ---- 时间戳与日志 ----
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-LOG_FILE="logs/DEGs.${TIMESTAMP}.log"
-mkdir -p logs
+# ---- run_id 与日志 ----
+RUN_ID=$(date +%Y%m%d_%H%M)
+printf "%s\n" "$RUN_ID" &gt; .run_id
+LOG_FILE="log/DEGs.log"
+mkdir -p log
 exec &gt; &gt;(tee -a "$LOG_FILE") 2&gt;&amp;1
 
 # ---- 清理函数 ----
@@ -1110,6 +1104,7 @@ echo "[$(date)] 开始作图..."
 Rscript scripts/DEGs_plot.R --config "$CONFIG"
 
 echo "[$(date)] 分析完成"</pre>
+                        <p><strong>业务保真要求：</strong> 包装脚本可以做路径标准化、参数桥接、日志和输出收集，但不能用 demo、mock、stub、placeholder、synthetic 或 fallback 逻辑替代真实业务流程。修改前必须先确认原始入口、核心脚本、配置、主要输出、绘图逻辑、报告逻辑和报告模板。</p>
                     </div>
 
                     <div id="script-naming" class="tab-content">
@@ -1169,7 +1164,7 @@ echo "[$(date)] 分析完成"</pre>
             <div class="card two-col">
                 <h2 class="section-title" id="sec-best">✅ 推荐做法</h2>
                 <ul class="rule-list">
-                    <li><strong>统一时间戳</strong>：程序开始时生成时间戳，所有输出文件统一使用</li>
+                    <li><strong>统一 run_id</strong>：程序开始时生成 run_id，写入 <code>.run_id</code>，日志、缓存、结果和报告均记录同一标识</li>
                     <li><strong>日志优先</strong>：<span class="text-red">无论是否有配置文件，日志中必须详细记录所有参数</span></li>
                     <li><strong>配置文件简洁</strong>：使用 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code>，每次运行覆盖</li>
                     <li><strong>日志使用中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
@@ -1185,7 +1180,7 @@ echo "[$(date)] 分析完成"</pre>
                     <li><strong>输出自检</strong>：脚本结束前自动校验输出文件存在性、非空、关键列完整</li>
                     <li><strong>README.md 完备</strong>：每个模块必须包含标准 README（用途、依赖、输入输出、运行示例）</li>
                     <li><strong>CHANGELOG.md</strong>：语义化版本号 + 每次变更记录</li>
-                    <li><strong>冒烟测试</strong>：提供示例数据和 <code>tests/smoke_test.sh</code>，一键验证核心流程</li>
+                    <li><strong>demo 验证</strong>：如提供 demo，只在 <code>demo/data/</code> 放输入数据和必要配置；输出由本次运行现场生成</li>
                     <li>定期清理过期的日志文件和临时结果（默认保留最近 30 天）</li>
                     <li>使用版本控制系统（Git）管理scripts文件夹中的脚本</li>
                     <li>为重要分析结果创建README.md说明文件内容</li>
@@ -1197,15 +1192,15 @@ echo "[$(date)] 分析完成"</pre>
             <div class="card two-col">
                 <h2 class="section-title" id="sec-avoid">❌ 避免做法</h2>
                 <ul class="check-list">
-                    <li>使用无意义的文件名（如 result1.csv, final.pdf）</li>
-                    <li>时间戳只精确到日期，导致同一天多次运行无法区分</li>
+                    <li>使用无意义的文件名（如 result1.tsv, final.pdf）</li>
+                    <li><code>.run_id</code> 内容只精确到日期，导致同一天多次运行无法区分</li>
                     <li>日志只记录运行成功/失败，不记录具体参数</li>
                     <li>依赖配置文件而忽略日志的参数记录功能</li>
                     <li>不保留日志文件，导致无法追溯分析过程</li>
-                    <li>结果文件与日志文件无法对应</li>
-                    <li>不同输出文件使用不同的时间戳</li>
+                    <li>结果文件与日志中的 run_id 无法对应</li>
+                    <li>同一次运行的日志、缓存、结果、报告使用不同 run_id</li>
                     <li><span class="text-red"><strong>跳过路径标准化</strong></span>：直接用命令行输入、配置值或字符串拼接后的路径做存在性校验和文件读写</li>
-                    <li>配置文件使用时间戳命名，导致文件夹碎片化</li>
+                    <li>把 run_id 或时间戳写进配置文件名，导致文件夹碎片化</li>
                     <li><span class="text-red"><strong>计算与作图混写</strong></span>：把数据计算和可视化代码写在同一个脚本中，导致改图必须重跑全部计算</li>
                     <li><span class="text-red"><strong>只保存单一图表格式</strong>：只保存 .png 或只保存 .pdf</span></li>
                     <li><strong>图表字体混用</strong>：同一项目中混用不同字体族（如无衬线 + 衬线混搭）；禁止使用 Times New Roman</li>
@@ -1248,12 +1243,12 @@ echo "[$(date)] 分析完成"</pre>
                         <table class="matrix">
                             <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
                             <tbody>
-                                <tr><td><strong>传递介质</strong></td><td>模块间一律通过 <span class="text-red">文件</span>（CSV / .qs2）传递数据，禁止依赖内存/全局变量</td><td>确保任意模块可独立运行和调试</td></tr>
+                                <tr><td><strong>传递介质</strong></td><td>模块间一律通过 <span class="text-red">文件</span>（TSV / CSV / .qs2）传递数据，禁止依赖内存/全局变量</td><td>确保任意模块可独立运行和调试</td></tr>
                                 <tr><td><strong>输出路径约定</strong></td><td>上游模块将结果写入自己的 <code>result/分析点/</code>；下游模块通过相对路径 <code>../上游模块/result/分析点/</code> 读取</td><td>路径在读取前必须经过 normalizePath</td></tr>
-                                <tr><td><strong>完成标志</strong></td><td>模块成功结束时在 <code>result/分析点/</code> 写入隐藏追踪文件 <code>.时间戳</code></td><td>下游可检查该文件判断上游是否已完成</td></tr>
+                                <tr><td><strong>完成标志</strong></td><td>模块成功结束时在模块结果目录顶层写入隐藏运行标识文件 <code>.run_id</code>，文件内容为本次 run_id/时间戳</td><td>下游可检查该文件判断上游是否已完成</td></tr>
                                 <tr><td><strong>接口文件规范</strong></td><td>模块对外暴露的输出文件名、列名、数据类型在 <code>README.md</code> 中明确列出</td><td>视为模块的公开 API，变更需通知下游</td></tr>
                                 <tr><td><strong>向后兼容</strong></td><td>输出文件新增列允许，<span class="text-red">删除或重命名已有列视为破坏性变更</span></td><td>破坏性变更需升主版本号</td></tr>
-                                <tr><td><strong>空结果处理</strong></td><td>如分析结果为空（如 0 个差异基因），仍应输出带表头的空 CSV + 日志记录</td><td>下游不因文件缺失而崩溃</td></tr>
+                                <tr><td><strong>空结果处理</strong></td><td>如分析结果为空（如 0 个差异基因），仍应输出带表头的空 TSV/CSV + 日志记录</td><td>下游不因文件缺失而崩溃</td></tr>
                             </tbody>
                         </table>
 
@@ -1265,7 +1260,7 @@ project/
 │   └── result/RawData/01.GSEXXX_count.csv
 ├── DEGs/             # 模块 2：差异分析（依赖模块 1）
 │   ├── run.sh
-│   └── result/DEGs/01.DEGs.csv
+│   └── result/DEGs/01.DEGs.tsv
 └── Enrichment/       # 模块 3：富集分析（依赖模块 2）
     ├── run.sh
     └── result/GSEA/01.gsea_result.csv
@@ -1294,7 +1289,7 @@ INPUT="../RawData/result/RawData/01.GSEXXX_count.csv"</pre>
 | 上游模块   | 所需文件                           | 最低版本 |
 |-----------|-----------------------------------|---------|
 | RawData   | result/RawData/01.GSEXXX_count.csv | v1.0    |
-| RawData   | result/RawData/.时间戳（完成标志）   | -       |
+| RawData   | module_output/.run_id（文件内容为本次 run_id）   | -       |
 
 ### 环境依赖
 
@@ -1364,10 +1359,10 @@ INPUT="../RawData/result/RawData/01.GSEXXX_count.csv"</pre>
                         <table class="matrix">
                             <thead><tr><th>校验项</th><th>要求</th><th>说明</th></tr></thead>
                             <tbody>
-                                <tr><td><strong>文件存在性</strong></td><td>脚本结束前检查所有预期输出文件是否已生成</td><td>缺少任何预期文件应报错退出</td></tr>
-                                <tr><td><strong>文件非空</strong></td><td>输出 CSV 至少包含表头行；.png/.pdf 文件大小 &gt; 0</td><td>空文件视为异常</td></tr>
-                                <tr><td><strong>行数/列数检查</strong></td><td>结果 CSV 的行数和列数写入日志，并与预期范围做对比</td><td>如差异基因数为 0，日志中标注 <code>[WARN]</code></td></tr>
-                                <tr><td><strong>关键列存在性</strong></td><td>输出 CSV 必须包含文档约定的关键列（如 <code>SYMBOL</code>、<code>log2FoldChange</code>、<code>pvalue</code>）</td><td>列名缺失直接报错</td></tr>
+                                <tr><td><strong>文件存在性</strong></td><td>脚本结束前检查所有应生成的关键输出文件是否已生成</td><td>缺少任何关键文件应报错退出</td></tr>
+                                <tr><td><strong>文件非空</strong></td><td>输出 TSV/CSV 至少包含表头行；.png/.pdf 文件大小 &gt; 0</td><td>空文件视为异常</td></tr>
+                                <tr><td><strong>行数/列数检查</strong></td><td>结果 TSV/CSV 的行数和列数写入日志，并与预期范围做对比</td><td>如差异基因数为 0，日志中标注 <code>[WARN]</code></td></tr>
+                                <tr><td><strong>关键列存在性</strong></td><td>输出 TSV/CSV 必须包含文档约定的关键列（如 <code>SYMBOL</code>、<code>log2FoldChange</code>、<code>pvalue</code>）</td><td>列名缺失直接报错</td></tr>
                                 <tr><td><strong>数据类型检查</strong></td><td>数值列不含非数值字符串；分类列取值在允许范围内</td><td>如 <code>riskgroup</code> 只允许 <code>High</code>/<code>Low</code></td></tr>
                                 <tr><td><strong>NA/空值检查</strong></td><td><span class="text-red">输出文件中不允许出现 NA</span>（与输入规范一致）</td><td>若分析结果含 NA 需在日志中说明并过滤</td></tr>
                                 <tr><td><strong>双格式图表验证</strong></td><td>每个图表同时存在 .png 和 .pdf，否则报 <code>[WARN]</code></td><td>与文件格式规范联动</td></tr>
@@ -1380,7 +1375,7 @@ validate_output &lt;- function(file_path, required_cols = NULL) {
     if (!file.exists(file_path)) stop("输出文件缺失: ", file_path)
     if (file.size(file_path) == 0) stop("输出文件为空: ", file_path)
 
-    if (grepl("\\.csv$", file_path)) {
+    if (grepl("\\.(tsv|csv)$", file_path)) {
         df &lt;- data.table::fread(file_path, nrows = 5)
         if (!is.null(required_cols)) {
             missing &lt;- setdiff(required_cols, names(df))
@@ -1391,51 +1386,49 @@ validate_output &lt;- function(file_path, required_cols = NULL) {
 }
 
 # 使用
-validate_output("result/DEGs/01.DEGs.csv", c("SYMBOL", "log2FoldChange", "pvalue", "padj"))</pre>
+validate_output("result/DEGs/01.DEGs.tsv", c("SYMBOL", "log2FoldChange", "pvalue", "padj"))</pre>
                     </div>
 
                     <div id="qa-test" class="tab-content">
-                        <h4>🧪 测试要求</h4>
+                        <h4>🧪 验证与 demo 要求</h4>
                         <table class="matrix">
-                            <thead><tr><th>测试类型</th><th>要求</th><th>说明</th></tr></thead>
+                            <thead><tr><th>验证项</th><th>要求</th><th>说明</th></tr></thead>
                             <tbody>
-                                <tr><td><strong>示例数据</strong></td><td><span class="text-red">每个模块必须包含可运行的小规模示例数据</span></td><td>放在 <code>tests/data/</code> 下，确保 <code>run.sh</code> 可端到端运行</td></tr>
-                                <tr><td><strong>冒烟测试</strong></td><td>模块根目录提供 <code>tests/smoke_test.sh</code>，一键验证核心流程</td><td>退出码 0 = 通过；检查关键输出文件是否生成</td></tr>
-                                <tr><td><strong>单元测试（推荐）</strong></td><td>R 使用 <code>testthat</code>，Python 使用 <code>pytest</code></td><td>至少覆盖：数据读取、核心计算、输出校验函数</td></tr>
-                                <tr><td><strong>回归验证</strong></td><td>保留基准结果（golden file），新版本结果与基准做 diff</td><td>关键数值列允许浮点误差 ≤ 1e-6</td></tr>
-                                <tr><td><strong>CI 集成</strong></td><td>冒烟测试纳入 CI/CD 流程，每次提交自动运行</td><td>未通过则阻止合并</td></tr>
+                                <tr><td><strong>demo 输入数据</strong></td><td><span class="text-red">每个模块可提供可运行的小规模 demo 输入数据</span></td><td>放在 <code>demo/data/</code> 下；demo 目录只放输入数据和必要配置，不放输出结果、历史结果、缓存或报告</td></tr>
+                                <tr><td><strong>demo 验证</strong></td><td>用 demo 输入运行 <code>run.sh</code>，确认流程可端到端启动并生成关键输出</td><td>只能标注为 demo 验证；不能报告成真实业务验证或结果回归测试</td></tr>
+                                <tr><td><strong>烟测验证</strong></td><td>如提供自动脚本，只检查入口、阶段编排、关键文件存在和退出码</td><td>退出码 0 = 烟测通过；不代表业务结果正确</td></tr>
+                                <tr><td><strong>单元测试（推荐）</strong></td><td>R 使用 <code>testthat</code>，Python 使用 <code>pytest</code></td><td>覆盖纯函数、输入解析和输出校验函数；不要把 demo 输入当作回归基准</td></tr>
+                                <tr><td><strong>CI 集成</strong></td><td>烟测验证可纳入 CI/CD 流程，每次提交自动运行</td><td>未通过则阻止合并；通过也只证明入口和契约未明显破坏</td></tr>
+                                <tr><td><strong>验证类型标注</strong></td><td>交付说明必须区分真实业务验证、契约/接口验证、烟测验证和 demo 验证</td><td>不能把 wrapper 生成文件或 demo 输入跑通报告成真实业务验证</td></tr>
+                                <tr><td><strong>业务保真复核</strong></td><td>涉及迁移、包装、统一入口或重构时，必须证明原始核心脚本、绘图逻辑、报告逻辑仍被调用</td><td>若有行为差异，需在交付说明中列出并经确认</td></tr>
                             </tbody>
                         </table>
 
-                        <strong style="display:block; margin-top:18px;">冒烟测试示例（tests/smoke_test.sh）：</strong>
+                        <strong style="display:block; margin-top:18px;">demo 验证示例（以 chromosome_plot 为例）：</strong>
                         <pre class="code-block">#!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== 冒烟测试开始 ==="
+echo "=== demo 验证开始 ==="
 
-# 使用示例数据运行
-bash run.sh --config tests/data/test_config.yaml
+# demo 目录只提供输入数据和配置；输出由本次运行现场生成
+bash run.sh full -c demo/data/chromosome_plot_config.ini -o demo_output --force
 
-# 检查关键输出
-for f in result/DEGs/01.DEGs.csv result/DEGs/02.heatmap.png result/DEGs/02.heatmap.pdf; do
+# 只检查关键产物是否由本次运行生成，不与预先保存的输出文件做 diff
+for f in demo_output/.run_id demo_output/log/full.log demo_output/result/01_gene_positions.tsv demo_output/result/02_circos.png demo_output/result/02_circos.pdf demo_output/result/chromosome_plot_report.docx; do
     if [ ! -s "$f" ]; then
         echo "[FAIL] 文件缺失或为空: $f"
         exit 1
     fi
 done
 
-echo "=== 冒烟测试通过 ==="</pre>
+echo "=== demo 验证完成：仅代表 demo 输入跑通 ==="</pre>
 
                         <div class="lead-box">
-                            <strong>💡 测试目录结构：</strong>
-                            <pre style="margin-top:8px; font-family: Consolas, monospace; font-size: 0.9em;">tests/
-├── smoke_test.sh        # 冒烟测试入口
-├── data/                # 小规模示例数据
-│   ├── expression.csv
-│   ├── group.csv
-│   └── test_config.yaml
-└── golden/              # 基准结果（用于回归比对）
-    └── 01.DEGs.csv</pre>
+                            <strong>💡 demo 目录结构：</strong>
+                            <pre style="margin-top:8px; font-family: Consolas, monospace; font-size: 0.9em;">demo/
+└── data/                # 只放小规模输入数据和必要配置
+    ├── genes.tsv
+    └── chromosome_plot_config.ini</pre>
                         </div>
                     </div>
                 </div>
@@ -1458,11 +1451,13 @@ echo "=== 冒烟测试通过 ==="</pre>
                         <tr><td><strong>版本与更新日期</strong></td><td>当前版本号 + 最后更新日期</td><td>与 CHANGELOG.md 保持一致</td></tr>
                         <tr><td><strong>环境依赖</strong></td><td>R/Python 最低版本、关键包列表、锁定文件位置</td><td>示例：<code>R &gt;= 4.2 | 依赖见 renv.lock</code></td></tr>
                         <tr><td><strong>上游模块依赖</strong></td><td>表格列出所需上游模块和文件（见模块协作章节）</td><td>无上游依赖时标注"无"</td></tr>
-                        <tr><td><strong>快速开始</strong></td><td>从安装到运行的完整命令序列</td><td>包含 <code>bash run.sh --help</code> 和典型运行示例</td></tr>
+                        <tr><td><strong>快速开始</strong></td><td>从安装到运行的完整命令序列</td><td>包含 <code>bash run.sh --help</code>、典型运行示例和输出目录说明</td></tr>
+                        <tr><td><strong>阶段说明</strong></td><td>列出可独立运行的阶段、每阶段输入、标准产物和不能做的事</td><td>多阶段模块需说明后续阶段如何引用前一阶段产物</td></tr>
                         <tr><td><strong>输入文件说明</strong></td><td>列出所有输入文件名、格式、关键列和约束</td><td>与输入校验规范对齐</td></tr>
-                        <tr><td><strong>输出文件说明</strong></td><td>列出所有输出文件名、所在目录、关键列</td><td>这是模块的公开 API</td></tr>
-                        <tr><td><strong>参数说明</strong></td><td>所有可配置参数、默认值和取值范围</td><td>可引用配置文件模板</td></tr>
-                        <tr><td><strong>目录结构</strong></td><td>展示模块内部目录树（可简化）</td><td>帮助快速定位文件</td></tr>
+                        <tr><td><strong>输出文件说明</strong></td><td>列出所有输出文件名、所在目录、关键列，并区分 <code>result/</code>、<code>cache/</code>、<code>log/</code> 与 <code>report/</code></td><td>正式结果和可复用缓存的边界属于模块公开 API</td></tr>
+                        <tr><td><strong>参数说明</strong></td><td>所有可配置业务参数、默认值和取值范围</td><td>配置文件不应写入本次运行输出目录；输出位置由命令行或运行入口显式传入</td></tr>
+                        <tr><td><strong>目录结构</strong></td><td>展示模块内部目录树（可简化）</td><td>帮助快速定位文件，并说明源码目录与运行产物目录边界</td></tr>
+                        <tr><td><strong>验证方式</strong></td><td>说明最小验证命令、应生成的关键输出和验证类型</td><td>需标注是真实业务验证、契约/接口验证、烟测验证还是 demo 验证</td></tr>
                     </tbody>
                 </table>
 
@@ -1511,7 +1506,7 @@ bash run.sh --plot-only
 
 | 文件                    | 目录           | 说明           |
 |------------------------|---------------|---------------|
-| 01.DEGs.csv            | result/DEGs/  | 差异基因列表     |
+| 01.DEGs.tsv            | result/DEGs/  | 差异基因列表（表格输出优先 TSV） |
 | 02.heatmap.png/.pdf    | result/DEGs/  | Top 基因热图    |
 | 03.volcano.png/.pdf    | result/DEGs/  | 火山图          |
 
@@ -1570,7 +1565,7 @@ bash run.sh --plot-only
                     <div id="format-data" class="tab-content active">
                         <h4>📊 数据文件格式</h4>
                         <ul>
-                            <li><strong>表格数据</strong>：优先使用 <span class="text-red">.csv</span>（通用、兼容性好）</li>
+                            <li><strong>表格输出</strong>：优先使用 <span class="text-red">.tsv</span>，可避免药物名、通路名、描述字段中出现逗号时破坏列解析；<code>.csv</code> 仍允许，但应限于下游工具明确要求或确认字段不会含逗号的场景</li>
                             <li><strong>R数据</strong>：使用 <span class="text-red">.qs2 保存</span>（<code>qs2</code> R 包，替代 .rds/.RData）</li>
                         </ul>
                         <div class="lead-box">
@@ -1691,7 +1686,7 @@ bash run.sh --plot-only
 
                         <div class="danger-box">
                             <strong>硬性规则：</strong>
-                            <span class="text-red">全部输入文件必须为 <code>.csv</code></span>；<span class="text-red">文件编码必须为 UTF-8（推荐无 BOM）</span>；<span class="text-red">行尾符建议统一为 LF（<code>\n</code>）</span>；<span class="text-red">数据中不允许出现 NA</span>；<span class="text-red">数值字段必须可解析为 <code>num/int</code></span>。
+                            <span class="text-red">输入文件可按模块约定使用 <code>.tsv</code> 或 <code>.csv</code>，含药物名、描述、复合标签等可能含逗号的字段时优先 <code>.tsv</code></span>；<span class="text-red">文件编码必须为 UTF-8（推荐无 BOM）</span>；<span class="text-red">行尾符建议统一为 LF（<code>\n</code>）</span>；<span class="text-red">数据中不允许出现 NA</span>；<span class="text-red">数值字段必须可解析为 <code>num/int</code></span>。
                         </div>
                     </div>
                 </div>

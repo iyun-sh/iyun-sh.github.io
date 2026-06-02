@@ -474,14 +474,14 @@
                                 <li class="step jinjie">
                                     <div class="node">
                                         <h4>Step 0 - 汇总资料</h4>
-                                        <p>整理样例输入、期望输出与代码模板，作为开发基线。</p>
+                                        <p>整理样例输入、期望输出与代码模板，作为开发基线；若是迁移、包装或改造既有模块，还必须列出原始入口、核心脚本、配置模板、主要输出、绘图逻辑、报告逻辑和报告模板。</p>
                                         <span class="meta">执行人: 金杰</span>
                                     </div>
                                 </li>
                                 <li class="step ai">
                                     <div class="node">
                                         <h4>Step 1 - AI 汇总分析</h4>
-                                        <p>提炼业务规则和边界条件，输出可执行实现思路。</p>
+                                        <p>提炼业务规则和边界条件，输出可执行实现思路；明确哪些是业务逻辑、哪些只是入口包装、日志、路径和输出收集，避免把 wrapper 契约当成业务实现。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
@@ -503,20 +503,20 @@
                                 <li class="step ai">
                                     <div class="node">
                                         <h4>Step 3 - 生成代码</h4>
-                                        <p>按决策范围实现代码，确保可运行且结构清晰。代码须遵循《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》的全部要求，包括但不限于：目录结构、命名、日志、路径 normalizePath 标准化、<strong>脚本开发规范</strong>（错误处理与退出码、编码风格）、<strong>计算与作图代码分离</strong>、<strong>模块协作与版本管理</strong>约定。</p>
+                                        <p>按决策范围实现代码，确保可运行且结构清晰。代码须遵循《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》的全部要求，包括但不限于：目录结构、命名、日志、路径 normalizePath 标准化、<strong>脚本开发规范</strong>（错误处理与退出码、编码风格）、<strong>计算与作图代码分离</strong>、<strong>模块协作与版本管理</strong>约定。迁移或包装既有模块时，不得用 demo、mock、stub、placeholder、synthetic 或 fallback 逻辑替代原始业务算法。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
                                 <li class="step ai">
                                     <div class="node">
-                                        <h4>Step 4 - 测试验证</h4>
-                                        <p>用基线样例做功能与结果校验，人工复核关键结果。<strong>须按《规范》质量保证章节的输出校验规范和测试要求执行</strong>，配套自动化测试脚本（输入→运行→对比预期输出）以减少人工负担。</p>
+                                        <h4>Step 4 - 验证</h4>
+                                        <p>用 demo 输入或真实业务输入做对应级别的验证，人工复核关键结果。<strong>须按《规范》质量保证章节的输出校验规范和验证类型标注执行</strong>；demo 目录只放输入数据，不放输出结果或预存基准。验证报告必须标注真实业务验证、契约/接口验证、烟测验证或 demo 验证，不能把生成文件成功等同于业务保真。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
                                 <li class="step decision">
                                     <div class="node">
-                                        <h4>检查 1 - 基线测试是否通过?</h4>
+                                        <h4>检查 1 - 验证是否通过?</h4>
                                         <div class="branches">
                                             <div class="branch fail">
                                                 <span class="label">不通过</span>
@@ -532,8 +532,8 @@
                                 </li>
                                 <li class="step ai">
                                     <div class="node">
-                                        <h4>Step 5 - 生成测试报告</h4>
-                                        <p>记录测试输入、输出、异常与结论，形成可追溯报告。报告须遵循《规范》文件格式建议中报告文件的标准章节结构（标题页、分析方法、主要结果、结论）。至少包含：测试日期、输入文件清单、输出文件清单、异常记录、通过/失败结论。</p>
+                                        <h4>Step 5 - 生成验证记录</h4>
+                                        <p>记录验证类型、输入、输出、异常与结论，形成可追溯记录。报告须遵循《规范》文件格式建议中报告文件的标准章节结构（标题页、分析方法、主要结果、结论）。至少包含：验证日期、输入文件清单、输出文件清单、异常记录、通过/失败结论。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
@@ -644,12 +644,12 @@
                     </div>
                     <div class="criteria-card ai">
                         <h4>阶段 2 退出标准</h4>
-                        <p>Step 3-5 完成后，基线样例通过，且报告可复现实验结果。</p>
-                        <span class="inline-note">必须产出: 可运行代码 + 基线测试报告</span>
+                        <p>Step 3-5 完成后，所选验证类型通过，且报告或验证记录可追溯输入、输出和结论。</p>
+                        <span class="inline-note">必须产出: 可运行代码 + 验证记录</span>
                     </div>
                     <div class="criteria-card linyu">
                         <h4>阶段 3 退出标准</h4>
-                        <p>Step 6-7 完成后，<span class="text-red">新数据测试通过且终审通过，才可交付</span>。</p>
+                        <p>Step 6-7 完成后，<span class="text-red">新数据验证通过且终审通过，才可交付</span>。</p>
                         <span class="inline-note">必须产出: 审核结论 + 交付版本标识</span>
                     </div>
                     <div class="criteria-card check">
@@ -672,8 +672,8 @@
                         <p>最终可运行代码，包含关键注释、版本号和必要配置说明。</p>
                     </div>
                     <div class="deliverable-card check">
-                        <h4>测试交付</h4>
-                        <p>基线测试 + 新数据测试结果，需记录输入、输出、异常处理和结论。</p>
+                        <h4>验证交付</h4>
+                        <p>真实业务验证、契约/接口验证、烟测验证或 demo 验证结果，需记录输入、输出、异常处理和结论；demo 不提供输出结果或预存基准文件。</p>
                     </div>
                     <div class="deliverable-card linyu">
                         <h4>审核交付</h4>
@@ -681,7 +681,7 @@
                     </div>
                     <div class="deliverable-card ai">
                         <h4>文档交付</h4>
-                        <p><code>README.md</code>（必备内容齐全）+ <code>CHANGELOG.md</code>（版本变更记录）+ 环境依赖文件（<code>requirements.txt</code> / <code>renv.lock</code>）。</p>
+                        <p><code>README.md</code>（入口、阶段、输入、输出、日志、缓存、验证方式齐全）+ <code>CHANGELOG.md</code>（版本变更记录）+ 环境依赖文件（<code>requirements.txt</code> / <code>renv.lock</code>）。涉及既有模块迁移或包装时，还需说明原始核心脚本、绘图逻辑、报告逻辑仍被调用，并列出验证类型与验证证据。</p>
                     </div>
                 </div>
             </div>

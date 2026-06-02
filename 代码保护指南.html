@@ -404,18 +404,19 @@
 ├── config/
 │   └── DEGs.config.example.ini/yaml
 ├── README.md           # 必备（参见《规范》README 必备内容章节）
-├── tests/              # 冒烟/回归测试（参见《规范》质量保证章节）
+├── demo/               # demo 输入数据（只放输入和必要配置，不放输出结果）
 ├── CHANGELOG.md        # 版本变更记录
 ├── cleanup.sh          # 临时文件清理脚本
 ├── requirements.txt    # Python 依赖锁定
 └── renv.lock           # R 依赖锁定（二选一或同时保有）
 
 module_output/          # 模块结果目录
-├── logs/
+├── log/
+├── cache/
 ├── result/
 └── report/</pre>
                 <div class="lead-box">
-                    <strong>推荐做法：</strong> 对外文档只讲清楚 <code>run.sh</code> 的用法、输入、输出和错误定位方式；<code>scripts/</code> 仅作为内部实现目录维护，<code>logs/</code> / <code>result/</code> / <code>report/</code> 应落在独立的模块结果目录而不是脚本模块根目录。
+                    <strong>推荐做法：</strong> 对外文档只讲清楚 <code>run.sh</code> 的用法、输入、输出和错误定位方式；<code>scripts/</code> 仅作为内部实现目录维护，<code>log/</code> / <code>cache/</code> / <code>result/</code> / <code>report/</code> 应落在独立的模块结果目录而不是脚本模块根目录。
                 </div>
             </section>
 
@@ -481,6 +482,9 @@ module_output/          # 模块结果目录
                     <li><span class="text-red">必须输出可定位问题的日志路径</span>，不把错误完全吞掉。</li>
                     <li>内部脚本名可以变化，但 <code>run.sh</code> 的调用方式<span class="text-red">不能随保护策略频繁变化</span>。</li>
                     <li>如果内部脚本经过保护处理（如加密、编译等），<code>run.sh</code> 仍应保持原有帮助信息和返回行为。</li>
+                    <li><code>run.sh</code> 必须承担输出路径安全检查：输出目录已存在时需显式确认，禁止危险删除，拒绝符号链接输出目录和符号链接祖先路径。</li>
+                    <li>禁止把输出目录设置为源码目录、源码子目录、共享根目录或其他高风险公共根目录；写入项目区时应按调用用户和项目边界保护。</li>
+                    <li>配置文件只描述业务参数，输出目录、运行目录和本次日志路径由入口参数或运行环境显式决定并写入日志。</li>
                 </ul>
                 <div class="warn-box">
                     <strong>不推荐：</strong> 让使用者直接运行 <code>python scripts/DEGs.py</code> 或 <code>Rscript scripts/RawData.R</code>。这会让外部调用与内部实现强绑定，后续一旦做保护处理就会破坏兼容性。
@@ -567,7 +571,7 @@ module_output/          # 模块结果目录
                         <tr>
                             <td>基础保护</td>
                             <td>内部协作、受控团队共享</td>
-                            <td>保留源码目录结构，但移除调试脚本、测试数据和无关历史文件，只保留 <code>run.sh</code>、内部脚本、模板配置和必要说明。</td>
+                            <td>保留源码目录结构，但移除调试脚本、旧结果和无关历史文件；交付包只保留 <code>run.sh</code>、内部脚本、模板配置、必要说明，以及只含输入数据和必要配置的 demo 目录。</td>
                         </tr>
                         <tr>
                             <td>中等保护</td>
@@ -730,18 +734,19 @@ rm -f scripts/scripts.sh.x.c
 │   └── protected_runtime/
 ├── config/
 │   └── DEGs.config.example.ini/yaml
-├── tests/                  # 冒烟测试用例
+├── demo/                   # demo 输入数据，不包含输出结果
 ├── requirements.txt        # Python 依赖（如适用）
 └── renv.lock               # R 依赖（如适用）
 
 output/                     # 运行后生成的模块结果目录
-├── logs/
+├── log/
+├── cache/
 ├── result/
 └── report/</pre>
                 <ul class="rule-list" style="margin-top: 14px;">
                     <li><code>README.md</code> 只说明运行方式、输入输出要求和常见错误定位。</li>
                     <li><code>scripts/protected_runtime/</code> 可以是受保护产物（如加密脚本、编译产物、二进制文件等）目录。</li>
-                    <li><span class="text-red">不要把运行生成的 logs/result/report 打包回脚本模块目录</span>，它们应作为独立结果目录存在。</li>
+                    <li><span class="text-red">不要把运行生成的 log/cache/result/report 打包回脚本模块目录</span>，它们应作为独立结果目录存在。</li>
                     <li>如果不需要对外暴露源码，避免把原始 <code>.R</code>、<code>.py</code> 文件直接放入交付包。</li>
                 </ul>
             </section>
@@ -829,9 +834,10 @@ output/                     # 运行后生成的模块结果目录
                 <ul class="check-list">
                     <li>确认对外文档只描述 <code>run.sh</code> 的用法，不要求用户直接调用内部脚本。</li>
                     <li>确认 <code>config/</code> 中保留了可读的参数模板，且与当前版本一致。</li>
-                    <li>确认交付包中不包含调试脚本、旧结果、测试数据和无关缓存。</li>
-                    <li>确认日志、结果、报告目录结构仍符合规范页要求。</li>
-                    <li>确认保护处理（如加密、编译、二进制化等）后，仍可通过日志追溯到分析点和运行时间。</li>
+                    <li>确认交付包中不包含调试脚本、旧结果、demo 输出、历史输出和无关缓存。</li>
+                    <li>确认 <code>.run_id</code>、日志、缓存、结果、报告目录结构仍符合规范页要求，并能区分正式结果、缓存对象、日志与报告输入副本。</li>
+                    <li>确认 README、配置模板、帮助信息、日志字段和输出结构彼此一致，未保留旧参数或旧产物说明。</li>
+                    <li>确认保护处理（如加密、编译、二进制化等）后，仍可通过日志追溯到分析点、运行时间、配置副本、输出目录和上游引用。</li>
                     <li>确认 <code>requirements.txt</code> 或 <code>renv.lock</code> 已包含在交付包中，且依赖版本可复现。</li>
                     <li>确认路径使用 <code>normalizePath()</code> 或等价处理，保护后路径仍然跨平台兼容。</li>
                     <li>确认 <code>README.md</code> 和 <code>CHANGELOG.md</code> 与当前交付版本一致。</li>
