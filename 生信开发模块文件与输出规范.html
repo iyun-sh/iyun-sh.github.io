@@ -316,8 +316,9 @@
 │   ├── <span class="file">01_gene_positions.tsv</span>
 │   ├── <span class="file">02_circos.pdf</span>
 │   ├── <span class="file">02_circos.png</span>
-│   └── <span class="file">chromosome_plot_report.docx</span>
-└── <span class="folder">report/</span>  <span class="hidden-file"># 如模块另设报告目录，需在 README 中明确；正式报告也可归入 result/</span></pre>
+│   └── <span class="file">chromosome_plot_report.docx</span>  <span class="hidden-file"># 正式报告可归入 result/</span>
+└── <span class="folder">report/</span>  <span class="hidden-file"># 如模块另设报告目录，需在 README 中明确</span>
+    └── <span class="file">chromosome_plot_report.docx</span>  <span class="hidden-file"># 可选：另设报告目录时放这里</span></pre>
 
                 <div class="lead-box" style="margin-top:18px;">
                     <strong>📌 使用约定：</strong>
@@ -375,7 +376,7 @@
                         <div class="lead-box">
                             <strong>💡 计算与作图分离 — 实施约定</strong>
                             <ul style="margin-top:8px; padding-left:20px;">
-                                <li><strong>中间结果格式</strong>：计算脚本将分析结果保存为 <code>.qs2</code>（R）或 <code>.tsv</code>/<code>.csv</code>（通用表格，新增输出优先 TSV），<span class="text-red">作图脚本直接读取中间结果文件，不重复执行计算逻辑</span></li>
+                                <li><strong>中间结果格式</strong>：计算脚本将分析结果保存为 <code>.qs2</code>（R）或 <code>.tsv</code>/<code>.csv</code>（通用表格：含化合物名、药物名、描述等可能带逗号字段时用 TSV；确认无逗号解析风险时可用 CSV），<span class="text-red">作图脚本直接读取中间结果文件，不重复执行计算逻辑</span></li>
                                 <li><strong>中间结果位置</strong>：中间结果统一输出到模块结果目录（如 <code>module_output/result/分析点/</code>），与最终结果同层，命名建议加 <code>_intermediate</code> 后缀或放入 <code>_tmp/</code> 子目录以便区分</li>
                                 <li><strong>命名规范</strong>：计算脚本以 <code>_analysis</code> 结尾，作图脚本以 <code>_plot</code> 结尾，如 <code>DEGs_analysis.R</code> / <code>DEGs_plot.R</code>、<code>GSEA_analysis.R</code> / <code>GSEA_plot.R</code></li>
                                 <li><strong>调度串联</strong>：<code>scripts.sh</code> 或 <code>run.sh</code> 中先调用计算脚本再调用作图脚本，<span class="text-red">支持通过参数单独运行作图脚本而不触发计算</span>（如 <code>run.sh --plot-only</code>）</li>
@@ -387,7 +388,7 @@
                         <strong style="display:block; margin-top:18px;">📝 计算脚本示例（DEGs_analysis.R）：</strong>
                         <pre class="code-block"># DEGs_analysis.R — 差异表达计算脚本
 # 输入：表达矩阵 + 分组信息
-# 输出：中间结果 .qs2 + 最终 TSV（CSV 仅在适用场景使用）
+# 输出：中间结果 .qs2 + 最终表格（含逗号风险用 TSV；无逗号问题可用 CSV）
 
 library(data.table)
 library(DESeq2)
@@ -500,7 +501,7 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                             <li><strong>图表文件</strong>：<span class="text-red">每个图表必须同时保存 .png 和 .pdf 格式</span></li>
                             <li>示例：
                                 <ul>
-                                    <li><code>01_gene_positions.tsv</code> - 表格结果（新增表格推荐 TSV，CSV 仅在适用场景使用）</li>
+                                    <li><code>01_gene_positions.tsv</code> - 表格结果（含逗号风险用 TSV；无逗号问题可用 CSV）</li>
                                     <li><code>02_circos.png</code> + <code>02_circos.pdf</code> - 图表（双格式）</li>
                                     <li><code>chromosome_plot_report.docx</code> - 正式报告</li>
                                     <li><code>.run_id</code> - 隐藏运行标识文件，内容是本次 run_id</li>
@@ -591,7 +592,7 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                             <tbody>
                                 <tr><td>入口与内部脚本</td><td><code>功能名.扩展名</code></td><td><code>run.sh</code>, <code>scripts/main.R</code>, <code>scripts/plot/plot_from_cache.R</code></td><td>顶层入口固定为 <code>run.sh</code>，内部脚本放在 <code>scripts/</code> 下并清晰表达阶段或功能</td></tr>
                                 <tr><td>日志文件</td><td><code>&lt;stage&gt;.log</code></td><td><code>full.log</code>, <code>calculate.log</code></td><td>日志内记录 run_id；不要靠文件名堆叠多个时间戳</td></tr>
-                                <tr><td>结果文件</td><td><code>序号_描述.扩展名</code></td><td><code>01_gene_positions.tsv</code>, <code>02_circos.png</code></td><td>数字前缀排序；表格新增输出优先 TSV</td></tr>
+                                <tr><td>结果文件</td><td><code>序号_描述.扩展名</code></td><td><code>01_gene_positions.tsv</code>, <code>02_circos.png</code></td><td>数字前缀排序；表格根据字段内容选择 TSV/CSV，含逗号风险用 TSV</td></tr>
                                 <tr><td>配置副本</td><td><code>log/模块配置名.ini</code> 或 <code>.yaml</code></td><td><code>log/chromosome_plot_config.ini</code></td><td>记录本次使用参数，随运行输出保存</td></tr>
                                 <tr><td>运行标识文件</td><td><code>.run_id</code></td><td><code>.run_id</code> 内容为 <code>20260306_1430</code></td><td>隐藏文件名固定，时间戳/run_id 写在文件内容里</td></tr>
                                 <tr><td>报告文件</td><td><code>描述.docx</code></td><td><code>chromosome_plot_report.docx</code></td><td>正式报告名表达模块和业务含义</td></tr>
@@ -1506,7 +1507,7 @@ bash run.sh --plot-only
 
 | 文件                    | 目录           | 说明           |
 |------------------------|---------------|---------------|
-| 01.DEGs.tsv            | result/DEGs/  | 差异基因列表（表格输出优先 TSV） |
+| 01.DEGs.tsv            | result/DEGs/  | 差异基因列表（含逗号风险用 TSV；无逗号问题可用 CSV） |
 | 02.heatmap.png/.pdf    | result/DEGs/  | Top 基因热图    |
 | 03.volcano.png/.pdf    | result/DEGs/  | 火山图          |
 
@@ -1565,7 +1566,7 @@ bash run.sh --plot-only
                     <div id="format-data" class="tab-content active">
                         <h4>📊 数据文件格式</h4>
                         <ul>
-                            <li><strong>表格输出</strong>：优先使用 <span class="text-red">.tsv</span>，可避免药物名、通路名、描述字段中出现逗号时破坏列解析；<code>.csv</code> 仍允许，但应限于下游工具明确要求或确认字段不会含逗号的场景</li>
+                            <li><strong>表格输出</strong>：根据字段内容选择 <code>.tsv</code> 或 <code>.csv</code>；含化合物名、药物名、通路名、描述等可能出现逗号的字段时使用 <span class="text-red">.tsv</span>，避免列解析被逗号破坏；确认无逗号解析风险且下游兼容时可使用 <code>.csv</code></li>
                             <li><strong>R数据</strong>：使用 <span class="text-red">.qs2 保存</span>（<code>qs2</code> R 包，替代 .rds/.RData）</li>
                         </ul>
                         <div class="lead-box">
@@ -1686,7 +1687,7 @@ bash run.sh --plot-only
 
                         <div class="danger-box">
                             <strong>硬性规则：</strong>
-                            <span class="text-red">输入文件可按模块约定使用 <code>.tsv</code> 或 <code>.csv</code>，含药物名、描述、复合标签等可能含逗号的字段时优先 <code>.tsv</code></span>；<span class="text-red">文件编码必须为 UTF-8（推荐无 BOM）</span>；<span class="text-red">行尾符建议统一为 LF（<code>\n</code>）</span>；<span class="text-red">数据中不允许出现 NA</span>；<span class="text-red">数值字段必须可解析为 <code>num/int</code></span>。
+                            <span class="text-red">输入文件可按模块约定使用 <code>.tsv</code> 或 <code>.csv</code>；含药物名、描述、复合标签等可能含逗号的字段时使用 <code>.tsv</code>，确认无逗号解析风险时可使用 <code>.csv</code></span>；<span class="text-red">文件编码必须为 UTF-8（推荐无 BOM）</span>；<span class="text-red">行尾符建议统一为 LF（<code>\n</code>）</span>；<span class="text-red">数据中不允许出现 NA</span>；<span class="text-red">数值字段必须可解析为 <code>num/int</code></span>。
                         </div>
                     </div>
                 </div>
