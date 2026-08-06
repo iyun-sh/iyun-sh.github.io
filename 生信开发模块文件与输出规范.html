@@ -247,6 +247,7 @@
     <nav class="sidebar">
         <div class="sidebar-title">&#x1F4D1; 目录导航</div>
         <a href="#sec-dir">模块目录结构</a>
+        <a href="#sec-runtime">运行阶段与缓存配置</a>
         <a href="#sec-naming">文件命名规范</a>
         <a href="#sec-log">日志文件规范</a>
         <a href="#sec-track">结果追踪机制</a>
@@ -270,6 +271,7 @@
             <div class="pill-row">
                 <span class="pill primary">🆔 .run_id 运行标识</span>
                 <span class="pill accent">📁 统一目录结构</span>
+                <span class="pill primary">💾 正式计算缓存</span>
                 <span class="pill warn">📄 日志优先追溯</span>
                 <span class="pill danger">🛠️ 脚本开发规范</span>
                 <span class="pill primary">🔄 模块协作与版本管理</span>
@@ -301,28 +303,35 @@
 │   └── <span class="folder">report/</span>
 │       └── <span class="file">generate_report.R</span>
 ├── <span class="folder">config/</span>
-│   └── <span class="config-file">chromosome_plot_config.ini</span>
+│   └── <span class="config-file">chromosome_plot.config.example.ini</span>
 └── <span class="folder">demo/</span>
     └── <span class="folder">data/</span>  <span class="hidden-file"># 只放 demo 输入数据，不放输出结果或历史结果</span>
 
 <span class="folder">module_output/</span>  <span class="hidden-file"># 模块结果目录，以 chromosome_plot full 阶段为例</span>
-├── <span class="hidden-file">.run_id</span>  <span class="hidden-file"># 文件内容记录本次 run_id，如 20260306_1430</span>
+├── <span class="hidden-file">.run_id</span>  <span class="hidden-file"># 最近一次成功调用的 run_id，如 20260806_143022</span>
 ├── <span class="folder">cache/</span>
-│   └── <span class="file">00.gene_positions.qs2</span>
+│   ├── <span class="folder">generations/</span>
+│   │   └── <span class="folder">20260806_120000/</span>  <span class="hidden-file"># 不可变缓存代次；名称为缓存生产 run_id</span>
+│   │       └── <span class="file">calculation.qs2</span>  <span class="hidden-file"># 足以重建全部约定图形的计算对象</span>
+│   └── <span class="file">cache_manifest.json</span>  <span class="hidden-file"># 当前有效代次、输入/参数指纹、校验和</span>
 ├── <span class="folder">log/</span>
-│   ├── <span class="config-file">chromosome_plot_config.ini</span>
-│   └── <span class="log-file">full.log</span>
+│   └── <span class="folder">20260806_143022/</span>  <span class="hidden-file"># 本次 run_id</span>
+│       ├── <span class="config-file">input.config.ini</span>  <span class="hidden-file"># 用户输入配置只读快照</span>
+│       ├── <span class="config-file">effective.config.ini</span>  <span class="hidden-file"># 解析后的生效参数</span>
+│       └── <span class="log-file">full.log</span>
 ├── <span class="folder">result/</span>
 │   ├── <span class="file">01_gene_positions.tsv</span>
 │   ├── <span class="file">02_circos.pdf</span>
 │   ├── <span class="file">02_circos.png</span>
-│   └── <span class="file">chromosome_plot_report.docx</span>  <span class="hidden-file"># 正式报告可归入 result/</span>
-└── <span class="folder">report/</span>  <span class="hidden-file"># 如模块另设报告目录，需在 README 中明确</span>
-    └── <span class="file">chromosome_plot_report.docx</span>  <span class="hidden-file"># 可选：另设报告目录时放这里</span></pre>
+│   └── <span class="file">chromosome_plot_report.docx</span>  <span class="hidden-file"># 本模块声明报告归入 result/</span></pre>
+
+                <div class="warn-box" style="margin-top:14px;">
+                    <strong>报告位置是模块契约，不是双写规则：</strong> 上例沿用 <code>result/</code>。只有模块 README 明确声明独立报告目录时，才按需创建 <code>report/</code> 并把报告放在那里；同一正式报告不得在两个目录重复生成。
+                </div>
 
                 <div class="lead-box" style="margin-top:18px;">
                     <strong>📌 使用约定：</strong>
-                    模块对外统一由顶层 <code>run.sh</code> <span class="text-red">作为唯一主入口</span>；<code>scripts/</code> 用于存放内部实现脚本，后续如需保护处理（如加密、编译、二进制化等）也<span class="text-red">应只影响内部实现，不改变外部使用方式</span>。
+                    新建或进入本轮升级范围的模块，对外统一由顶层 <code>run.sh</code> <span class="text-red">作为唯一主入口</span>；<code>scripts/</code> 用于存放内部实现脚本，后续如需保护处理（如加密、编译、二进制化等）也<span class="text-red">应只影响内部实现，不改变外部使用方式</span>。尚未升级的已部署模块可继续保留公开的 <code>run_*.sh</code>，以模块 README 和 <code>--help</code> 为准，不因本目录示例被机械改名。
                     <br><br>
                     <strong>📦 结果边界：</strong>
                     <span class="text-red">运行日志、分析结果、报告属于独立的模块结果目录</span>，不要和脚本模块根目录混放。
@@ -346,21 +355,21 @@
                             <span class="tab-icon">📊</span> output/result/
                         </button>
                         <button class="tab" onclick="showTab('dir-report', event)">
-                            <span class="tab-icon">📝</span> output/report/
+                            <span class="tab-icon">📝</span> report/（可选）
                         </button>
                     </div>
 
                     <div id="dir-scripts" class="tab-content active">
                         <h4>📂 scripts/ - 内部实现脚本目录</h4>
                         <ul>
-                            <li><strong>顶层入口固定</strong>：模块使用者统一执行顶层 <code>run.sh</code>，<span class="text-red">不直接面向 <code>scripts/</code> 内部脚本</span></li>
+                            <li><strong>顶层入口固定</strong>：新建或进入升级范围的模块统一执行顶层 <code>run.sh</code>，<span class="text-red">不直接面向 <code>scripts/</code> 内部脚本</span>；未升级模块仍以已公开入口为准</li>
                             <li>存放该模块的内部实现脚本（.R、.py、.sh 等），可由 <code>scripts.sh</code> 或其他调度脚本串联执行</li>
                             <li><strong>内部实现可调整</strong>：<code>scripts/</code> 内部脚本后续可做保护处理（如加密、编译、二进制化等）、替换或重构，但应保持 <code>run.sh</code> 的对外调用方式稳定</li>
                             <li><strong>路径处理统一</strong>：所有输入、输出、配置、日志路径在使用前都应先做 <code>normalizePath</code> 或等价标准化处理，<span class="text-red">禁止直接拼接原始路径字符串后立即读写文件</span></li>
                             <li><strong>计算与作图分离</strong>：<span class="text-red">同一分析点的计算逻辑和可视化逻辑应拆分为独立脚本</span>，如 <code>DEGs_analysis.R</code>（差异计算）与 <code>DEGs_plot.R</code>（热图/火山图等），便于只改图时不必重跑计算、提高复用性和调试效率</li>
                             <li>脚本命名使用驼峰命名法，清晰表明功能，建议按分析流程顺序命名</li>
-                            <li><strong>配置模板</strong>：在 <code>config/</code> 下保存示例配置（<code>*.config.example.ini/yaml</code>）</li>
-                            <li><strong>模板与运行配置分离</strong>：<code>config/</code> 保存模板，运行时配置写入独立的模块结果目录（如 <code>module_output/result/分析点/</code>）</li>
+                            <li><strong>配置模板</strong>：在 <code>config/</code> 下保存模块选定格式的一个示例配置（<code>*.config.example.*</code>）</li>
+                            <li><strong>模板与运行配置分离</strong>：模块内 <code>config/</code> 只保存只读示例模板；<code>init</code> 在用户指定的项目目录生成一份分析配置；每次运行再把输入配置与解析后的生效参数写入 <code>module_output/log/&lt;run_id&gt;/</code></li>
                             <li><strong>读取文件推荐</strong>：R脚本推荐使用 <code>data.table</code> 包</li>
                             <li>示例：
                                 <ul>
@@ -377,96 +386,144 @@
                             <strong>💡 计算与作图分离 — 实施约定</strong>
                             <ul style="margin-top:8px; padding-left:20px;">
                                 <li><strong>中间结果格式</strong>：计算脚本将分析结果保存为 <code>.qs2</code>（R）或 <code>.tsv</code>/<code>.csv</code>（通用表格：含化合物名、药物名、描述等可能带逗号字段时用 TSV；确认无逗号解析风险时可用 CSV），<span class="text-red">作图脚本直接读取中间结果文件，不重复执行计算逻辑</span></li>
-                                <li><strong>中间结果位置</strong>：中间结果统一输出到模块结果目录（如 <code>module_output/result/分析点/</code>），与最终结果同层，命名建议加 <code>_intermediate</code> 后缀或放入 <code>_tmp/</code> 子目录以便区分</li>
+                                <li><strong>正式缓存位置</strong>：绘图可复用的正式计算对象统一写入 <code>module_output/cache/</code>；仅供单次运行使用、失败后可丢弃的临时文件才放入 <code>_tmp/</code>，二者不得混用</li>
                                 <li><strong>命名规范</strong>：计算脚本以 <code>_analysis</code> 结尾，作图脚本以 <code>_plot</code> 结尾，如 <code>DEGs_analysis.R</code> / <code>DEGs_plot.R</code>、<code>GSEA_analysis.R</code> / <code>GSEA_plot.R</code></li>
-                                <li><strong>调度串联</strong>：<code>scripts.sh</code> 或 <code>run.sh</code> 中先调用计算脚本再调用作图脚本，<span class="text-red">支持通过参数单独运行作图脚本而不触发计算</span>（如 <code>run.sh --plot-only</code>）</li>
+                                <li><strong>调度串联</strong>：<code>scripts.sh</code> 或 <code>run.sh</code> 中先调用计算脚本再调用作图脚本，<span class="text-red">并支持 <code>./run.sh plot</code> 从有效缓存重建全部图形而不触发计算</span>；既有 <code>--plot-only</code> 只能作为明确记录的兼容别名</li>
                                 <li><strong>参数传递</strong>：作图脚本的可视化参数（色板、字号、图幅尺寸等）应独立于分析参数，可在配置文件中设专用 <code>[Plot]</code> 段</li>
                                 <li><strong>日志独立</strong>：如计算和作图分开运行，各自的日志应能独立追溯；若串联运行，可合并到同一份日志中按步骤分段记录</li>
                             </ul>
                         </div>
 
-                        <strong style="display:block; margin-top:18px;">📝 计算脚本示例（DEGs_analysis.R）：</strong>
-                        <pre class="code-block"># DEGs_analysis.R — 差异表达计算脚本
-# 输入：表达矩阵 + 分组信息
-# 输出：中间结果 .qs2 + 最终表格（含逗号风险用 TSV；无逗号问题可用 CSV）
-
+                        <strong style="display:block; margin-top:18px;">📝 计算与缓存发布示例（DEGs_analysis.R，关键逻辑）：</strong>
+                        <pre class="code-block"># 输入：表达矩阵 + 分组信息
+# 输出：正式表格 + 足以绘制全部约定图形的命名对象
 library(data.table)
 library(DESeq2)
 library(qs2)
 
-# ---- 路径标准化 ----
-input_expr   &lt;- normalizePath(input_expr, winslash = "/", mustWork = FALSE)
-input_group  &lt;- normalizePath(input_group, winslash = "/", mustWork = FALSE)
-output_dir   &lt;- normalizePath(output_dir, winslash = "/", mustWork = FALSE)
+expr_mat  &lt;- fread(normalizePath(input_expr), data.table = FALSE)
+group_info &lt;- fread(normalizePath(input_group), data.table = FALSE)
 
-# ---- 读取数据 ----
-expr_mat  &lt;- fread(input_expr, data.table = FALSE)
-group_info &lt;- fread(input_group, data.table = FALSE)
-
-# ---- DESeq2 分析 ----
-dds &lt;- DESeqDataSetFromMatrix(countData = expr_mat, colData = group_info, design = ~group)
+dds &lt;- DESeqDataSetFromMatrix(expr_mat, group_info, design = ~group)
 dds &lt;- DESeq(dds)
-res &lt;- results(dds, alpha = p_cutoff)
+de_table &lt;- as.data.frame(results(dds, alpha = p_cutoff))
+de_table$significance &lt;- "NotSignificant"
+de_table$significance[!is.na(de_table$padj) &amp; de_table$padj &lt; p_cutoff &amp;
+                          de_table$log2FoldChange &gt;= log2fc_cutoff] &lt;- "Up"
+de_table$significance[!is.na(de_table$padj) &amp; de_table$padj &lt; p_cutoff &amp;
+                          de_table$log2FoldChange &lt;= -log2fc_cutoff] &lt;- "Down"
 
-# ---- 保存中间结果（供作图脚本直接读取） ----
-qs2::qs_save(res, file.path(output_dir, "DEGs_intermediate.qs2"))
+normalized_mat &lt;- assay(vst(dds, blind = FALSE))
+top_index &lt;- head(order(apply(normalized_mat, 1, var), decreasing = TRUE), 100)
+plot_cache &lt;- list(
+    de_table = de_table,
+    top_genes_mat = normalized_mat[top_index, , drop = FALSE],
+    heatmap_annotation = group_info
+)
 
-# ---- 保存最终 TSV ----
-fwrite(as.data.frame(res), file.path(output_dir, "01.DEGs.tsv"), sep = "\t")</pre>
+fwrite(de_table, file.path(result_dir, "01.DEGs.tsv"), sep = "\t")
 
-                        <strong style="display:block; margin-top:18px;">🎨 作图脚本示例（DEGs_plot.R）：</strong>
-                        <pre class="code-block"># DEGs_plot.R — 差异表达可视化脚本
-# 输入：DEGs_analysis.R 产出的中间结果
-# 输出：热图 + 火山图（png + pdf）
+# 每次生成不可变代次；input_fingerprint / compute_fingerprint 由稳定序列化规则计算
+generation_rel &lt;- file.path("generations", run_id)
+generation_dir &lt;- file.path(cache_dir, generation_rel)
+staging_dir &lt;- file.path(cache_dir, paste0(".staging-", run_id))
+if (dir.exists(generation_dir) || dir.exists(staging_dir)) stop("缓存代次已存在")
+dir.create(staging_dir, recursive = TRUE)
+artifact_tmp &lt;- file.path(staging_dir, "calculation.qs2")
+qs2::qs_save(plot_cache, artifact_tmp)
 
-library(qs2)
-library(ggplot2)
-library(pheatmap)
+manifest &lt;- list(
+    schema_version = 1,
+    module = list(name = "DEGs", version = module_version),
+    producer_run_id = run_id,
+    created_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z"),
+    input_fingerprint = input_fingerprint,
+    compute_fingerprint = compute_fingerprint,
+    artifacts = list(list(
+        path = file.path(generation_rel, "calculation.qs2"),
+        sha256 = digest::digest(file = artifact_tmp, algo = "sha256"),
+        size = unname(file.info(artifact_tmp)$size)
+    )),
+    plot_contract = list(figures = c("02_heatmap", "03_volcano")),
+    runtime = list(
+        R = R.version.string,
+        Rscript = normalizePath(file.path(R.home("bin"), "Rscript")),
+        qs2 = as.character(packageVersion("qs2"))
+    )
+)
 
-# ---- 路径标准化 ----
-output_dir &lt;- normalizePath(output_dir, winslash = "/", mustWork = FALSE)
+# 校验 staging 后先发布不可变对象，最后原子替换顶层 manifest 作为提交点。
+# 若最后一步失败，旧 manifest 仍指向旧的有效代次；新代次只会成为可清理孤儿。
+validate_staged_cache(plot_cache, manifest, artifact_tmp)
+dir.create(dirname(generation_dir), recursive = TRUE, showWarnings = FALSE)
+if (!file.rename(staging_dir, generation_dir)) stop("缓存对象发布失败")
+manifest_tmp &lt;- file.path(cache_dir, paste0("cache_manifest.json.tmp.", run_id))
+jsonlite::write_json(manifest, manifest_tmp, auto_unbox = TRUE, pretty = TRUE)
+if (!file.rename(manifest_tmp, file.path(cache_dir, "cache_manifest.json"))) {
+    stop("缓存清单发布失败；当前有效清单未改变")
+}</pre>
 
-# ---- 直接读取中间结果，不重复计算 ----
-res &lt;- qs2::qs_read(file.path(output_dir, "DEGs_intermediate.qs2"))
+                        <strong style="display:block; margin-top:18px;">🎨 从缓存绘图示例（DEGs_plot.R，关键逻辑）：</strong>
+                        <pre class="code-block"># validate_cache_manifest 必须校验 schema、绘图契约、输入/计算指纹、文件大小、sha256 和必需对象；
+# 任一校验失败即 stop，不得调用计算脚本。
+cache_dir &lt;- normalizePath(cache_dir, mustWork = TRUE)
+manifest &lt;- jsonlite::read_json(file.path(cache_dir, "cache_manifest.json"), simplifyVector = TRUE)
+artifact_rel &lt;- validate_cache_manifest(
+    manifest = manifest,
+    cache_dir = cache_dir,
+    expected_input_fingerprint = input_fingerprint,
+    expected_compute_fingerprint = compute_fingerprint,
+    expected_figures = c("02_heatmap", "03_volcano"),
+    required_objects = c("de_table", "top_genes_mat", "heatmap_annotation")
+)
+plot_cache &lt;- qs2::qs_read(file.path(cache_dir, artifact_rel))
 
-# ---- 统一图表主题（默认 sans-serif，不硬编码字体名） ----
-theme_pub &lt;- theme_classic() +
-    theme(text = element_text(size = 10))
+# 下列 resolve/build/save 函数是模块内绘图工具，只消费缓存数据和 [Plot] 配置。
+style &lt;- resolve_plot_style(
+    theme = plot_theme,
+    palette = plot_palette,
+    font_family = plot_font_family,
+    base_size = plot_base_size
+)
+p_volcano &lt;- build_volcano(plot_cache$de_table, style)
+p_heatmap &lt;- build_heatmap(
+    plot_cache$top_genes_mat,
+    plot_cache$heatmap_annotation,
+    style
+)
 
-# ---- 火山图 ----
-p_volcano &lt;- ggplot(as.data.frame(res), aes(x = log2FoldChange, y = -log10(pvalue))) +
-    geom_point(aes(color = significance), size = 1) +
-    scale_color_manual(values = ggsci::pal_npg()(3)) +
-    theme_pub
+figures &lt;- list("02_heatmap" = p_heatmap, "03_volcano" = p_volcano)
+for (figure_name in names(figures)) {
+    save_figure_set(
+        figure = figures[[figure_name]],
+        output_base = file.path(result_dir, figure_name),
+        formats = plot_formats,
+        width = plot_width,
+        height = plot_height,
+        size_unit = plot_size_unit,
+        dpi = plot_dpi
+    )
+}
+log_effective_plot_settings(style, plot_formats, plot_width, plot_height, plot_size_unit, plot_dpi)</pre>
 
-ggsave(file.path(output_dir, "03.volcano.png"), p_volcano, width = 6, height = 4, dpi = 300)
-ggsave(file.path(output_dir, "03.volcano.pdf"), p_volcano, width = 6, height = 4, device = cairo_pdf)
-
-# ---- 热图 ----
-png(file.path(output_dir, "02.heatmap.png"), width = 6, height = 4, units = "in", res = 300, type = "cairo")
-pheatmap(top_genes_mat)
-dev.off()
-
-cairo_pdf(file.path(output_dir, "02.heatmap.pdf"), width = 6, height = 4)
-pheatmap(top_genes_mat)
-dev.off()</pre>
-
-                        <strong style="display:block; margin-top:18px;">⚙️ 调度入口示例（run.sh 片段）：</strong>
+                        <strong style="display:block; margin-top:18px;">⚙️ 业务阶段调度示例（仅展示后文完整入口解析参数后的内部调度）：</strong>
                         <pre class="code-block">#!/usr/bin/env bash
-# run.sh — 支持 --plot-only 跳过计算
+set -euo pipefail
 
-PLOT_ONLY=false
-for arg in "$@"; do
-    case "$arg" in --plot-only) PLOT_ONLY=true ;; esac
-done
-
-if [ "$PLOT_ONLY" = false ]; then
-    echo "[$(date)] 开始计算..."
-    Rscript scripts/DEGs_analysis.R --config config/DEGs.config.yaml
-fi
-
-echo "[$(date)] 开始作图..."
-Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
+MODULE_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &amp;&amp; pwd)
+run_business_stage() {
+    local stage=$1
+    shift
+    case "$stage" in
+        calculate) Rscript "$MODULE_DIR/scripts/DEGs_analysis.R" "$@" ;;
+        plot)      Rscript "$MODULE_DIR/scripts/DEGs_plot.R" "$@" ;;
+        full)
+            Rscript "$MODULE_DIR/scripts/DEGs_analysis.R" "$@"
+            Rscript "$MODULE_DIR/scripts/DEGs_plot.R" "$@"
+            ;;
+        *) return 2 ;;  # 阶段白名单由入口骨架先行校验
+    esac
+}</pre>
 
                         <div class="lead-box">
                             <strong>💡 为什么推荐 data.table？</strong>
@@ -484,9 +541,9 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                         <h4>📄 log/ - 日志文件夹 <span class="badge badge-required">核心</span></h4>
                         <ul>
                             <li>存放各阶段或模块入口的运行日志，推荐使用单数目录 <code>log/</code>，与 <code>chromosome_plot</code> 示例保持一致</li>
-                            <li>日志文件命名优先使用阶段名：<code>&lt;stage&gt;.log</code>，如 <code>calculate.log</code>、<code>plot.log</code>、<code>report.log</code>、<code>full.log</code></li>
-                            <li><strong>运行标识</strong>：本次运行的时间戳或 run_id 写入模块结果目录下的隐藏文件 <code>.run_id</code>，日志内容同时记录 <code>run_id</code>、命令、输出目录和退出码</li>
-                            <li><strong>避免双时间戳</strong>：不要同时用多个时间戳日志文件表达同一次运行；同一次运行应由 <code>.run_id</code> 与日志字段关联</li>
+                            <li>每次实际运行使用 <code>log/&lt;run_id&gt;/&lt;stage&gt;.log</code>，如 <code>log/20260806_143022/plot.log</code>；帮助与 <code>init</code> 不创建运行日志</li>
+                            <li><strong>运行标识</strong>：日志从启动起记录本次 run_id、命令、阶段、输出目录和退出码；仅在该次调用成功完成后原子更新模块结果目录顶层 <code>.run_id</code></li>
+                            <li><strong>缓存追溯</strong>：绘图日志同时记录当前绘图 run_id 和缓存生产 run_id，不得用当前 run_id 覆盖缓存来源</li>
                             <li><strong>支持中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
                         </ul>
                     </div>
@@ -496,28 +553,28 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                         <ul>
                             <li>存放正式用户结果：表格、图和最终报告；可复用对象放 <code>cache/</code>，日志和配置副本放 <code>log/</code></li>
                             <li>结果文件使用数字前缀排序（01_, 02_, 03_ 或 01., 02., 03.），文件名表达业务含义</li>
-                            <li>模块结果目录顶层包含隐藏文件 <code>.run_id</code>，文件内容写入本次 run_id（如 <code>20260306_1430</code>），不要把时间戳写进隐藏文件名</li>
-                            <li><strong>配置文件</strong>：本次使用的配置副本放入 <code>log/</code>，如 <code>log/chromosome_plot_config.ini</code></li>
-                            <li><strong>图表文件</strong>：<span class="text-red">每个图表必须同时保存 .png 和 .pdf 格式</span></li>
+                            <li>模块结果目录顶层 <code>.run_id</code> 只指向最近一次成功调用；失败运行仍保留自己的日志，但不得覆盖成功标识</li>
+                            <li><strong>配置文件</strong>：本次输入快照与生效参数分别写入 <code>log/&lt;run_id&gt;/input.config.*</code> 和 <code>effective.config.*</code></li>
+                            <li><strong>图表文件</strong>：默认同时保存 PNG 和 PDF；模块也可按 <code>[Plot].formats</code> 生成经过校验的请求格式</li>
                             <li>示例：
                                 <ul>
                                     <li><code>01_gene_positions.tsv</code> - 表格结果（含逗号风险用 TSV；无逗号问题可用 CSV）</li>
                                     <li><code>02_circos.png</code> + <code>02_circos.pdf</code> - 图表（双格式）</li>
                                     <li><code>chromosome_plot_report.docx</code> - 正式报告</li>
-                                    <li><code>.run_id</code> - 隐藏运行标识文件，内容是本次 run_id</li>
+                                    <li><code>.run_id</code> - 隐藏运行标识文件，内容是最近一次成功调用的 run_id</li>
                                 </ul>
                             </li>
                         </ul>
                     </div>
 
                     <div id="dir-report" class="tab-content">
-                        <h4>📝 report/ - 报告文件夹</h4>
+                        <h4>📝 report/ - 可选报告文件夹</h4>
                         <ul>
-                            <li>按分析点创建子文件夹</li>
+                            <li>正式报告默认可直接放入 <code>result/</code>；只有模块 README 明确声明独立报告目录时才使用本目录</li>
+                            <li>仅在报告阶段实际启用并成功产出报告时按需创建，禁止预建空目录</li>
                             <li>报告文件名应表达模块或报告含义，如 <code>chromosome_plot_report.docx</code></li>
-                            <li>报告路径和对应 run_id 写入日志，由 <code>.run_id</code> 与日志字段追溯</li>
+                            <li>报告路径和对应 run_id 写入该次运行日志，由 <code>.run_id</code> 定位最近成功调用</li>
                             <li>便于追溯某次分析的具体结果和参数</li>
-                            <li><strong>查找最新版本</strong>：文件按时间排序，最后一个即为最新</li>
                             <li><strong>默认格式</strong>：报告默认使用 .docx 格式</li>
                             <li><strong>推荐工具</strong>：推荐使用 <code>Quarto</code> 生成报告</li>
                             <li>示例：
@@ -539,6 +596,120 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ========== 运行阶段、正式缓存与配置生命周期 ========== -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="section-title" id="sec-runtime">🚀 运行阶段、正式缓存与配置生命周期</h2>
+
+                <div class="danger-box">
+                    <strong>⚠️ 核心契约：</strong>
+                    新建或升级后的模块统一使用顶层 <code>run.sh</code> 和阶段式入口。正式计算产物写入 <code>cache/</code>，绘图阶段只读取有效缓存并重建全部图形结果，<span class="text-red">不得静默回退为重新计算</span>。帮助、初始化和各运行阶段只创建自身确实需要的文件与目录。
+                </div>
+
+                <h3 style="margin-top:24px; color:#0f172a; font-size:1.15rem;">统一阶段与副作用</h3>
+                <table class="matrix">
+                    <thead><tr><th>调用</th><th>职责</th><th>允许产生的内容</th><th>禁止行为</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>./run.sh</code><br><code>./run.sh --help</code></td><td>显示模块用途、阶段、参数、输入模式、输出和示例；正常返回 <code>0</code></td><td>仅向 stdout 输出帮助</td><td>不得创建 <code>.run_id</code>、日志或任何输出目录</td></tr>
+                        <tr><td><code>./run.sh init --target DIR</code></td><td>从模块模板生成一份可编辑的分析配置</td><td><code>DIR/config/&lt;module&gt;.config.&lt;ext&gt;</code></td><td>不得同时生成多份等价分析配置，不得预建 <code>log/</code>、<code>cache/</code>、<code>result/</code> 或 <code>report/</code></td></tr>
+                        <tr><td><code>./run.sh calculate --config FILE --output DIR</code></td><td>校验输入并执行正式计算</td><td>正式表格、有效计算缓存和本阶段日志</td><td>不得生成图形或空报告目录</td></tr>
+                        <tr><td><code>./run.sh plot --config FILE --output DIR</code></td><td>校验并读取已有正式缓存，重新生成该模块约定的全部图形</td><td>请求格式的图形和本阶段日志</td><td>不得调用计算脚本；缓存无效时不得静默重算</td></tr>
+                        <tr><td><code>./run.sh report ...</code></td><td>仅适用于明确支持独立报告阶段的模块</td><td>正式报告及日志；目录按需创建</td><td>不支持报告的模块不得暴露空阶段或预建空 <code>report/</code></td></tr>
+                        <tr><td><code>./run.sh full ...</code></td><td>按顺序执行计算、绘图，以及模块明确支持且已启用的报告阶段</td><td>各已执行阶段的正式产物和日志</td><td>不得无条件创建未启用阶段的目录</td></tr>
+                    </tbody>
+                </table>
+
+                <strong style="display:block; margin-top:18px;">最小缓存清单示例：</strong>
+                <pre class="code-block">{
+  "schema_version": 1,
+  "module": {"name": "DEGs", "version": "1.4.0"},
+  "producer_run_id": "20260806_120000",
+  "created_at": "2026-08-06T12:00:00+08:00",
+  "input_fingerprint": "sha256:...",
+  "compute_fingerprint": "sha256:...",
+  "artifacts": [
+    {"path": "generations/20260806_120000/calculation.qs2", "sha256": "...", "size": 123456}
+  ],
+  "plot_contract": {
+    "figures": ["02_heatmap", "03_volcano"]
+  },
+  "runtime": {
+    "R": "&lt;runtime-detected-version&gt;",
+    "Rscript": "&lt;resolved-executable-path&gt;",
+    "qs2": "&lt;runtime-detected-version&gt;"
+  }
+}</pre>
+                <p class="muted" style="margin-top:8px;">清单中的运行时与包版本由入口在本次执行时探测并写入，不得从模板写死；同一主机的项目 profile 与 PATH fallback 可能使用不同版本。</p>
+
+                <div class="lead-box" style="margin-top:14px;">
+                    <strong>兼容边界：</strong> 新模板只使用上表语法。既有模块如已公开 <code>--init</code>、<code>--plot-only</code>、<code>--stage full</code> 或 <code>--stage all</code>，可以保留为兼容别名，但必须在模块 README 和 <code>--help</code> 中写明映射关系；不得把旧别名继续复制到新模块。
+                </div>
+
+                <h3 style="margin-top:26px; color:#0f172a; font-size:1.15rem;">入口与参数规则</h3>
+                <table class="matrix">
+                    <thead><tr><th>规则</th><th>要求</th><th>说明</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>稳定长参数</strong></td><td>统一使用 <code>--config</code>、<code>--output</code>、<code>--target</code>、<code>--force</code> 和 <code>--help</code></td><td>短参数仅在不与既有业务参数冲突时作为别名；不得跨模块强制规定 <code>-c</code></td></tr>
+                        <tr><td><strong>直接执行</strong></td><td><code>run.sh</code> 必须带 shebang 和可执行权限，README 示例统一使用 <code>./run.sh</code></td><td>不能只保证 <code>bash run.sh</code> 可用</td></tr>
+                        <tr><td><strong>工作目录无关</strong></td><td>模块内部脚本和模板路径以 <code>run.sh</code> 所在目录为基准</td><td>命令行相对路径以调用者当前目录为基准；配置内相对路径以配置文件所在目录为基准，解析后写入日志</td></tr>
+                        <tr><td><strong>参数错误</strong></td><td>未知阶段、未知参数、缺失参数和互斥组合均输出明确错误并非零退出</td><td>错误信息同时给出 <code>--help</code> 提示，不创建正式产物</td></tr>
+                        <tr><td><strong>按需建目录</strong></td><td>完成参数与路径校验后，仅为当前阶段创建所需目录</td><td><code>init</code>、帮助和失败的前置校验不得留下空运行目录</td></tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top:26px; color:#0f172a; font-size:1.15rem;">正式计算缓存契约</h3>
+                <table class="matrix">
+                    <thead><tr><th>契约项</th><th>强制要求</th><th>目的</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>内容边界</strong></td><td>缓存必须包含绘制该模块全部图形所需的完整计算对象或标准化绘图数据；正式表格和报告仍属于 <code>result/</code> 或模块声明的报告目录</td><td>“从缓存重绘”不等同于恢复所有表格和报告</td></tr>
+                        <tr><td><strong>来源元数据</strong></td><td>运行时探测并记录缓存 schema/version、模块版本、生产缓存的 run_id、生成时间、实际解释器路径与版本及关键包版本；不得在模板中写死版本号</td><td>判断旧缓存能否被当前绘图代码读取，并区分项目 profile 与 fallback 环境</td></tr>
+                        <tr><td><strong>有效性指纹</strong></td><td>记录输入文件身份和计算参数指纹；纯绘图参数不参与计算缓存失效判断</td><td>改颜色、尺寸、主题或字体时可复用缓存，改输入或计算参数时拒绝旧缓存</td></tr>
+                        <tr><td><strong>完整性校验</strong></td><td>读取前校验清单、必需对象、文件非空和校验和；缺失、损坏或不兼容时明确报错并非零退出</td><td>避免使用半成品或错误版本缓存</td></tr>
+                        <tr><td><strong>原子发布</strong></td><td>先在同一文件系统写入并校验不可变缓存代次，最后原子替换顶层 manifest 作为唯一提交点；manifest 只能指向已完整发布且校验通过的代次</td><td>失败时旧 manifest 仍然有效，新半成品或孤儿代次不得被读取为当前缓存</td></tr>
+                        <tr><td><strong>保留策略</strong></td><td><code>cache/</code> 是正式可复用产物，不随 <code>_tmp/</code> 或通用中间文件清理；删除须使用独立、显式且有日志的策略</td><td>保证后续能够重新绘图</td></tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin-top:26px; color:#0f172a; font-size:1.15rem;">分析配置生命周期</h3>
+                <table class="matrix">
+                    <thead><tr><th>角色</th><th>位置与行为</th><th>写入规则</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>模块模板</strong></td><td><code>module/config/&lt;module&gt;.config.example.*</code></td><td>随模块交付，只读维护；每个模块选定一种主要格式</td></tr>
+                        <tr><td><strong>分析配置</strong></td><td><code>init</code> 在用户目标目录生成一份可编辑配置</td><td>所有参数使用稳定英文键名，并附中文注释、默认值、类型、单位、允许值及是否必填</td></tr>
+                        <tr><td><strong>输入快照</strong></td><td><code>log/&lt;run_id&gt;/input.config.*</code></td><td>保留用户传入文件的只读副本；源和目标规范化后相同则直接复用，不复制自身</td></tr>
+                        <tr><td><strong>生效参数</strong></td><td><code>log/&lt;run_id&gt;/effective.config.*</code> 与阶段日志</td><td>记录默认值、配置值和合法命令行覆盖合并后的最终值，不混入运行统计或输出结果</td></tr>
+                    </tbody>
+                </table>
+                <ul style="margin-top:12px; padding-left:20px;">
+                    <li><strong>优先级：</strong>合法命令行覆盖 &gt; 分析配置 &gt; 模块默认值；每个覆盖项必须写入日志。</li>
+                    <li><strong>未知键：</strong>默认视为配置错误并指出键名，禁止静默忽略拼写错误。</li>
+                    <li><strong>重复初始化：</strong>目标不存在时创建；目标内容一致时成功复用；内容不同时默认拒绝覆盖，只有显式 <code>--force</code> 才可替换，并先保留有界回滚副本。</li>
+                    <li><strong>职责边界：</strong>配置只描述输入和业务/绘图参数；输出目录、运行目录和日志路径由入口参数或运行环境决定。</li>
+                </ul>
+
+                <strong style="display:block; margin-top:20px;">带中文注释的绘图配置示例：</strong>
+                <pre class="code-block">[Plot]
+# 输出图形格式；允许 png、pdf，默认同时输出
+formats=png,pdf
+# 图形宽度，单位由 size_unit 指定
+width=6
+# 图形高度，单位由 size_unit 指定
+height=4
+# 尺寸单位；允许 in、cm、mm
+size_unit=in
+# 位图分辨率；仅作用于 png 等位图格式
+dpi=300
+# 图形主题；允许值由模块 README 和 --help 列出
+theme=classic
+# 配色方案或显式颜色列表；必须满足可读性和色盲友好要求
+palette=npg
+# 字体族；默认 sans，不可用时按模块声明规则报错或回退并写入日志
+font_family=sans
+# 主题基础字号，单位 pt；允许 6-32，默认 11
+base_size=11</pre>
             </div>
         </div>
 
@@ -571,15 +742,15 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                         <table class="matrix">
                             <thead><tr><th>格式</th><th>示例</th><th>说明</th></tr></thead>
                             <tbody>
-                                <tr><td><code>YYYYMMDD_HHMM</code></td><td><code>20260306_1430</code></td><td>推荐写入 <code>.run_id</code> 的内容，表示 2026年3月6日 14:30</td></tr>
-                                <tr><td><code>YYYYMMDD_HHMMSS</code></td><td><code>20260306_143022</code></td><td>需要秒级区分时允许使用</td></tr>
+                                <tr><td><code>YYYYMMDD_HHMMSS</code></td><td><code>20260306_143022</code></td><td>推荐写入 <code>.run_id</code> 的内容，避免同一分钟内多次调用发生冲突</td></tr>
+                                <tr><td><code>YYYYMMDD_HHMM</code></td><td><code>20260306_1430</code></td><td>仅在入口能够以其他方式保证 run_id 唯一时使用</td></tr>
                             </tbody>
                         </table>
                         <div class="lead-box">
                             <strong>💡 使用 <code>.run_id</code> 作为运行标识的优势：</strong>
                             <ul style="margin-top:8px; padding-left:20px;">
                                 <li><strong>文件名固定</strong>：隐藏文件始终命名为 <code>.run_id</code>，不要把时间戳写进文件名</li>
-                                <li><strong>内容可读</strong>：文件内容写入 <code>YYYYMMDD_HHMM</code> 或等价 run_id，必要时可精确到秒</li>
+                                <li><strong>内容可读且唯一</strong>：默认写入 <code>YYYYMMDD_HHMMSS</code>；若存在并发调用，还须追加进程号、随机后缀或等价唯一标识</li>
                                 <li><strong>便于追溯</strong>：日志、缓存、结果和报告都通过同一个 run_id 串联</li>
                             </ul>
                         </div>
@@ -590,11 +761,11 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                         <table class="matrix">
                             <thead><tr><th>文件类型</th><th>命名格式</th><th>示例</th><th>说明</th></tr></thead>
                             <tbody>
-                                <tr><td>入口与内部脚本</td><td><code>功能名.扩展名</code></td><td><code>run.sh</code>, <code>scripts/main.R</code>, <code>scripts/plot/plot_from_cache.R</code></td><td>顶层入口固定为 <code>run.sh</code>，内部脚本放在 <code>scripts/</code> 下并清晰表达阶段或功能</td></tr>
-                                <tr><td>日志文件</td><td><code>&lt;stage&gt;.log</code></td><td><code>full.log</code>, <code>calculate.log</code></td><td>日志内记录 run_id；不要靠文件名堆叠多个时间戳</td></tr>
+                                <tr><td>入口与内部脚本</td><td><code>功能名.扩展名</code></td><td><code>run.sh</code>, <code>scripts/main.R</code>, <code>scripts/plot/plot_from_cache.R</code></td><td>新建/升级模块的顶层入口固定为 <code>run.sh</code>；未升级模块保留已公开入口，内部脚本放在 <code>scripts/</code> 下并清晰表达阶段或功能</td></tr>
+                                <tr><td>日志文件</td><td><code>log/&lt;run_id&gt;/&lt;stage&gt;.log</code></td><td><code>log/20260806_143022/plot.log</code></td><td>每次调用独立保存；日志内同时记录当前 run_id 与缓存生产 run_id</td></tr>
                                 <tr><td>结果文件</td><td><code>序号_描述.扩展名</code></td><td><code>01_gene_positions.tsv</code>, <code>02_circos.png</code></td><td>数字前缀排序；表格根据字段内容选择 TSV/CSV，含逗号风险用 TSV</td></tr>
-                                <tr><td>配置副本</td><td><code>log/模块配置名.ini</code> 或 <code>.yaml</code></td><td><code>log/chromosome_plot_config.ini</code></td><td>记录本次使用参数，随运行输出保存</td></tr>
-                                <tr><td>运行标识文件</td><td><code>.run_id</code></td><td><code>.run_id</code> 内容为 <code>20260306_1430</code></td><td>隐藏文件名固定，时间戳/run_id 写在文件内容里</td></tr>
+                                <tr><td>配置快照</td><td><code>log/&lt;run_id&gt;/input.config.*</code><br><code>effective.config.*</code></td><td><code>log/20260806_143022/effective.config.ini</code></td><td>分别保留原始输入和最终生效参数，不覆盖历史</td></tr>
+                                <tr><td>运行标识文件</td><td><code>.run_id</code></td><td><code>.run_id</code> 内容为 <code>20260806_143022</code></td><td>仅在调用成功后原子更新，指向最近一次成功调用</td></tr>
                                 <tr><td>报告文件</td><td><code>描述.docx</code></td><td><code>chromosome_plot_report.docx</code></td><td>正式报告名表达模块和业务含义</td></tr>
                             </tbody>
                         </table>
@@ -610,10 +781,10 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                             </tbody>
                         </table>
                         <div class="warn-box">
-                            <strong>💡 选择建议：</strong> 根据项目需求选择。配置简单用 .ini，配置复杂用 .yaml。两种格式都是可选的，日志文件才是参数记录的核心。
+                            <strong>💡 选择建议：</strong> 根据项目需求在 .ini 与 .yaml 中选择一种主要格式。<code>init</code> 只生成该格式的一份分析配置，不同时生成两份等价配置。
                         </div>
                         <div class="lead-box" style="margin-top:12px;">
-                            <strong>📌 设计原则：</strong> 配置模板保持在 <code>config/</code>，本次运行配置副本写入 <code>log/</code>；追溯历史以日志和 <code>.run_id</code> 为准，run_id 内容记录时间戳或等价运行标识。
+                            <strong>📌 设计原则：</strong> 配置模板保持在 <code>config/</code>；本次输入快照和生效参数写入 <code>log/&lt;run_id&gt;/</code>。追溯历史以独立运行日志为准，<code>.run_id</code> 只定位最近一次成功调用。
                         </div>
                     </div>
 
@@ -680,12 +851,14 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                         <table class="matrix">
                             <thead><tr><th>内容类别</th><th>必须包含的信息</th><th>示例</th></tr></thead>
                             <tbody>
-                                <tr><td><strong>运行信息</strong></td><td>时间戳、入口脚本、版本、运行环境</td><td><code>2026-03-06 14:30:22 | run.sh v1.2 | Python 3.9</code></td></tr>
+                                <tr><td><strong>运行信息</strong></td><td>当前 run_id、阶段、完整命令、入口与模块版本、运行环境、工作目录和退出码</td><td><code>run_id=20260806_143022 | stage=plot | exit_code=0</code></td></tr>
+                                <tr><td><strong>配置来源</strong></td><td>输入配置规范化路径、快照路径、生效参数以及命令行覆盖项</td><td><code>config_source=... | override=Plot.formats=png</code></td></tr>
                                 <tr><td><strong>输入参数</strong></td><td>所有分析参数（阈值、方法、条件等）</td><td><code>p_value_cutoff=0.05, log2fc_cutoff=1, method=DESeq2</code></td></tr>
                                 <tr><td><strong>输入文件</strong></td><td>数据来源、文件路径、样本信息</td><td><code>Input: ../RawData/01.GSEXXX_count.csv (150 samples)</code></td></tr>
                                 <tr><td><strong>输出文件</strong></td><td>生成的结果文件路径和名称</td><td><code>Output: 01.DEGs.tsv, 02.heatmap.png, 02.heatmap.pdf</code></td></tr>
                                 <tr><td><strong>统计信息</strong></td><td>样本数、基因数、筛选后的数量等</td><td><code>Total genes: 25000 | After filtering: 18500 | DEGs: 1234</code></td></tr>
-                                <tr><td><strong>运行过程</strong></td><td>关键步骤、警告、错误</td><td><code>[WARN] 50 samples have low counts | [ERROR] Sample S99 missing</code></td></tr>
+                                <tr><td><strong>缓存事件</strong></td><td>写入、命中或拒绝原因；缓存 schema、指纹、完整性和生产 run_id</td><td><code>cache=hit | producer_run_id=20260806_120000</code></td></tr>
+                                <tr><td><strong>运行过程</strong></td><td>关键步骤、跳过阶段、警告、错误与最终退出码</td><td><code>[SKIP] report 未启用 | [ERROR] cache fingerprint mismatch</code></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -693,70 +866,52 @@ Rscript scripts/DEGs_plot.R --config config/DEGs.config.yaml</pre>
                     <div id="log-example" class="tab-content">
                         <h4>📄 日志文件示例（中文版）</h4>
                         <pre class="code-block">================================================================================
-差异分析日志 - Differential Expression Analysis
+DEGs 绘图阶段日志
 ================================================================================
-时间戳: 2026-03-06 14:30:22
-运行ID: 20260306_143022
-入口脚本: run.sh v1.2
-内部分析点: DEGs.py
-运行环境: Python 3.9.7, R 4.1.2
+时间戳: 2026-08-06 14:30:22+08:00
+当前运行ID: 20260806_143022
+阶段: plot
+完整命令: ./run.sh plot --config /project/config/DEGs.config.ini --output /project/output
+工作目录: /project
+入口与模块版本: run.sh / DEGs v1.4.0
+Rscript: &lt;resolved-executable-path&gt;
+R版本: &lt;runtime-detected-version&gt;
+qs2版本: &lt;runtime-detected-version&gt;
 
 ----------------------------------------
-输入参数
+配置
 ----------------------------------------
-p值阈值: 0.05
-log2倍数变化阈值: 1.0
-分析方法: DESeq2
-独立过滤: 是
-Cook距离过滤: 是
+配置来源: /project/config/DEGs.config.ini
+输入快照: /project/output/log/20260806_143022/input.config.ini
+生效快照: /project/output/log/20260806_143022/effective.config.ini
+命令行覆盖: 无
+计算参数: p_value_cutoff=0.05, log2fc_cutoff=1.0, method=DESeq2
+绘图参数: formats=png,pdf; width=6; height=4; size_unit=in; dpi=300
+绘图外观: theme=classic; palette=npg; requested_font=sans; effective_font=&lt;resolved-font&gt;
 
 ----------------------------------------
-输入文件
+缓存校验
 ----------------------------------------
-计数矩阵: ../RawData/01.GSEXXX_count.csv
-样本元数据: ../RawData/samples.txt
-样本总数: 150
-基因总数: 25000
+事件: cache=hit
+schema_version: 1
+缓存生产运行ID: 20260806_120000
+输入指纹: sha256:... [MATCH]
+计算参数指纹: sha256:... [MATCH]
+对象: cache/generations/20260806_120000/calculation.qs2 [SIZE OK, SHA256 OK]
+必需对象: de_table, top_genes_mat, heatmap_annotation [OK]
 
 ----------------------------------------
-分析步骤
+绘图过程与输出
 ----------------------------------------
-[14:30:23] 加载计数矩阵... 完成
-[14:30:25] 标准化处理... 完成
-[14:30:28] 运行DESeq2... 完成
-[14:30:45] 提取差异基因... 完成
-[14:30:47] 生成热图... 完成
+[14:30:23] 读取并校验缓存... 完成
+[14:30:24] 生成 Top 100 基因热图... 完成
+[14:30:25] 生成火山图... 完成
+输出: result/02.heatmap.png, result/02.heatmap.pdf
+输出: result/03.volcano.png, result/03.volcano.pdf
+日志文件: log/20260806_143022/plot.log
 
-----------------------------------------
-统计信息
-----------------------------------------
-检测基因总数: 25000
-上调基因 (log2FC&gt;1): 756
-下调基因 (log2FC&lt;-1): 478
-差异基因总数 (p&lt;0.05): 1234
-
-----------------------------------------
-警告信息
-----------------------------------------
-[警告] 50个样本reads数较低 (&lt;10)
-[警告] 检测到异常样本: S99
-
-----------------------------------------
-输出文件
-----------------------------------------
-01.DEGs.tsv - 1234个差异表达基因
-02.heatmap.png / 02.heatmap.pdf - Top 100基因热图
-03.volcano.png / 03.volcano.pdf - 火山图
-
-----------------------------------------
-追溯信息
-----------------------------------------
-日志文件: log/full.log
-配置文件: log/chromosome_plot_config.ini
-报告文件: result/chromosome_plot_report.docx
-
-================================================================================
-分析成功完成
+退出码: 0
+状态: plot 成功；未调用 calculate；顶层 .run_id 已更新为 20260806_143022
 ================================================================================</pre>
                     </div>
 
@@ -765,12 +920,12 @@ Cook距离过滤: 是
                         <table class="matrix">
                             <thead><tr><th>对比项</th><th>日志文件</th><th>配置文件</th></tr></thead>
                             <tbody>
-                                <tr><td><strong>文件名</strong></td><td><code>log/&lt;stage&gt;.log</code></td><td><code>log/分析点.config.ini/yaml</code></td></tr>
-                                <tr><td><strong>是否覆盖</strong></td><td>每次运行创建新文件</td><td>每次运行覆盖旧文件</td></tr>
-                                <tr><td><strong>内容</strong></td><td>参数 + 过程 + 统计 + 警告</td><td>主要是参数和路径</td></tr>
+                                <tr><td><strong>文件名</strong></td><td><code>log/&lt;run_id&gt;/&lt;stage&gt;.log</code></td><td><code>input.config.*</code> / <code>effective.config.*</code></td></tr>
+                                <tr><td><strong>是否覆盖</strong></td><td>每次调用创建独立文件</td><td>每次调用创建独立快照，不覆盖历史</td></tr>
+                                <tr><td><strong>内容</strong></td><td>参数 + 过程 + 统计 + 缓存事件 + 警告 + 退出码</td><td>原始输入或解析后的最终参数</td></tr>
                                 <tr><td><strong>可读性</strong></td><td>文本格式，易于人工阅读</td><td>结构化格式，便于程序解析</td></tr>
                                 <tr><td><strong>语言支持</strong></td><td>支持中文</td><td>建议使用英文（键名）</td></tr>
-                                <tr><td><strong>优先级</strong></td><td>⭐⭐⭐ 必须</td><td>⭐ 可选</td></tr>
+                                <tr><td><strong>优先级</strong></td><td>⭐⭐⭐ 实际运行必须</td><td>⭐⭐⭐ 使用配置的运行必须</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -784,7 +939,7 @@ Cook距离过滤: 是
                 <h2 class="section-title" id="sec-track">🔗 结果追踪机制</h2>
 
                 <div class="lead-box" style="background:#ecfdf5; border-color:#6ee7b7;">
-                    <strong>✨ 核心设计：</strong> 程序开始时生成 run_id，写入模块结果目录顶层 <code>.run_id</code>；日志记录 run_id、命令、配置副本和输出路径；报告用业务含义命名，追溯依赖日志字段而不是文件名时间戳。
+                    <strong>✨ 核心设计：</strong> 程序开始时在内存中生成当前 run_id，并立即写入该次运行日志；全部校验和目标阶段成功后才原子更新模块结果目录顶层 <code>.run_id</code>。缓存另存生产 run_id，报告用业务含义命名。
                 </div>
 
                 <div class="tabs-container">
@@ -803,86 +958,42 @@ Cook距离过滤: 是
                     <div id="track-flow" class="tab-content active">
                         <h4>🔄 run_id 生成和使用流程</h4>
                         <ol class="steps">
-                            <li><strong>程序启动</strong>：生成 <code>run_id</code>，写入模块结果目录顶层 <code>.run_id</code>（推荐内容格式 <code>YYYYMMDD_HHMM</code>，必要时可到秒），后续日志、缓存、结果和报告均使用同一标识</li>
-                            <li><strong>阶段编排</strong>：由 <code>run.sh</code> 统一解析参数、执行安全检查并调度初始化、计算、作图、报告或全流程阶段；业务算法仍保留在内部脚本中</li>
-                            <li><strong>记录日志</strong>：由 <code>run.sh</code> 创建阶段日志，在开头记录命令、配置副本、运行目录、输出目录和上游引用</li>
-                            <li><strong>保存结果</strong>：正式用户结果写入 <code>result/</code>；阶段复用对象、报告输入副本和中间快照写入 <code>cache/</code>；二者不能混放</li>
-                            <li><strong>更新配置</strong>（可选）：覆盖 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code>；配置只描述业务参数，不记录本次输出目录</li>
-                            <li><strong>生成报告</strong>：报告文件写入正式结果目录，并在日志中记录报告路径、输入结果和所用配置</li>
+                            <li><strong>解析阶段</strong>：无参数或 <code>--help</code> 直接显示帮助；其他调用先解析参数、校验阶段、配置、输入和输出边界，不提前创建产物目录</li>
+                            <li><strong>开始运行</strong>：为实际计算、绘图或报告调用生成当前 <code>run_id</code>，创建 <code>log/&lt;run_id&gt;/</code>，记录命令、配置来源、运行目录、输出目录和上游引用</li>
+                            <li><strong>阶段编排</strong>：由 <code>run.sh</code> 调度计算、作图、报告或全流程；业务算法保留在内部脚本中，未启用阶段不创建目录</li>
+                            <li><strong>保存结果</strong>：正式用户结果写入 <code>result/</code>；绘图可复用的正式计算对象和清单写入 <code>cache/</code>；一次性临时文件写入 <code>_tmp/</code></li>
+                            <li><strong>保存追溯快照</strong>：写入输入配置快照和生效参数，不覆盖用户分析配置；绘图日志保留缓存生产 run_id</li>
+                            <li><strong>成功发布</strong>：校验目标阶段产物后原子更新 <code>.run_id</code>；失败调用保留日志但不得伪装成最近成功运行</li>
                         </ol>
                     </div>
 
                     <div id="track-relations" class="tab-content">
                         <h4>🔗 追溯关系</h4>
                         <ul>
-                            <li><strong>结果 → 日志</strong>：通过模块结果目录顶层隐藏文件 <code>.run_id</code> 读取本次 run_id，再在日志字段中定位对应运行</li>
-                            <li><strong>结果 → 参数</strong>：通过日志文件（首选）或配置文件查看分析参数</li>
+                            <li><strong>结果 → 日志</strong>：通过模块结果目录顶层 <code>.run_id</code> 读取最近一次成功调用的 run_id，再进入对应日志目录</li>
+                            <li><strong>结果 → 参数</strong>：通过 <code>log/&lt;run_id&gt;/effective.config.*</code> 和阶段日志查看最终生效参数</li>
                             <li><strong>日志 → 报告</strong>：通过日志中的 run_id 和报告路径找到对应的分析报告</li>
-                            <li><strong>完整链条</strong>：run.sh → 配置副本 → 内部脚本 → 日志 → cache 阶段产物 → result 正式结果 → 报告</li>
+                            <li><strong>完整链条</strong>：run.sh → 输入配置与生效快照 → 内部脚本 → 日志 → cache 正式计算对象 → result 正式结果 → 可选报告</li>
                             <li><strong>阶段引用</strong>：后一阶段只能读取前一阶段公开约定的标准产物，不应扫描临时目录或依赖未文档化的内部文件</li>
                             <li><strong>命名一致</strong>：单阶段运行与 full 全流程运行应生成同名同义的正式结果，避免下游因运行方式不同而改解析规则</li>
-                            <li><strong>查找最新版本</strong>：在 logs 文件夹按名称排序，最后一个即为最新运行</li>
+                            <li><strong>查找最近成功运行</strong>：读取 <code>.run_id</code>，再进入同名 <code>log/&lt;run_id&gt;/</code>；不能用目录排序代替成功状态</li>
                         </ul>
                     </div>
 
                     <div id="track-examples" class="tab-content">
-                        <h4>📄 配置文件示例（两种格式）</h4>
-
-                        <strong>INI 格式示例：</strong>
-                        <pre class="code-block">[Analysis]
-timestamp=20260306_143022
-script=run.sh
-analysis_point=DEGs
-version=1.2
-
-[Parameters]
-p_value_cutoff=0.05
-log2fc_cutoff=1
-method=DESeq2
-independent_filtering=true
-cooks_cutoff=true
-
-[Input]
-count_file=../RawData/01.GSEXXX_count.csv
-sample_file=../RawData/samples.txt
-total_samples=150
-total_genes=25000
-
-[Output]
-deg_file=01.DEGs.tsv
-heatmap_png=02.heatmap.png
-heatmap_pdf=02.heatmap.pdf
-volcano_png=03.volcano.png
-volcano_pdf=03.volcano.pdf
-total_degs=1234</pre>
-
-                        <strong style="display:block; margin-top:18px;">YAML 格式示例：</strong>
-                        <pre class="code-block">Analysis:
-  timestamp: 20260306_143022
-  script: run.sh
-  analysis_point: DEGs
-  version: 1.2
-
-Parameters:
-  p_value_cutoff: 0.05
-  log2fc_cutoff: 1
-  method: DESeq2
-  independent_filtering: true
-  cooks_cutoff: true
-
-Input:
-  count_file: ../RawData/01.GSEXXX_count.csv
-  sample_file: ../RawData/samples.txt
-  total_samples: 150
-  total_genes: 25000
-
-Output:
-  deg_file: 01.DEGs.tsv
-  heatmap_png: 02.heatmap.png
-  heatmap_pdf: 02.heatmap.pdf
-  volcano_png: 03.volcano.png
-  volcano_pdf: 03.volcano.pdf
-  total_degs: 1234</pre>
+                        <h4>📄 运行追溯字段示例</h4>
+                        <pre class="code-block">current_run_id=20260806_143022
+stage=plot
+module_version=1.4.0
+config_source=/project/config/DEGs.config.ini
+input_snapshot=log/20260806_143022/input.config.ini
+effective_config=log/20260806_143022/effective.config.ini
+cache_action=hit
+cache_schema=1
+cache_producer_run_id=20260806_120000
+cache_fingerprint=sha256:...
+result_dir=/project/output/result
+exit_code=0</pre>
                     </div>
                 </div>
             </div>
@@ -1039,8 +1150,10 @@ except Exception as e:
                             <tbody>
                                 <tr><td><strong>Shebang</strong></td><td><span class="text-red">必须使用 <code>#!/usr/bin/env bash</code></span></td><td>确保跨环境可移植</td></tr>
                                 <tr><td><strong>安全模式</strong></td><td><span class="text-red">第二行固定 <code>set -euo pipefail</code></span></td><td>任何错误立即终止</td></tr>
-                                <tr><td><strong>参数解析</strong></td><td>使用 <code>getopts</code> 或 <code>case</code> 循环解析命令行参数</td><td><code>--config</code>, <code>--plot-only</code>, <code>--help</code></td></tr>
-                                <tr><td><strong>帮助信息</strong></td><td><span class="text-red">必须实现 <code>--help / -h</code></span>，输出用途、参数说明和示例</td><td><code>run.sh --help</code></td></tr>
+                                <tr><td><strong>参数解析</strong></td><td>使用 <code>getopts</code> 或 <code>case</code> 循环解析阶段和长参数</td><td><code>init</code>, <code>calculate</code>, <code>plot</code>, <code>full</code>, <code>--config</code>, <code>--output</code></td></tr>
+                                <tr><td><strong>帮助信息</strong></td><td><span class="text-red">无参数、<code>--help</code> 或 <code>-h</code> 均显示帮助并返回 0</span>，且不得创建任何文件</td><td><code>./run.sh</code></td></tr>
+                                <tr><td><strong>直接执行</strong></td><td>入口带 shebang 并设置可执行权限，文档统一使用 <code>./run.sh</code></td><td><code>chmod +x run.sh</code></td></tr>
+                                <tr><td><strong>路径基准</strong></td><td>内部脚本和模板相对 <code>run.sh</code> 所在目录定位，不依赖调用者当前目录</td><td><code>MODULE_DIR=$(cd ... &amp;&amp; pwd)</code></td></tr>
                                 <tr><td><strong>变量引用</strong></td><td>变量必须用双引号包裹：<code>"$VAR"</code></td><td>防止空格/特殊字符引发错误</td></tr>
                                 <tr><td><strong>临时文件</strong></td><td>使用 <code>mktemp</code> 创建，配合 <code>trap</code> 在退出时清理</td><td><code>TMP=$(mktemp); trap "rm -f $TMP" EXIT</code></td></tr>
                                 <tr><td><strong>日志重定向</strong></td><td>stdout/stderr 分别重定向到日志文件</td><td><code>exec &gt; &gt;(tee -a "$LOG") 2&gt;&amp;1</code></td></tr>
@@ -1049,62 +1162,120 @@ except Exception as e:
                             </tbody>
                         </table>
 
-                        <strong style="display:block; margin-top:18px;">run.sh 模板：</strong>
+                        <strong style="display:block; margin-top:18px;">run.sh 入口骨架：</strong>
                         <pre class="code-block">#!/usr/bin/env bash
 set -euo pipefail
 
-# ---- 帮助信息 ----
+MODULE_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &amp;&amp; pwd)
+RAW_COMMAND=$(printf '%q ' "$0" "$@")
+
 usage() {
     cat &lt;&lt;EOF
-用法: $(basename "$0") [选项]
+用途: 对表达矩阵和分组信息执行差异分析，并支持从正式缓存独立绘图。
+用法: $(basename "$0") &lt;init|calculate|plot|full&gt; [选项]
+
+阶段:
+  init      在 --target 下生成一份带中文注释的分析配置
+  calculate 校验输入、输出正式表格并发布绘图所需缓存
+  plot      只校验和读取已有缓存，重建全部约定图形
+  full      依次执行 calculate + plot
+
+输入模式:
+  业务输入由 --config 指定；命令行只接受帮助中列出的合法覆盖项。
+  配置内相对路径以配置文件目录为基准，解析后的绝对路径写入日志。
 
 选项:
-  --config FILE   指定配置文件（默认: config/DEGs.config.yaml）
-  --plot-only     仅运行作图脚本，跳过计算
-  -h, --help      显示此帮助信息
+  --target DIR   init 的目标目录
+  --config FILE  calculate / plot / full 的分析配置
+  --output DIR   calculate / plot / full 的独立结果目录
+  --force        仅 init 使用；覆盖前保留有界回滚副本
+  -h, --help     显示本帮助
+
+输出与边界:
+  result/ 保存正式表格和图形；cache/ 保存可校验的正式计算缓存；
+  log/&lt;run_id&gt;/ 保存日志和配置快照。plot 不重新计算，本模块不提供独立 report 阶段。
 
 示例:
-  $(basename "$0") --config config/DEGs.config.yaml
-  $(basename "$0") --plot-only
+  $(basename "$0") init --target ./project
+  $(basename "$0") full --config ./project/config/DEGs.config.ini --output ./output
 EOF
-    exit 0
 }
 
-# ---- 默认参数 ----
-CONFIG="config/DEGs.config.yaml"
-PLOT_ONLY=false
+require_value() {
+    local option=$1 value=${2:-}
+    if [[ -z "$value" || "$value" == -* ]]; then
+        die_usage "参数缺少值: $option"
+    fi
+}
 
-# ---- 参数解析 ----
+die_usage() {
+    echo "错误: $*" &gt;&amp;2
+    echo "运行 $(basename "$0") --help 查看帮助" &gt;&amp;2
+    exit 2
+}
+
+if [[ $# -eq 0 || "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    usage
+    exit 0
+fi
+
+STAGE=$1
+shift
+case "$STAGE" in
+    init|calculate|plot|full) ;;
+    *) die_usage "未知阶段: $STAGE" ;;
+esac
+
+CONFIG=""
+OUTPUT_DIR=""
+TARGET_DIR=""
+FORCE=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --config)    CONFIG="$2"; shift 2 ;;
-        --plot-only) PLOT_ONLY=true; shift ;;
-        -h|--help)   usage ;;
-        *)           echo "未知参数: $1" &gt;&amp;2; exit 1 ;;
+        --config) require_value "$@"; CONFIG=$2; shift 2 ;;
+        --output) require_value "$@"; OUTPUT_DIR=$2; shift 2 ;;
+        --target) require_value "$@"; TARGET_DIR=$2; shift 2 ;;
+        --force) FORCE=true; shift ;;
+        -h|--help) usage; exit 0 ;;
+        *) die_usage "未知参数: $1" ;;
     esac
 done
 
-# ---- run_id 与日志 ----
-RUN_ID=$(date +%Y%m%d_%H%M)
-printf "%s\n" "$RUN_ID" &gt; .run_id
-LOG_FILE="log/DEGs.log"
-mkdir -p log
-exec &gt; &gt;(tee -a "$LOG_FILE") 2&gt;&amp;1
-
-# ---- 清理函数 ----
-cleanup() { echo "[$(date)] 脚本退出"; }
-trap cleanup EXIT
-
-# ---- 执行分析 ----
-if [ "$PLOT_ONLY" = false ]; then
-    echo "[$(date)] 开始计算..."
-    Rscript scripts/DEGs_analysis.R --config "$CONFIG"
+# 先做阶段互斥校验；帮助与 init 不创建运行目录。
+if [[ "$STAGE" == "init" ]]; then
+    [[ -n "$TARGET_DIR" ]] || die_usage "init 必须提供 --target"
+    [[ -z "$CONFIG" &amp;&amp; -z "$OUTPUT_DIR" ]] || die_usage "init 不接受 --config 或 --output"
+    INIT_ARGS=(--target "$TARGET_DIR")
+    [[ "$FORCE" == true ]] &amp;&amp; INIT_ARGS+=(--force)
+    "$MODULE_DIR/scripts/init_config.sh" "${INIT_ARGS[@]}"
+    exit 0
 fi
 
-echo "[$(date)] 开始作图..."
-Rscript scripts/DEGs_plot.R --config "$CONFIG"
+[[ -n "$CONFIG" &amp;&amp; -n "$OUTPUT_DIR" ]] || die_usage "$STAGE 必须提供 --config 和 --output"
+[[ -z "$TARGET_DIR" &amp;&amp; "$FORCE" == false ]] || die_usage "$STAGE 不接受 --target 或 --force"
 
-echo "[$(date)] 分析完成"</pre>
+# 这里只校验参数、输出写入边界和日志目录边界，不读取正式缓存。
+"$MODULE_DIR/scripts/validate_arguments.sh" "$STAGE" "$CONFIG" "$OUTPUT_DIR"
+RUN_ID="$(date +%Y%m%d_%H%M%S)_$$"
+LOG_DIR="$OUTPUT_DIR/log/$RUN_ID"
+mkdir -p "$LOG_DIR"
+exec &gt; &gt;(tee "$LOG_DIR/$STAGE.log") 2&gt;&amp;1
+printf 'run_id=%s stage=%s command=%s cwd=%q\n' "$RUN_ID" "$STAGE" "$RAW_COMMAND" "$PWD"
+
+# 输入、配置和缓存校验发生在日志初始化之后，拒绝原因因此可以追溯。
+"$MODULE_DIR/scripts/validate_runtime.sh" "$STAGE" "$CONFIG" "$OUTPUT_DIR" || {
+    status=$?; printf 'exit_code=%s status=validation_failed\n' "$status"; exit "$status";
+}
+"$MODULE_DIR/scripts/run_stage.sh" "$STAGE" "$CONFIG" "$OUTPUT_DIR" "$RUN_ID" || {
+    status=$?; printf 'exit_code=%s status=stage_failed\n' "$status"; exit "$status";
+}
+
+# 全部阶段与产物校验成功后，才更新最近成功运行标识。
+RUN_ID_TMP="$OUTPUT_DIR/.run_id.tmp.$RUN_ID"
+printf "%s\n" "$RUN_ID" &gt; "$RUN_ID_TMP"
+mv -f "$RUN_ID_TMP" "$OUTPUT_DIR/.run_id"
+printf 'exit_code=0 status=success\n'</pre>
+                        <p class="muted" style="margin-top:8px;">上例选择了“不提供独立报告阶段”的模块。确实支持 <code>report</code> 的模块才可把它同时加入帮助、阶段白名单、调度和验收；不能只加一个空分支。</p>
                         <p><strong>业务保真要求：</strong> 包装脚本可以做路径标准化、参数桥接、日志和输出收集，但不能用 demo、mock、stub、placeholder、synthetic 或 fallback 逻辑替代真实业务流程。修改前必须先确认原始入口、核心脚本、配置、主要输出、绘图逻辑、报告逻辑和报告模板。</p>
                     </div>
 
@@ -1165,14 +1336,14 @@ echo "[$(date)] 分析完成"</pre>
             <div class="card two-col">
                 <h2 class="section-title" id="sec-best">✅ 推荐做法</h2>
                 <ul class="rule-list">
-                    <li><strong>统一 run_id</strong>：程序开始时生成 run_id，写入 <code>.run_id</code>，日志、缓存、结果和报告均记录同一标识</li>
+                    <li><strong>区分运行来源</strong>：程序开始时生成当前 run_id 并写入日志，成功后才更新 <code>.run_id</code>；复用缓存时另行保留缓存生产 run_id</li>
                     <li><strong>日志优先</strong>：<span class="text-red">无论是否有配置文件，日志中必须详细记录所有参数</span></li>
-                    <li><strong>配置文件简洁</strong>：使用 <code>分析点.config.ini</code> 或 <code>分析点.config.yaml</code>，每次运行覆盖</li>
+                    <li><strong>配置文件简洁</strong>：模块选择 INI 或 YAML 中的一种主要格式；<code>init</code> 生成一份分析配置，运行只保存快照而不覆盖用户配置</li>
                     <li><strong>日志使用中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
                     <li><strong>计算与作图分离</strong>：同一分析点的计算脚本和作图脚本拆成独立文件，改图时无需重跑计算</li>
-                    <li><strong>双格式图表</strong>：<span class="text-red">每个图表必须同时保存 .png 和 .pdf 格式</span>（特殊情况除外）</li>
+                    <li><strong>图形格式可配置</strong>：默认同时保存 PNG 和 PDF，也可按配置生成模块支持的格式；验收以请求格式清单为准</li>
                     <li><strong>统一路径标准化</strong>：所有路径在校验、读写、记录前先做 <code>normalizePath</code> 或等价处理，并在日志中保持一致口径</li>
-                    <li><strong>图表字体统一</strong>：使用默认字体（sans-serif 无衬线族）；<span class="text-red">禁止使用 Times New Roman 等衬线字体</span></li>
+                    <li><strong>图表字体可追溯</strong>：默认使用 sans-serif；可配置已安装且模块支持的字体，缺失时应报错或按声明回退并写入日志</li>
                     <li><strong>色板标准</strong>：推荐使用 <code>ggsci::npg</code>、<code>RColorBrewer</code> 等学术配色方案；<span class="text-red">图表必须对色盲友好</span>，避免仅靠红/绿区分数据</li>
                     <li><strong>使用 .qs2</strong>：<span class="text-red">R数据使用 .qs2 格式保存</span>（<code>qs2</code> R 包，替代 .rds/.RData）</li>
                     <li><strong>使用 data.table</strong>：读取文件推荐使用 data.table 包</li>
@@ -1182,7 +1353,7 @@ echo "[$(date)] 分析完成"</pre>
                     <li><strong>README.md 完备</strong>：每个模块必须包含标准 README（用途、依赖、输入输出、运行示例）</li>
                     <li><strong>CHANGELOG.md</strong>：语义化版本号 + 每次变更记录</li>
                     <li><strong>demo 验证</strong>：如提供 demo，只在 <code>demo/data/</code> 放输入数据和必要配置；输出由本次运行现场生成</li>
-                    <li>定期清理过期的日志文件和临时结果（默认保留最近 30 天）</li>
+                    <li>按模块声明的保留策略清理过期日志和一次性临时结果；正式计算缓存不得作为临时文件自动删除</li>
                     <li>使用版本控制系统（Git）管理scripts文件夹中的脚本</li>
                     <li>为重要分析结果创建README.md说明文件内容</li>
                     <li>定期备份result和report文件夹到云端或外部存储</li>
@@ -1199,12 +1370,12 @@ echo "[$(date)] 分析完成"</pre>
                     <li>依赖配置文件而忽略日志的参数记录功能</li>
                     <li>不保留日志文件，导致无法追溯分析过程</li>
                     <li>结果文件与日志中的 run_id 无法对应</li>
-                    <li>同一次运行的日志、缓存、结果、报告使用不同 run_id</li>
+                    <li>用当前绘图 run_id 覆盖缓存生产 run_id，导致无法识别复用来源</li>
                     <li><span class="text-red"><strong>跳过路径标准化</strong></span>：直接用命令行输入、配置值或字符串拼接后的路径做存在性校验和文件读写</li>
                     <li>把 run_id 或时间戳写进配置文件名，导致文件夹碎片化</li>
                     <li><span class="text-red"><strong>计算与作图混写</strong></span>：把数据计算和可视化代码写在同一个脚本中，导致改图必须重跑全部计算</li>
-                    <li><span class="text-red"><strong>只保存单一图表格式</strong>：只保存 .png 或只保存 .pdf</span></li>
-                    <li><strong>图表字体混用</strong>：同一项目中混用不同字体族（如无衬线 + 衬线混搭）；禁止使用 Times New Roman</li>
+                    <li><span class="text-red"><strong>忽略格式配置</strong></span>：未生成用户请求的受支持格式，或仍按固定双格式验收</li>
+                    <li><strong>字体行为不透明</strong>：配置字体不可用时静默替换，且日志不记录实际使用字体</li>
                     <li><span class="text-red"><strong>使用 .rds/.RData</strong></span>：推荐使用更现代的 .qs2 格式（<code>qs2</code> R 包）</li>
                     <li><strong>使用 base R</strong>：推荐使用更高效的 data.table</li>
                     <li><span class="text-red"><strong>静默吞异常</strong></span>：<code>except: pass</code> 或裸 <code>tryCatch</code> 不记录错误信息</li>
@@ -1321,7 +1492,7 @@ INPUT="../RawData/result/RawData/01.GSEXXX_count.csv"</pre>
 
 ### 新增
 - 计算与作图分离：DEGs_analysis.R / DEGs_plot.R
-- 支持 --plot-only 参数
+- 新增 plot 阶段，可从有效缓存重建全部约定图形
 
 ### 修复
 - 修复 normalizePath 在 Windows 上的分隔符问题
@@ -1366,7 +1537,23 @@ INPUT="../RawData/result/RawData/01.GSEXXX_count.csv"</pre>
                                 <tr><td><strong>关键列存在性</strong></td><td>输出 TSV/CSV 必须包含文档约定的关键列（如 <code>SYMBOL</code>、<code>log2FoldChange</code>、<code>pvalue</code>）</td><td>列名缺失直接报错</td></tr>
                                 <tr><td><strong>数据类型检查</strong></td><td>数值列不含非数值字符串；分类列取值在允许范围内</td><td>如 <code>riskgroup</code> 只允许 <code>High</code>/<code>Low</code></td></tr>
                                 <tr><td><strong>NA/空值检查</strong></td><td><span class="text-red">输出文件中不允许出现 NA</span>（与输入规范一致）</td><td>若分析结果含 NA 需在日志中说明并过滤</td></tr>
-                                <tr><td><strong>双格式图表验证</strong></td><td>每个图表同时存在 .png 和 .pdf，否则报 <code>[WARN]</code></td><td>与文件格式规范联动</td></tr>
+                                <tr><td><strong>图形格式验证</strong></td><td>配置请求的每种受支持格式均存在、非空且可读取；默认配置通常检查 PNG + PDF</td><td>不得用固定双格式规则覆盖 <code>[Plot].formats</code></td></tr>
+                            </tbody>
+                        </table>
+
+                        <strong style="display:block; margin-top:18px;">运行契约最小验收矩阵：</strong>
+                        <table class="matrix">
+                            <thead><tr><th>场景</th><th>成功证据</th><th>禁止出现</th></tr></thead>
+                            <tbody>
+                                <tr><td><strong>无参数 / --help</strong></td><td>stdout 含用途、阶段、输入模式、参数、输出与示例；退出码 0</td><td>任何输出目录、日志或 <code>.run_id</code></td></tr>
+                                <tr><td><strong>首次 init</strong></td><td>目标目录只新增一份带完整中文注释的分析配置</td><td>两种等价配置、运行产物目录</td></tr>
+                                <tr><td><strong>重复 init</strong></td><td>内容相同则成功且不改文件；内容不同则默认非零退出并说明 <code>--force</code></td><td>无提示覆盖或重复配置报错栈</td></tr>
+                                <tr><td><strong>calculate</strong></td><td>正式表格、可校验缓存清单和计算对象、独立日志均非空</td><td>图形、空 <code>report/</code>、部分写入冒充有效缓存</td></tr>
+                                <tr><td><strong>plot 缓存命中</strong></td><td>不调用计算代码；生成约定的全部图形及请求格式；日志记录两个 run_id</td><td>计算产物时间戳变化或静默重算</td></tr>
+                                <tr><td><strong>plot 缓存失效</strong></td><td>非零退出，错误明确指出 schema、指纹、完整性或缺失项</td><td>自动回退计算、覆盖已有有效缓存</td></tr>
+                                <tr><td><strong>full</strong></td><td>结果等价于 calculate + plot，加上已声明且启用的可选报告</td><td>未启用阶段的空目录</td></tr>
+                                <tr><td><strong>未知参数 / 配置键</strong></td><td>非零退出并给出具体字段及帮助入口</td><td>忽略后继续运行</td></tr>
+                                <tr><td><strong>任意目录直接执行</strong></td><td>从模块目录外执行 <code>/path/to/module/run.sh --help</code> 与正式阶段均可定位内部资源</td><td>依赖调用者先 <code>cd</code> 到模块目录</td></tr>
                             </tbody>
                         </table>
 
@@ -1412,15 +1599,39 @@ set -euo pipefail
 echo "=== demo 验证开始 ==="
 
 # demo 目录只提供输入数据和配置；输出由本次运行现场生成
-bash run.sh full -c demo/data/chromosome_plot_config.ini -o demo_output --force
+DEMO_OUTPUT=${1:-demo_output}
+[[ ! -e "$DEMO_OUTPUT" ]] || {
+    echo "[FAIL] 输出已存在，请指定新的 demo 输出目录: $DEMO_OUTPUT" &gt;&amp;2
+    exit 2
+}
+./run.sh full --config demo/data/chromosome_plot_config.ini --output "$DEMO_OUTPUT"
+
+RUN_ID=$(tr -d '\r\n' &lt; "$DEMO_OUTPUT/.run_id")
+LOG_FILE="$DEMO_OUTPUT/log/$RUN_ID/full.log"
 
 # 只检查关键产物是否由本次运行生成，不与预先保存的输出文件做 diff
-for f in demo_output/.run_id demo_output/log/full.log demo_output/result/01_gene_positions.tsv demo_output/result/02_circos.png demo_output/result/02_circos.pdf demo_output/result/chromosome_plot_report.docx; do
+for f in "$DEMO_OUTPUT/.run_id" "$LOG_FILE" "$DEMO_OUTPUT/cache/cache_manifest.json" "$DEMO_OUTPUT/result/01_gene_positions.tsv" "$DEMO_OUTPUT/result/02_circos.png" "$DEMO_OUTPUT/result/02_circos.pdf"; do
     if [ ! -s "$f" ]; then
         echo "[FAIL] 文件缺失或为空: $f"
         exit 1
     fi
 done
+
+# 同时验证 manifest 指向的不可变缓存对象非空、未越界且校验和一致
+Rscript --vanilla - "$DEMO_OUTPUT/cache" &lt;&lt;'RS'
+args &lt;- commandArgs(trailingOnly = TRUE)
+cache_dir &lt;- normalizePath(args[[1]], mustWork = TRUE)
+manifest &lt;- jsonlite::read_json(file.path(cache_dir, "cache_manifest.json"), simplifyVector = FALSE)
+if (length(manifest$artifacts) &lt; 1L) stop("manifest 未声明缓存对象")
+if (length(manifest$plot_contract$figures) &lt; 1L) stop("manifest 未声明绘图契约")
+artifact &lt;- manifest$artifacts[[1L]]
+artifact_path &lt;- normalizePath(file.path(cache_dir, artifact$path), mustWork = TRUE)
+cache_prefix &lt;- paste0(cache_dir, .Platform$file.sep)
+if (!startsWith(artifact_path, cache_prefix)) stop("manifest 缓存路径越界")
+if (file.info(artifact_path)$size != as.numeric(artifact$size)) stop("缓存大小不匹配")
+actual_sha256 &lt;- digest::digest(file = artifact_path, algo = "sha256")
+if (!identical(tolower(actual_sha256), tolower(artifact$sha256))) stop("缓存校验和不匹配")
+RS
 
 echo "=== demo 验证完成：仅代表 demo 输入跑通 ==="</pre>
 
@@ -1452,11 +1663,14 @@ echo "=== demo 验证完成：仅代表 demo 输入跑通 ==="</pre>
                         <tr><td><strong>版本与更新日期</strong></td><td>当前版本号 + 最后更新日期</td><td>与 CHANGELOG.md 保持一致</td></tr>
                         <tr><td><strong>环境依赖</strong></td><td>R/Python 最低版本、关键包列表、锁定文件位置</td><td>示例：<code>R &gt;= 4.2 | 依赖见 renv.lock</code></td></tr>
                         <tr><td><strong>上游模块依赖</strong></td><td>表格列出所需上游模块和文件（见模块协作章节）</td><td>无上游依赖时标注"无"</td></tr>
-                        <tr><td><strong>快速开始</strong></td><td>从安装到运行的完整命令序列</td><td>包含 <code>bash run.sh --help</code>、典型运行示例和输出目录说明</td></tr>
+                        <tr><td><strong>快速开始</strong></td><td>从查看帮助、初始化到分阶段运行的完整命令序列</td><td>包含 <code>./run.sh</code>、<code>init</code>、<code>full</code>、<code>plot</code> 与输出目录说明</td></tr>
                         <tr><td><strong>阶段说明</strong></td><td>列出可独立运行的阶段、每阶段输入、标准产物和不能做的事</td><td>多阶段模块需说明后续阶段如何引用前一阶段产物</td></tr>
+                        <tr><td><strong>输入模式与边界</strong></td><td>说明支持的文件、目录、配置或上游结果输入模式，以及互斥关系和优先级</td><td>明确模块会做什么、不会做什么，不依赖使用者猜测</td></tr>
                         <tr><td><strong>输入文件说明</strong></td><td>列出所有输入文件名、格式、关键列和约束</td><td>与输入校验规范对齐</td></tr>
                         <tr><td><strong>输出文件说明</strong></td><td>列出所有输出文件名、所在目录、关键列，并区分 <code>result/</code>、<code>cache/</code>、<code>log/</code> 与 <code>report/</code></td><td>正式结果和可复用缓存的边界属于模块公开 API</td></tr>
-                        <tr><td><strong>参数说明</strong></td><td>所有可配置业务参数、默认值和取值范围</td><td>配置文件不应写入本次运行输出目录；输出位置由命令行或运行入口显式传入</td></tr>
+                        <tr><td><strong>参数说明</strong></td><td>所有可配置业务与绘图参数、默认值、取值范围和中文注释</td><td>说明命令行覆盖 &gt; 配置 &gt; 默认值；输出位置由入口显式传入</td></tr>
+                        <tr><td><strong>缓存契约</strong></td><td>列出缓存文件、清单字段、失效条件、<code>plot</code> 行为和显式清理方式</td><td>明确缓存承载绘图所需计算对象，不把它描述为完整报告归档</td></tr>
+                        <tr><td><strong>日志与排错</strong></td><td>说明 <code>log/&lt;run_id&gt;/</code>、常见退出码、缓存拒绝原因和最近成功运行定位方式</td><td>帮助、init 和实际运行的副作用边界必须写清楚</td></tr>
                         <tr><td><strong>目录结构</strong></td><td>展示模块内部目录树（可简化）</td><td>帮助快速定位文件，并说明源码目录与运行产物目录边界</td></tr>
                         <tr><td><strong>验证方式</strong></td><td>说明最小验证命令、应生成的关键输出和验证类型</td><td>需标注是真实业务验证、契约/接口验证、烟测验证还是 demo 验证</td></tr>
                     </tbody>
@@ -1486,14 +1700,17 @@ echo "=== demo 验证完成：仅代表 demo 输入跑通 ==="</pre>
 ## 快速开始
 
 ```bash
-# 查看帮助
-bash run.sh --help
+# 查看帮助（无参数同样只显示帮助）
+./run.sh
+
+# 生成一份带中文注释的分析配置
+./run.sh init --target ./project
 
 # 完整运行（计算 + 作图）
-bash run.sh --config config/DEGs.config.yaml
+./run.sh full --config ./project/config/DEGs.config.ini --output ./output
 
-# 仅重新作图
-bash run.sh --plot-only
+# 仅从有效正式缓存重新作图
+./run.sh plot --config ./project/config/DEGs.config.ini --output ./output
 ```
 
 ## 输入文件
@@ -1510,6 +1727,8 @@ bash run.sh --plot-only
 | 01.DEGs.tsv            | result/DEGs/  | 差异基因列表（含逗号风险用 TSV；无逗号问题可用 CSV） |
 | 02.heatmap.png/.pdf    | result/DEGs/  | Top 基因热图    |
 | 03.volcano.png/.pdf    | result/DEGs/  | 火山图          |
+| calculation.qs2        | cache/generations/&lt;producer_run_id&gt;/ | 绘图所需正式计算对象 |
+| cache_manifest.json    | cache/        | 缓存版本、指纹、完整性与生产 run_id |
 
 ## 参数说明
 
@@ -1517,7 +1736,59 @@ bash run.sh --plot-only
 |----------------|--------|--------------------|
 | p_value_cutoff | 0.05   | 显著性阈值           |
 | log2fc_cutoff  | 1.0    | log2 倍数变化阈值     |
-| method         | DESeq2 | 差异分析方法          |</pre>
+| method         | DESeq2 | 差异分析方法          |
+| formats        | png,pdf | 图形输出格式          |
+| width / height | 6 / 4  | 图形尺寸，默认单位 in  |
+| theme / palette / font_family | classic / npg / sans | 主题、配色和字体 |
+
+## 阶段与功能边界
+
+| 阶段 | 输入 | 产物 | 不会执行 |
+|------|------|------|----------|
+| init | 模块模板 | 一份分析配置 | 不创建运行目录 |
+| calculate | 配置与业务输入 | 表格、正式缓存、日志 | 不作图、不生成报告 |
+| plot | 配置与有效缓存 | 全部约定图形、日志 | 不重新计算 |
+| full | 配置与业务输入 | calculate + plot 产物 | 本模块不提供报告阶段 |
+
+## 输入模式与优先级
+
+- 支持的输入：表达矩阵文件 + 分组文件，二者必须在同一份分析配置中明确指定。
+- 不支持：直接读取未声明的目录、自动猜测最新文件、同时传入多组互斥业务输入。
+- 参数优先级：帮助中声明的命令行覆盖 &gt; 分析配置 &gt; 默认值；未知配置键直接报错。
+
+## 输出目录
+
+```text
+output/
+├── .run_id
+├── cache/               # 正式缓存代次 + cache_manifest.json
+├── log/&lt;run_id&gt;/       # 阶段日志、输入配置和生效配置快照
+└── result/              # 正式表格和图形
+```
+
+## 缓存契约
+
+- 缓存包含 `de_table`、`top_genes_mat` 和 `heatmap_annotation`，足以重建本模块全部约定图形。
+- `cache_manifest.json` 记录 schema、生产 run_id、输入/计算指纹、对象校验和及实际运行时版本。
+- 输入或计算参数变化、清单不兼容、对象缺失或校验和不符时，`plot` 非零退出且不静默重算。
+- 正式缓存不随临时文件清理；显式清理方式及保留代次数见 `./run.sh --help`。
+
+## 日志与排错
+
+- 读取 `.run_id` 定位最近成功调用，再查看 `log/&lt;run_id&gt;/&lt;stage&gt;.log`。
+- 失败调用不会覆盖 `.run_id`；其 stderr 会给出对应日志路径和退出码。
+- 日志同时记录当前 run_id 与缓存生产 run_id、配置来源/覆盖项、缓存命中或拒绝原因。
+
+## 最小验证
+
+```bash
+./run.sh                         # 返回 0，且不创建文件
+./run.sh init --target ./check   # 只生成一份分析配置
+./run.sh full --config ./check/config/DEGs.config.ini --output ./check-output
+./run.sh plot --config ./check/config/DEGs.config.ini --output ./check-output
+```
+
+上述命令默认属于契约/接口或 demo 验证；只有使用代表性真实输入并复核业务结果时，才标记为真实业务验证。</pre>
             </div>
         </div>
 
@@ -1533,12 +1804,12 @@ bash run.sh --plot-only
                         <tr><td><strong>样本信息一致性</strong></td><td><span class="text-red">样本表与计数矩阵样本名必须 1:1 对齐</span></td><td>运行前进行一致性校验并写入日志</td></tr>
                         <tr><td><strong>随机性控制</strong></td><td><span class="text-red">所有含随机过程的步骤固定随机种子</span></td><td>示例：<code>seed=20260306</code></td></tr>
                         <tr><td><strong>差异分析阈值</strong></td><td><span class="text-red">统一记录 <code>p/FDR</code> 与 <code>|log2FC|</code> 阈值</span></td><td>避免仅写“默认参数”导致不可复现</td></tr>
-                        <tr><td><strong>图表视觉标准</strong></td><td>使用默认 sans-serif 字体；<span class="text-red">禁止衬线字体（如 Times New Roman）</span>；固定最小字号</td><td>建议轴标题 >= 10 pt，刻度 >= 8 pt</td></tr>
+                        <tr><td><strong>图表视觉标准</strong></td><td>默认使用 sans-serif；主题、颜色、字体和字号可配置并记录实际生效值</td><td>建议轴标题 &gt;= 10 pt，刻度 &gt;= 8 pt；字体缺失时不得静默替换</td></tr>
                         <tr><td><strong>软件环境记录</strong></td><td>记录 Python/R 版本和关键包版本</td><td>建议输出 <code>sessionInfo()</code> 或 <code>pip freeze</code> 摘要</td></tr>
                         <tr><td><strong>依赖锁定文件</strong></td><td><span class="text-red">每个模块必须包含可复现的依赖锁定文件</span></td><td>R 项目：<code>renv.lock</code>；Python 项目：<code>requirements.txt</code> 或 <code>environment.yml</code></td></tr>
-                        <tr><td><strong>最低版本约束</strong></td><td>在 <code>README.md</code> 或 <code>config/</code> 中标注最低 R/Python 版本</td><td>示例：<code>Requires: R >= 4.2, Python >= 3.9</code></td></tr>
+                        <tr><td><strong>最低版本约束</strong></td><td>在 <code>README.md</code> 或 <code>config/</code> 中标注经模块实测的最低 R/Python 兼容版本；运行日志仍记录本次实际版本</td><td>示例：<code>Requires: R >= &lt;模块实测最低版本&gt;, Python >= &lt;模块实测最低版本&gt;</code></td></tr>
                         <tr><td><strong>并行与多线程</strong></td><td>涉及并行计算时必须在配置和日志中记录线程数，<span class="text-red">默认线程数不超过可用核心的 80%</span></td><td>R 使用 <code>data.table::setDTthreads()</code>、<code>BiocParallel</code>；Python 使用 <code>multiprocessing</code> 并记录 <code>n_jobs</code></td></tr>
-                        <tr><td><strong>临时文件与资源清理</strong></td><td>日志保留策略：<span class="text-red">默认保留最近 30 天</span>，超期日志 + 中间结果由定期清理脚本删除</td><td>模块可提供 <code>scripts/cleanup.sh --days 30</code>；临时文件统一放 <code>result/分析点/_tmp/</code>，分析结束后自动清理</td></tr>
+                        <tr><td><strong>临时文件与资源清理</strong></td><td>日志和一次性临时文件按模块声明的策略清理；<span class="text-red">正式缓存不纳入临时清理</span></td><td>临时文件统一放 <code>_tmp/</code> 并在退出时清理；删除正式缓存必须显式执行且写入日志</td></tr>
                         <tr><td><strong>数据安全与隐私</strong></td><td>涉及临床/患者数据时，<span class="text-red">样本 ID 必须脱敏</span>；原始临床表不纳入 Git</td><td>脱敏规则记录在日志中；敏感文件加入 <code>.gitignore</code>；传输使用加密通道</td></tr>
                     </tbody>
                 </table>
@@ -1573,7 +1844,7 @@ bash run.sh --plot-only
                             <strong>💡 为什么使用 .qs2 而不是 .rds/.RData？</strong>
                             <ul style="margin-top:8px; padding-left:20px;">
                                 <li>.qs2（<code>qs2</code> R 包）是更现代的二进制格式，性能更好</li>
-                                <li>跨平台兼容性更好，不受R版本限制</li>
+                                <li>跨平台使用方便，但仍需在缓存清单中记录 R、qs2 和关键包版本并校验兼容性</li>
                                 <li>压缩比更高，文件更小</li>
                                 <li>读写速度更快</li>
                             </ul>
@@ -1583,17 +1854,17 @@ bash run.sh --plot-only
                     <div id="format-chart" class="tab-content">
                         <h4>📈 图表文件格式</h4>
                         <ul>
-                            <li><strong>必须同时保存</strong>：<span class="text-red">.png（位图）+ .pdf（矢量图）</span></li>
-                            <li><strong>字体要求</strong>：使用默认字体（sans-serif 无衬线族）即可；<span class="text-red">禁止使用 Times New Roman 等衬线字体</span></li>
-                            <li><strong>PNG</strong>：300 dpi；R 中推荐使用 <code>png(type = "cairo")</code> 保证无头服务器兼容</li>
-                            <li><strong>PDF</strong>：矢量格式，可编辑、可缩放；R 中推荐使用 <code>cairo_pdf()</code> 或 <code>ggsave(device = cairo_pdf)</code>，确保字体嵌入和中文支持</li>
-                            <li><strong>默认尺寸</strong>：单面板图 6×4 in，多面板按比例缩放；发表级图表建议 7×5 in</li>
+                            <li><strong>输出格式</strong>：默认保存 PNG + PDF；<code>[Plot].formats</code> 可选择模块声明支持的一个或多个格式</li>
+                            <li><strong>字体要求</strong>：默认 sans-serif；允许配置已安装且模块支持的字体族，必须记录请求字体、实际字体及回退行为</li>
+                            <li><strong>PNG</strong>：默认 300 dpi，可通过 <code>[Plot].dpi</code> 调整；R 推荐 <code>png(type = "cairo")</code> 以兼容无头服务器</li>
+                            <li><strong>PDF</strong>：矢量格式；R 推荐 <code>cairo_pdf()</code> 或 <code>ggsave(device = cairo_pdf)</code>，并校验字体嵌入和中文显示</li>
+                            <li><strong>尺寸与外观</strong>：默认单面板图 6×4 in；尺寸、单位、主题、色板、字体和基础字号均由 <code>[Plot]</code> 控制</li>
                             <li><strong>特殊情况</strong>：交互图表使用 .html（Plotly等）</li>
                         </ul>
                         <div class="warn-box">
-                            <strong>⚠️ 必须同时保存 PNG 和 PDF</strong>
-                            <p style="margin-top:8px;">除非是交互式图表（如 Plotly），每个静态图表都应同时保存 .png 和 .pdf。</p>
-                            <p style="margin-top:6px;">PNG 适合演示与办公文档，PDF 适合发表与后续编辑。</p>
+                            <strong>⚠️ 以配置和模块能力共同确定验收清单</strong>
+                            <p style="margin-top:8px;">默认配置生成 PNG 与 PDF；若用户显式选择其他受支持格式，运行日志必须记录请求值和实际产物。</p>
+                            <p style="margin-top:6px;">不支持的格式、主题或字体应在绘图前报错，不得静默忽略。</p>
                         </div>
                     </div>
 
@@ -1695,7 +1966,7 @@ bash run.sh --plot-only
         </div>
 
         <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.3 | <strong>更新日期:</strong> 2026-03-26</p>
+        <p class="footer-note"><strong>版本:</strong> v1.4 | <strong>更新日期:</strong> 2026-08-06</p>
 
     </div>
 

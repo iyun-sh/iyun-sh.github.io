@@ -341,7 +341,7 @@
                 <div class="danger-box">
                     <strong>&#x1F6AB; 绝对禁止</strong>
                     <ul style="margin-top:8px">
-                        <li>直接运行 <code>/media/share/secure/</code> 下的 <code>.R</code> 脚本 — 只能通过 <code>run_*.sh</code> 入口脚本调用</li>
+                        <li>直接运行 <code>/media/share/secure/</code> 下的 <code>.R</code> 脚本 — 只能通过模块公开的 Shell 入口（<code>run_*.sh</code> 或 <code>run.sh</code>）调用</li>
                         <li>修改 <code>/media/share/secure/</code> 下任何文件 — 该目录只读（对非所有者）</li>
                         <li>输出目录不要放在 <code>/media/share/secure/</code> 内</li>
                     </ul>
@@ -452,17 +452,21 @@
         <div class="grid" id="invoke">
             <div class="card">
                 <h2 class="section-title">&#x1F4E2; 2. 统一调用规范</h2>
-                <p>所有模块的调用方式遵循相同模式：</p>
+                <p>本页记录已部署模块当前可用的真实入口；具体参数以各入口的 <code>--help</code> 为准：</p>
 
-                <div class="code-block"><span class="comment"># 通用调用格式</span>
-/media/share/secure/<span class="path">&lt;模块名&gt;</span>/<span class="flag">run_*.sh</span> <span class="value">[参数]</span>
+                <div class="code-block"><span class="comment"># 通用调用格式；入口名以模块 README / --help 为准</span>
+/media/share/secure/<span class="path">&lt;模块名&gt;</span>/<span class="flag">&lt;公开入口&gt;</span> <span class="value">[阶段] [参数]</span>
 
 <span class="comment"># 查看帮助</span>
-/media/share/secure/<span class="path">&lt;模块名&gt;</span>/<span class="flag">run_*.sh</span> --help
+/media/share/secure/<span class="path">&lt;模块名&gt;</span>/<span class="flag">&lt;公开入口&gt;</span> --help
 
-<span class="comment"># 删除输出（仅创建者可删）</span>
-/media/share/secure/<span class="path">&lt;模块名&gt;</span>/<span class="flag">run_*.sh</span> --rm -o <span class="path">&lt;输出目录&gt;</span>
+<span class="comment"># 删除输出：仅当该入口的 --help 明确支持 --rm 时使用</span>
+/media/share/secure/<span class="path">&lt;模块名&gt;</span>/<span class="flag">&lt;公开入口&gt;</span> --rm -o <span class="path">&lt;输出目录&gt;</span>
 </div>
+
+                <div class="warn-box" style="margin-top:14px">
+                    <strong>&#x1F4CC; 新旧接口边界：</strong> 下方 <code>run_*.sh</code>、<code>--init</code>、<code>-c</code>、<code>--stage full/all</code> 是已部署模块的兼容接口，不应机械改写。新建或升级模块按《生信开发模块文件与输出规范》使用可直接执行的 <code>./run.sh</code>、<code>init</code> / <code>calculate</code> / <code>plot</code> / <code>full</code> 阶段和稳定长参数；兼容映射必须同时写入模块 README 与帮助信息。
+                </div>
 
                 <table class="matrix" style="margin-top:18px">
                     <thead>
@@ -738,25 +742,25 @@
                 <ol class="steps">
                     <li>
                         <strong>完整流程（GO/KEGG + GSEA）</strong>
-                        <div class="code-block">/media/share/secure/unified_enrichment/run_unified_enrichment.sh \
+                        <div class="code-block">/media/share/secure/unified_enrichment/run.sh <span class="value">full</span> \
+  <span class="flag">-c</span> <span class="path">/media/share/secure/unified_enrichment/config/unified_enrichment.config.ini</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/04_Enrichment</span> \
   <span class="flag">-w</span> <span class="path">/path/to/workdir</span> \
   <span class="flag">-s</span> <span class="value">hsa</span> \
   <span class="flag">--gene-list</span> <span class="path">gene_list.csv</span> \
-  <span class="flag">--expr-matrix</span> <span class="path">expr_matrix.csv</span> \
   <span class="flag">--ranked-list</span> <span class="path">ranked_gene_list.csv</span> \
-  <span class="flag">--go-kegg</span> <span class="value">true</span> \
-  <span class="flag">--gsea</span> <span class="value">true</span> \
-  <span class="flag">--output-dir</span> <span class="path">/media/share/Project/myproject/04_Enrichment</span></div>
+  <span class="flag">--gmt</span> <span class="path">hallmark.gmt</span></div>
                     </li>
                     <li>
                         <strong>仅 GSEA 模式</strong>
-                        <div class="code-block">/media/share/secure/unified_enrichment/run_unified_enrichment.sh \
+                        <div class="code-block">/media/share/secure/unified_enrichment/run.sh <span class="value">calculate</span> \
+  <span class="flag">-c</span> <span class="path">/media/share/secure/unified_enrichment/config/unified_enrichment.config.ini</span> \
+  <span class="flag">-o</span> <span class="path">/media/share/Project/myproject/04_GSEA</span> \
   <span class="flag">-w</span> <span class="path">/path/to/workdir</span> \
   <span class="flag">-s</span> <span class="value">hsa</span> \
   <span class="flag">--analysis-mode</span> <span class="value">gsea-only</span> \
   <span class="flag">--ranked-list</span> <span class="path">ranked_gene_list.csv</span> \
-  <span class="flag">--gmt</span> <span class="path">hallmark.gmt</span> \
-  <span class="flag">--output-dir</span> <span class="path">/media/share/Project/myproject/04_GSEA</span></div>
+  <span class="flag">--gmt</span> <span class="path">hallmark.gmt</span></div>
                     </li>
                 </ol>
 
@@ -764,14 +768,19 @@
                 <table class="matrix">
                     <thead><tr><th>参数</th><th>说明</th><th>必需</th></tr></thead>
                     <tbody>
-                        <tr><td><code>-s</code></td><td>物种：hsa（人）/ mmu（小鼠）</td><td>&#x2705;</td></tr>
+                        <tr><td><code>-c, --config</code></td><td>分析配置文件；示例使用模块正式模板</td><td>可选，默认模块配置</td></tr>
+                        <tr><td><code>-o, --output</code></td><td>Project 域内的绝对输出目录</td><td>&#x2705;</td></tr>
+                        <tr><td><code>-w, --work-dir</code></td><td>业务输入的工作目录</td><td>&#x2705;</td></tr>
+                        <tr><td><code>-s</code></td><td>物种：hsa（人）/ mmu（小鼠）/ rno（大鼠）</td><td>&#x2705;</td></tr>
                         <tr><td><code>--gene-list</code></td><td>ORA 基因列表 CSV（含 gene 列头，一列基因名），通常来自 DEGs 的 <code>01.gene.csv</code></td><td>ORA 时必填</td></tr>
                         <tr><td><code>--ranked-list</code></td><td>GSEA 排序基因列表 CSV（两列：gene + logFC），按 logFC 降序排列。通常取 DEGs 输出的 <code>01.DEG_all.csv</code> 中 gene 和 logFC 列</td><td>GSEA 时必填</td></tr>
                         <tr><td><code>--expr-matrix</code></td><td>表达矩阵（提供全部检测基因作为 ORA 背景基因集，推荐提供，否则用物种全基因组）</td><td>推荐</td></tr>
                         <tr><td><code>--gene-id-type</code></td><td>基因 ID 类型：symbol（基因名）/ entrez（Entrez ID）</td><td>可选，默认 symbol</td></tr>
-                        <tr><td><code>--universe-mode</code></td><td>背景基因模式：<code>expr_matrix</code>=仅用表达矩阵中的基因；<code>all</code>=用该物种全部注释基因</td><td>可选，默认 expr_matrix</td></tr>
-                                            <tr><td><code>--gmt</code></td><td>自定义 GMT 基因集文件路径（GSEA 模式下可指定 hallmark、KEGG 等自定义集合，替代默认 MSigDB）</td><td>可选</td></tr>
-                        <tr><td><code>--analysis-mode</code></td><td>分析模式：<code>full</code>=GO/KEGG+GSEA 联合，<code>gsea-only</code>=仅 GSEA</td><td>可选，默认 full</td></tr></tbody>
+                        <tr><td><code>--universe-mode</code></td><td>ORA 背景模式：<code>genome</code>=物种注释基因；<code>expr_matrix</code>=表达矩阵基因；<code>file</code>=显式背景文件</td><td>可选，默认 genome</td></tr>
+                        <tr><td><code>--gmt</code></td><td>GSEA 基因集文件；多个 GMT 可用逗号或分号分隔，GSVA 未单独指定时也可复用</td><td>GSEA 时必填</td></tr>
+                        <tr><td><code>--analysis-mode</code></td><td>分析模式：<code>full</code>、<code>gsea-only</code> 或 <code>gsva-only</code></td><td>可选，默认 full</td></tr>
+                        <tr><td><code>--gsea</code></td><td>是否运行 GSEA；设为 <code>false</code> 可只执行 GO/KEGG ORA</td><td>可选，默认 true</td></tr>
+                    </tbody>
                 </table>
 
                 
@@ -779,10 +788,11 @@
                 <table class="matrix">
                     <thead><tr><th>文件</th><th>格式编号</th><th>说明</th></tr></thead>
                     <tbody>
-                        <tr><td>gene.csv</td><td><a href="#fmt-gene">F3</a></td><td>ORA 模式：差异基因列表（来自 DEGs 输出 01.gene.csv）</td></tr>
-                        <tr><td>expression.csv</td><td><a href="#fmt-expr">F1</a></td><td>GSEA 模式：全基因表达矩阵（自动计算 logFC 排序）</td></tr>
-                        <tr><td>group.csv</td><td><a href="#fmt-group">F2</a></td><td>GSEA 模式需要，提供分组信息计算 logFC</td></tr>
-                        <tr><td>gmt 文件（可选）</td><td>GMT 格式</td><td>自定义基因集，每行: 通路名\tURL\tgene1\tgene2...</td></tr>
+                        <tr><td>gene_list.csv</td><td><a href="#fmt-gene">F3</a></td><td>GO/KEGG ORA 输入基因列表</td></tr>
+                        <tr><td>ranked_gene_list.csv</td><td>CSV / TSV</td><td>prerank GSEA 输入，至少包含基因列和可转数值的排序指标列</td></tr>
+                        <tr><td>expression.csv + target_genes.csv</td><td><a href="#fmt-expr">F1</a> + <a href="#fmt-gene">F3</a></td><td>correlation / median_split GSEA 输入</td></tr>
+                        <tr><td>group.csv</td><td><a href="#fmt-group">F2</a></td><td>GSVA 分组输入；可通过专用参数或通用分组参数指定</td></tr>
+                        <tr><td>GMT 文件</td><td>GMT 格式</td><td>GSEA 必需；每行包含通路名、描述及基因列表，支持传入多个文件</td></tr>
                     </tbody>
                 </table>
 
@@ -796,7 +806,7 @@
                         <tr><td><code>GSEA_*.csv</code></td><td>GSEA 富集结果（含 NES、p.adjust）</td></tr>
                         <tr><td><code>*_barplot.png/pdf</code></td><td>柱状图 / 泡泡图 / 点图可视化</td></tr>
                         <tr><td><code>gsea_plot_*.png/pdf</code></td><td>GSEA 山脊图（前 N 条通路）</td></tr>
-                        <tr><td><code>report.docx</code></td><td>Word 自动汇总报告</td></tr>
+                        <tr><td><code>unified_enrichment_report.&lt;run_id&gt;.docx</code></td><td>启用报告时写入 <code>result/</code> 的 Word 汇总报告</td></tr>
                     </tbody>
                 </table>
                 </div>
@@ -1775,15 +1785,16 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
                     </tbody>
                 </table>
 
-                <h3>日志与报告</h3>
+                <h3>日志、缓存与报告</h3>
                 <div class="success-box">
-                    <strong>&#x1F4CB; 所有模块都会生成：</strong>
+                    <strong>&#x1F4CB; 按实际阶段查看：</strong>
                     <ul style="margin-top:8px">
-                        <li><strong>logs/</strong>：运行日志（含时间戳和 sessionInfo）</li>
-                        <li><strong>report/</strong>：自动 Word/Quarto 报告（大部分模块支持）</li>
+                        <li><strong>log/&lt;run_id&gt;/</strong>：新建或升级模块的独立运行日志与配置快照；既有模块若仍使用 <code>logs/</code>，以模块帮助为准</li>
+                        <li><strong>cache/</strong>：支持分阶段重绘的模块保存正式计算缓存及清单，<code>plot</code> 不得静默重新计算</li>
                         <li><strong>result/</strong>：分析结果（CSV + 图表）</li>
+                        <li><strong>report/</strong>：仅明确支持独立报告目录的模块按需创建；正式报告的既有位置以模块 README 为准</li>
                     </ul>
-                    遇到问题时，优先查看 <code>logs/</code> 目录下最新的 <code>.log</code> 文件。
+                    遇到问题时，先读取 <code>.run_id</code> 定位最近成功调用，再查看对应运行日志；失败运行按其输出的日志路径排查，不能只按文件名排序猜测“最新”。
                 </div>
             </div>
         </div>
@@ -1808,7 +1819,7 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
                         <tr><td>2</td><td>分组提取</td><td><code>run_extract_groups.sh</code></td><td>iyunlyl</td><td>pdata.csv</td><td>group.csv</td></tr>
                         <tr><td>3</td><td>Combine</td><td><code>run_combine.sh</code></td><td>iyunlyl</td><td>多个 dat.csv + group.csv</td><td>combat.dat.csv</td></tr>
                         <tr><td>4</td><td>DEGs</td><td><code>run_degs.sh</code></td><td>iyunlyl</td><td>dat.csv + group.csv</td><td>DEG_all/sig.csv + 图表</td></tr>
-                        <tr><td>5</td><td>富集分析</td><td><code>run_unified_enrichment.sh</code></td><td>iyunlpf</td><td>gene_list.csv + ranked_list.csv</td><td>GO/KEGG/GSEA 结果</td></tr>
+                        <tr><td>5</td><td>富集分析</td><td><code>run.sh</code></td><td>iyunlpf</td><td>gene_list.csv + ranked_list.csv</td><td>GO/KEGG/GSEA 结果</td></tr>
                         <tr><td>6</td><td>MachineLearn</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>gene.csv + dat.csv + group.csv</td><td>各算法结果</td></tr>
                         <tr><td>7</td><td>韦恩图</td><td><code>run_venn_plot.sh</code></td><td>iyunlpf</td><td>多个 gene_list.csv</td><td>Venn + UpSet 图</td></tr>
                         <tr><td>8</td><td>表达验证</td><td><code>run_expression_verify.sh</code></td><td>iyunlyl</td><td>train/val expr + genes</td><td>统计 + 箱线图 + ROC</td></tr>
@@ -1832,8 +1843,8 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
 
         <!-- ========== Footer ========== -->
         <p class="footer-note">
-            生物信息学标准化分析流程 SOP &mdash; 版本 1.7 &mdash; 最后更新：2026-04-02<br>
-            脚本目录：<code>/media/share/secure/</code> &nbsp;|&nbsp; 输出目录：<code>/media/share/Project/</code>
+            生物信息学标准化分析流程 SOP &mdash; 版本 1.7 &mdash; 最后更新：2026-08-06<br>
+            脚本目录：<code>/media/share/secure/</code> &nbsp;|&nbsp; 输出目录：<code>/media/share/Project/</code> &nbsp;|&nbsp; 关联主规范：v1.4
         </p>
 
     </div>

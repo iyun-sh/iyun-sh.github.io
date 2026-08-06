@@ -503,7 +503,7 @@
                                 <li class="step ai">
                                     <div class="node">
                                         <h4>Step 3 - 生成代码</h4>
-                                        <p>按决策范围实现代码，确保可运行且结构清晰。代码须遵循《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》的全部要求，包括但不限于：目录结构、命名、日志、路径 normalizePath 标准化、<strong>脚本开发规范</strong>（错误处理与退出码、编码风格）、<strong>计算与作图代码分离</strong>、<strong>模块协作与版本管理</strong>约定。迁移或包装既有模块时，不得用 demo、mock、stub、placeholder、synthetic 或 fallback 逻辑替代原始业务算法。</p>
+                                        <p>按决策范围实现代码，确保可运行且结构清晰。代码须遵循《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》的全部要求，包括目录结构、命名、日志、路径 normalizePath 标准化、阶段式 <code>run.sh</code>、单一分析配置初始化、正式计算缓存、计算与作图分离、模块协作与版本管理。迁移或包装既有模块时，不得用 demo、mock、stub、placeholder、synthetic 或 fallback 逻辑替代原始业务算法。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
@@ -511,6 +511,15 @@
                                     <div class="node">
                                         <h4>Step 4 - 验证</h4>
                                         <p>用 demo 输入或真实业务输入做对应级别的验证，人工复核关键结果。<strong>须按《规范》质量保证章节的输出校验规范和验证类型标注执行</strong>；demo 目录只放输入数据，不放输出结果或预存基准。验证报告必须标注真实业务验证、契约/接口验证、烟测验证或 demo 验证，不能把生成文件成功等同于业务保真。</p>
+                                        <p><strong>契约验收至少覆盖：</strong></p>
+                                        <ul>
+                                            <li>无参数与 <code>--help</code>：返回 0、帮助完整且没有文件副作用；未知参数明确失败。</li>
+                                            <li><code>init</code>：首次只生成一份带完整中文注释的分析配置；重复执行幂等，差异内容不被静默覆盖。</li>
+                                            <li><code>calculate</code>：生成正式表格、覆盖全部约定图形所需的缓存对象和 manifest，不生成图形或空报告目录。</li>
+                                            <li><code>plot</code>：缓存有效时不计算并重建全部约定图形；缓存缺失、损坏或不兼容时明确失败且不静默重算。</li>
+                                            <li><code>full</code>：结果等价于各已启用阶段组合，未启用报告时不创建空 <code>report/</code>。</li>
+                                            <li>从模块目录外直接执行入口仍能定位内部资源；图形格式、尺寸、主题、颜色与字体配置均有实际产物或明确错误证据。</li>
+                                        </ul>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
@@ -533,7 +542,7 @@
                                 <li class="step ai">
                                     <div class="node">
                                         <h4>Step 5 - 生成验证记录</h4>
-                                        <p>记录验证类型、输入、输出、异常与结论，形成可追溯记录。报告须遵循《规范》文件格式建议中报告文件的标准章节结构（标题页、分析方法、主要结果、结论）。至少包含：验证日期、输入文件清单、输出文件清单、异常记录、通过/失败结论。</p>
+                                        <p>记录验证类型、输入、输出、异常与结论，形成可追溯记录。至少包含：验证日期与完整命令、输入文件及计算参数指纹、当前 run_id、缓存生产 run_id、输入与生效配置快照、输出文件清单、缓存命中/拒绝证据、异常记录、退出码和通过/失败结论。业务分析报告仍按模块原有正式位置保存，不因验证记录新增固定报告目录。</p>
                                         <span class="meta">执行人: AI + 执行者</span>
                                     </div>
                                 </li>
@@ -601,7 +610,7 @@
                                 <li class="step end">
                                     <div class="node">
                                         <h4>完成</h4>
-                                        <p>输出最终代码与报告，流程闭环。</p>
+                                        <p>输出最终代码与验证记录；业务报告仅按模块已声明能力及既有位置生成，流程闭环。</p>
                                     </div>
                                 </li>
                             </ol>
@@ -681,14 +690,14 @@
                     </div>
                     <div class="deliverable-card ai">
                         <h4>文档交付</h4>
-                        <p><code>README.md</code>（入口、阶段、输入、输出、日志、缓存、验证方式齐全）+ <code>CHANGELOG.md</code>（版本变更记录）+ 环境依赖文件（<code>requirements.txt</code> / <code>renv.lock</code>）。涉及既有模块迁移或包装时，还需说明原始核心脚本、绘图逻辑、报告逻辑仍被调用，并列出验证类型与验证证据。</p>
+                        <p><code>README.md</code>（模块用途、功能边界、入口、阶段、<code>init</code>、输入模式、参数优先级、输出、日志、缓存契约、验证方式齐全）+ <code>CHANGELOG.md</code>（版本变更记录）+ 环境依赖文件（<code>requirements.txt</code> / <code>renv.lock</code>）。涉及既有模块迁移或包装时，还需说明原始核心脚本、绘图逻辑、报告逻辑仍被调用，并列出验证类型与验证证据。</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.1 | <strong>更新日期:</strong> 2026-03-27 | 与《生信开发模块文件与输出规范 v1.3》配套</p>
+        <p class="footer-note"><strong>版本:</strong> v1.2 | <strong>更新日期:</strong> 2026-08-06 | 与《生信开发模块文件与输出规范 v1.4》配套</p>
 
     </div>
 <script>

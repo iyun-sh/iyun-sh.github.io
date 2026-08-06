@@ -724,7 +724,7 @@ stopifnot("sample 不匹配" = length(setdiff(group_samples, expr_samples)) == 0
                 <h2 class="section-title" id="sec-cmd">🖥️ 标准化模块执行命令 <span class="badge badge-required">核心</span></h2>
 
                 <div class="lead-box">
-                    <strong>📌 命令规范：</strong>所有模块通过顶层 <code>run.sh</code> 统一调用。命令执行前需确保输入文件已通过校验，执行后检查输出文件和日志。
+                    <strong>📌 命令规范：</strong>新建或升级模块通过可直接执行的顶层 <code>./run.sh</code> 调用，并采用 <code>init</code> / <code>calculate</code> / <code>plot</code> / <code>full</code> 阶段。下列示例保留已部署模块的真实兼容语法，具体参数以对应 <code>--help</code> 为准，不应机械改写。执行前校验输入，执行后检查正式结果和独立运行日志。
                 </div>
 
                 <div class="tabs-container">
@@ -827,21 +827,24 @@ run_download_gse.sh -g GSE126124 -o /media/share/Project/myproject/01_GSE/GSE126
                     <div id="cmd-enrich" class="tab-content">
                         <h4>🧬 富集分析模块</h4>
                         <pre class="code-block"># ---- GO / KEGG 富集分析 ----
-bash run.sh \
-    --module Enrichment \
-    --gene gene.csv \
-    --species human \
-    --type GO,KEGG \
-    --pvalue 0.05 \
-    --output result/Enrichment/
+RUN=/media/share/secure/unified_enrichment/run.sh
+CONFIG=/media/share/secure/unified_enrichment/config/unified_enrichment.config.ini
+
+"$RUN" calculate -c "$CONFIG" \
+    -o /media/share/Project/项目名/04_Enrichment \
+    -w /path/to/workdir \
+    -s hsa \
+    --gene-list gene_list.csv \
+    --gsea false
 
 # ---- GSEA 基因集富集分析 ----
-bash run.sh \
-    --module GSEA \
-    --expression expression.csv \
-    --group group.csv \
-    --gene-sets MSigDB \
-    --output result/GSEA/</pre>
+"$RUN" calculate -c "$CONFIG" \
+    -o /media/share/Project/项目名/04_GSEA \
+    -w /path/to/workdir \
+    -s hsa \
+    --analysis-mode gsea-only \
+    --ranked-list ranked_gene_list.csv \
+    --gmt hallmark.gmt</pre>
                     </div>
 
                     <div id="cmd-combine" class="tab-content">
@@ -949,7 +952,7 @@ run_extract_groups.sh -f /media/share/Project/项目名/01_GSE/GSEXXXXX/GSEXXXXX
 # 备注: 
 
 # ---- Step 5: 富集分析 ----
-/media/share/secure/unified_enrichment/run_unified_enrichment.sh --help
+/media/share/secure/unified_enrichment/run.sh --help
 # 状态: ✅ 完成 / ❌ 失败
 # 备注: </pre>
                         <div class="success-box">
@@ -1292,7 +1295,7 @@ setdiff(group_samples, expr_samples)</pre>
                     <strong>✅ 交付前检查清单：</strong>
                     <ul style="margin-top:8px; padding-left:20px;">
                         <li>☐ 所有必需文件已生成且通过校验</li>
-                        <li>☐ 数据处理日志已保存到 <code>logs/</code> 目录</li>
+                        <li>☐ 新建或升级模块的日志已保存到 <code>log/&lt;run_id&gt;/</code>；既有模块使用 <code>logs/</code> 时已按其帮助说明核对</li>
                         <li>☐ 分组决策已记录（含数据反馈文件中的建议和最终方案）</li>
                         <li>☐ 标准化模块执行命令已记录</li>
                         <li>☐ 各文件的 sample 列/列名已交叉验证一致</li>
@@ -1303,7 +1306,7 @@ setdiff(group_samples, expr_samples)</pre>
         </div>
 
         <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.0 | 更新日期: 2026-04-01 | 关联文档：《生信开发模块文件与输出规范》</p>
+        <p class="footer-note"><strong>版本:</strong> v1.1 | 更新日期: 2026-08-06 | 关联文档：《生信开发模块文件与输出规范 v1.4》</p>
 
     </div>
 
@@ -1374,4 +1377,3 @@ setdiff(group_samples, expr_samples)</pre>
 </script>
 </body>
 </html>
-
