@@ -295,16 +295,19 @@
         <a href="#m-mr">20. MR</a>
         <a href="#m-coloc">21. coloc</a>
         <a href="#m-tsg">22. TSG</a>
-        <a href="#troubleshoot">23. 故障排除</a>
+        <a href="#m-ic50">23. IC50</a>
+        <a href="#m-drugreflector">24. DrugReflector</a>
+        <a href="#m-graphban">25. GraphBAN</a>
+        <a href="#troubleshoot">26. 故障排除</a>
     </nav>
     <div class="container">
 
         <!-- ========== Hero ========== -->
         <div class="hero">
             <h1>&#x1F9EC; 标准化分析流程 SOP</h1>
-            <p>涵盖 21 个生物信息学分析模块的标准操作流程，从 GEO 数据下载到因果推断全链路覆盖。所有模块统一通过入口脚本调用，代码受保护，多用户共享。</p>
+            <p>涵盖 24 个生物信息学分析模块的标准操作流程，从 GEO 数据下载、统计建模到药物预测与因果推断全链路覆盖。所有模块统一通过入口脚本调用，输出写入 Project 目录。</p>
             <div class="pill-row">
-                <span class="pill primary">&#x1F4CB; 21 个分析模块</span>
+                <span class="pill primary">&#x1F4CB; 24 个分析模块</span>
                 <span class="pill accent">&#x1F512; 代码保护机制</span>
                 <span class="pill warn">&#x1F4C4; 自动报告生成</span>
                 <span class="pill danger">&#x26A0;&#xFE0F; 只用入口脚本运行</span>
@@ -326,11 +329,11 @@
                     </div>
                     <div class="check-item">
                         <span class="icon">&#x1F4C1;</span>
-                        <div class="desc"><strong>共享目录</strong><br>脚本位于 <code>/media/share/secure/</code>，输出请写到 <code>/media/share/Project/</code></div>
+                        <div class="desc"><strong>模块目录</strong><br>入口路径以各模块章节为准（当前使用 <code>/media/share/secure/</code> 或 <code>/media/share/secure_dev/</code>），输出写到 <code>/media/share/Project/</code></div>
                     </div>
                     <div class="check-item">
                         <span class="icon">&#x1F512;</span>
-                        <div class="desc"><strong>权限配置</strong><br>已配置免密调用受保护脚本（<code>/etc/sudoers.d/secure_scripts</code>）</div>
+                        <div class="desc"><strong>写入边界</strong><br>每个模块的公开入口只操作当前调用者 Project 范围内、由该模块自身校验通过的路径</div>
                     </div>
                     <div class="check-item">
                         <span class="icon">&#x1F4E6;</span>
@@ -341,12 +344,11 @@
                 <div class="danger-box">
                     <strong>&#x1F6AB; 绝对禁止</strong>
                     <ul style="margin-top:8px">
-                        <li>直接运行 <code>/media/share/secure/</code> 下的 <code>.R</code> 脚本 — 只能通过模块公开的 Shell 入口（<code>run_*.sh</code> 或 <code>run.sh</code>）调用</li>
-                        <li>修改 <code>/media/share/secure/</code> 下任何文件 — 该目录只读（对非所有者）</li>
-                        <li>输出目录不要放在 <code>/media/share/secure/</code> 内</li>
+                        <li>直接运行 <code>/media/share/secure/</code> 或 <code>/media/share/secure_dev/</code> 下的 <code>.R</code> / <code>.py</code> 脚本 — 只能通过模块公开的 Shell 入口（<code>run_*.sh</code> 或 <code>run.sh</code>）调用</li>
+                        <li>修改上述模块目录中的任何文件 — 这些目录对普通调用者只读</li>
+                        <li>输出目录不得放在上述模块目录内</li>
                     </ul>
                 </div>
-                <p style="margin-top:14px;font-size:14px;">📖 <strong>新人培训：</strong><a href="生信流程执行员培训手册.html">生信流程执行员培训手册</a> &mdash; 数据获取 Day 1（GSE+单细胞下载）→ Day 2（预处理+Seurat 对象构建）→ Day 3（combine+考核）</p>
             </div>
         </div>
 
@@ -354,32 +356,35 @@
         <div class="grid" id="workflow">
             <div class="card">
                 <h2 class="section-title">&#x1F5FA;&#xFE0F; 1. 全流程总览</h2>
-                <p>以下 21 个模块可根据项目需求<strong>灵活组合</strong>，不存在固定的执行顺序。每个模块只要满足其<strong>前置数据需求</strong>即可独立运行。</p>
+                <p>以下模块可根据项目需求<strong>灵活组合</strong>，不存在固定的执行顺序。每个模块只要满足其<strong>前置数据需求</strong>即可独立运行；同一模块的输入、输出、日志和报告应放在同一个项目目录下。</p>
 
                 <table class="matrix">
                     <thead><tr><th style="width:30px">#</th><th>模块</th><th>功能</th><th>前置数据需求</th><th style="min-width:60px;text-align:center">类型</th></tr></thead>
                     <tbody>
-                        <tr><td>1</td><td>GEO 下载</td><td>从 GEO 数据库下载表达芯片/RNA-seq 数据集</td><td>GSE 编号列表</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
-                        <tr><td>2</td><td>分组提取</td><td>从 GEO 数据提取分组信息</td><td>GEO 下载的输出</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
-                        <tr><td>3</td><td>Combine 合并</td><td>多平台/多数据集合并为统一矩阵</td><td>GEO 下载 + 分组提取的输出</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
-                        <tr><td>4</td><td>DEGs 差异表达</td><td>鉴定差异表达基因</td><td>合并后的表达矩阵 + 分组信息</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
-                        <tr><td>5</td><td>Enrichment 富集分析</td><td>GO / KEGG / GSEA 功能注释</td><td>差异基因列表（DEGs 输出）</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
-                        <tr><td>6</td><td>MachineLearn 机器学习</td><td>多种算法筛选关键特征基因</td><td>差异基因列表 + 表达矩阵</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
-                        <tr><td>7</td><td>Venn 韦恩图</td><td>取多种方法的特征基因交集</td><td>MachineLearn 各算法输出</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
-                        <tr><td>8</td><td>Expression_verify 表达验证</td><td>在独立数据集中验证候选基因表达</td><td>Venn 交集基因 + 验证数据集</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
-                        <tr><td>9</td><td>Prognosis 预后分析</td><td>Cox/LASSO/KM 生存分析与预后建模</td><td>候选基因 + 生存数据</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
-                        <tr><td>10</td><td>Nomogram 列线图</td><td>构建多因素列线图并校准</td><td>预后模型输出</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>11</td><td>WGCNA</td><td>加权共表达网络分析</td><td>表达矩阵 + 临床特征</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>12</td><td>Friends GO 语义相似性</td><td>基因 GO 功能相似性网络</td><td>候选基因列表</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>13</td><td>PPI 蛋白互作</td><td>STRING 蛋白互作网络</td><td>候选基因列表</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>14</td><td>Immune 免疫浸润</td><td>8 种方法评估免疫微环境</td><td>表达矩阵 + 分组信息</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>15</td><td>Chromosome 染色体图</td><td>基因在染色体上的位置可视化</td><td>候选基因列表 + 物种信息</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>16</td><td>TMB 肿瘤突变负担</td><td>突变负担计算与分组比较</td><td>MAF 突变数据 + riskscore（Prognosis 输出）</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>17</td><td>MSI 微卫星不稳定</td><td>MSI 状态分析与风险关联</td><td>MSI 数据 + riskscore（Prognosis 输出）</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>18</td><td>DEPTH2</td><td>拷贝数 / 甲基化 / 免疫联合分析</td><td>Prognosis 输出 + TCGA 数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>19</td><td>MR 孟德尔随机化</td><td>因果推断（GWAS 数据驱动）</td><td>GWAS 汇总统计数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>20</td><td>coloc 共定位</td><td>独立共定位分析流程，评估 GWAS 与 eQTL/pQTL 信号是否共享因果位点</td><td>GWAS 汇总统计 + eQTL/pQTL 区域数据或 coloc 配置</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
-                        <tr><td>21</td><td>TSG (TWAS+SMR+MR)</td><td>多组学因果推断</td><td>GWAS + eQTL 数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>1</td><td>GEO 下载</td><td>从 GEO 下载表达芯片/RNA-seq 数据集</td><td>GSE 编号或 GSE 列表</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>2</td><td>分组提取</td><td>从 pdata/样本信息中提取分组表</td><td>GEO 下载输出的 pdata.csv</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>3</td><td>Combine 合并</td><td>多平台/多数据集合并与批次校正</td><td>表达矩阵 + 分组表</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>4</td><td>DEGs 差异表达</td><td>差异基因、火山图、热图与报告</td><td>表达矩阵 + 分组表</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>5</td><td>unified_enrichment 富集</td><td>GO / KEGG / Reactome ORA 与 GSEA</td><td>基因列表或 ranked list</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>6</td><td>MachineLearn</td><td>LASSO / RF / SVM-RFE / Boruta 等特征选择</td><td>候选基因 + 表达矩阵 + 分组表</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>7</td><td>venn_plot</td><td>韦恩图、UpSet 图与交集基因表</td><td>多个基因列表</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>8</td><td>Expression_verify</td><td>候选基因表达量验证、ROC/AUC</td><td>训练/验证表达矩阵 + 基因表</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>9</td><td>Prognosis</td><td>Cox / LASSO / KM / 时间 ROC 预后建模</td><td>表达矩阵 + 生存信息 + 基因表</td><td><span class="badge" style="background:#059669;color:#fff">核心</span></td></tr>
+                        <tr><td>10</td><td>Nomogram</td><td>列线图、DCA、校准曲线</td><td>预后模型或临床变量</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>11</td><td>DEPTH2</td><td>拷贝数、甲基化、免疫相关综合分析</td><td>Prognosis 输出 + TCGA 数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>12</td><td>WGCNA</td><td>加权共表达网络分析</td><td>表达矩阵 + 临床/分组性状</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>13</td><td>friends</td><td>GO 语义相似性网络</td><td>候选基因列表</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>14</td><td>PPI</td><td>STRING 互作网络、cytoHubba 候选核心基因</td><td>候选基因列表</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>15</td><td>immune_infiltration</td><td>CIBERSORT / EPIC / ESTIMATE 等免疫浸润</td><td>表达矩阵 + 分组表</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>16</td><td>chromosome_plot</td><td>染色体环形图与基因定位可视化</td><td>基因列表 + 物种信息</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>17</td><td>TMB</td><td>肿瘤突变负担、突变景观与生存关联</td><td>MAF/TCGA 突变数据 + 风险评分</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>18</td><td>MSI</td><td>微卫星不稳定性状态分析</td><td>MSI/临床数据 + 风险评分</td><td><span class="badge" style="background:#f59e0b;color:#fff">扩展</span></td></tr>
+                        <tr><td>19</td><td>MR</td><td>eQTL / pQTL / traditional MR</td><td>基因表 + GWAS/eQTL/pQTL 配置</td><td><span class="badge" style="background:#f59e0b;color:#fff">因果</span></td></tr>
+                        <tr><td>20</td><td>coloc</td><td>GWAS 与 eQTL/pQTL 信号共定位</td><td>GWAS + eQTL/pQTL 区域数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">因果</span></td></tr>
+                        <tr><td>21</td><td>TSG</td><td>TWAS + SMR + HEIDI + MR 因果推断流水线</td><td>GWAS + eQTL 数据</td><td><span class="badge" style="background:#f59e0b;color:#fff">因果</span></td></tr>
+                        <tr><td>22</td><td>IC50</td><td>pRRophetic / oncoPredict 药物响应与敏感性组间比较</td><td>表达矩阵 + 风险评分 + 模型基因</td><td><span class="badge" style="background:#8b5cf6;color:#fff">药物</span></td></tr>
+                        <tr><td>23</td><td>DrugReflector</td><td>反向治疗 signature 与候选药物排序</td><td>bulk 表达矩阵 + 分组表 + 目标基因表</td><td><span class="badge" style="background:#8b5cf6;color:#fff">药物</span></td></tr>
+                        <tr><td>24</td><td>GraphBAN</td><td>靶点蛋白候选小分子相互作用预测</td><td>靶点基因/蛋白序列 + 小分子库</td><td><span class="badge" style="background:#8b5cf6;color:#fff">药物</span></td></tr>
                     </tbody>
                 </table>
 
@@ -387,7 +392,7 @@
                     <strong>&#x1F4A1; 项目目录推荐结构</strong>
 <pre style="margin:8px 0 0; font-family:Consolas,monospace; font-size:0.9em; line-height:1.6">
 /media/share/Project/你的用户名/项目名/
-├── 01_GSE/                  &larr; GEO 下载输出
+├── 01_GSE/                  &larr; GEO 下载与分组提取
 ├── 02_Combine/              &larr; 合并后数据
 ├── 03_DEGs/                 &larr; 差异表达结果
 ├── 04_Enrichment/           &larr; 富集分析结果
@@ -401,16 +406,13 @@
 ├── 12_PPI/                  &larr; 蛋白互作网络
 ├── 13_Immune/               &larr; 免疫浸润
 ├── 14_Chromosome/           &larr; 染色体图
-├── 15_TMB/                  &larr; 肿瘤突变负担
-├── 16_MSI/                  &larr; 微卫星不稳定性
-├── 17_DEPTH2/               &larr; DEPTH2
-├── 18_MR/                   &larr; 孟德尔随机化
-├── 19_coloc/                &larr; 共定位分析
-└── 20_TSG/                  &larr; 因果推断
+├── 15_TMB_MSI_DEPTH2/       &larr; 突变/微卫星/综合扩展
+├── 16_MR_coloc_TSG/         &larr; 因果推断
+└── 17_Drug/                 &larr; IC50 / DrugReflector / GraphBAN
 </pre>
                     <p style="margin-top:8px;font-size:0.92em;">
                         <strong>目录创建：</strong><code>mkdir -p /media/share/Project/$(whoami)/项目名</code><br>
-                        <strong>权限设置：</strong><code>chmod 1777 /media/share/Project/$(whoami)/项目名</code>（入口脚本以 iyunlyl 身份运行，需要写入权限；1777 = 全开 + sticky bit 防互删）
+                        <strong>写入方式：</strong>通过各模块的公开入口指定结果目录；调用者、路径、创建、覆盖与删除规则由当前模块独立校验。
                     </p>
                 </div>
 
@@ -467,6 +469,9 @@
                 <div class="warn-box" style="margin-top:14px">
                     <strong>&#x1F4CC; 新旧接口边界：</strong> 下方 <code>run_*.sh</code>、<code>--init</code>、<code>-c</code>、<code>--stage full/all</code> 是已部署模块的兼容接口，不应机械改写。新建或升级模块按《生信开发模块文件与输出规范》使用可直接执行的 <code>./run.sh</code>、<code>init</code> / <code>calculate</code> / <code>plot</code> / <code>full</code> 阶段和稳定长参数；兼容映射必须同时写入模块 README 与帮助信息。
                 </div>
+                <div class="info-box" style="margin-top:10px">
+                    <strong>&#x1F4CD; 当前部署路径：</strong><code>IC50</code>、<code>DrugReflector</code> 和 <code>GraphBAN</code> 当前入口位于 <code>/media/share/secure_dev/</code>；其余模块按各自章节保留 <code>/media/share/secure/</code> 的已部署路径。路径迁移前不得自行替换。
+                </div>
 
                 <table class="matrix" style="margin-top:18px">
                     <thead>
@@ -478,7 +483,7 @@
                     <tbody>
                         <tr>
                             <td><code>iyunlyl</code></td>
-                            <td>gse_download_and_cleaning、Combine、DEGs、MachineLearn、Expression_verify、Prognosis、Nomogram、DEPTH2、wgcna、friends、PPI、immune_infiltration、chromosome_plot、TMB、MSI、MR、coloc</td>
+                            <td>gse_download_and_cleaning、Combine、DEGs、MachineLearn、Expression_verify、Prognosis、Nomogram、DEPTH2、wgcna、friends、PPI、immune_infiltration、chromosome_plot、TMB、MSI、MR、coloc、IC50、DrugReflector、GraphBAN</td>
                         </tr>
                         <tr>
                             <td><code>iyunlpf</code></td>
@@ -488,11 +493,11 @@
                 </table>
 
                 <div class="warn-box" style="margin-top:14px">
-                    <strong>&#x1F4DD; 输出目录权限模型</strong>
+                    <strong>&#x1F4DD; 模块独立的输出边界</strong>
                     <ul style="margin-top:8px">
-                        <li>输出目录自动设为 <code>777 + sticky bit</code>（所有人可写，但不能删别人的文件）</li>
-                        <li>目录下生成 <code>.owner</code> 文件记录创建者</li>
-                        <li>删除操作需 <code>.owner</code> 匹配当前用户</li>
+                        <li>每个模块在自身公开入口内识别调用者，并独立校验 Project 路径、目录创建、覆盖与删除操作</li>
+                        <li>严禁依赖 <code>/media/share/secure/</code>、<code>/media/share/secure_dev/</code> 等共享根目录的公共校验脚本，也不得调用其他模块的校验实现</li>
+                        <li>所有者标记等内部机制由各模块自行决定并写入 README，不作为跨模块公共契约</li>
                     </ul>
                 </div>
             </div>
@@ -586,7 +591,7 @@
                         <tr><td><code>GSExxxxx.dat.csv</code></td><td>表达矩阵（第一列 SYMBOL）</td></tr>
                         <tr><td><code>GSExxxxx_pdata.csv</code></td><td>样本临床信息</td></tr>
                         <tr><td><code>GSExxxxx_group.csv</code></td><td>分组文件（sample, group）</td></tr>
-                        <tr><td><strong>项目编号-数据集反馈.xlsx</strong></td><td>数据集反馈表（总览 + 各数据集样本详情），详见培训手册 <a href="生信流程执行员培训手册.html#feedback">附录 A</a></td></tr>
+                        <tr><td><strong>项目编号-数据集反馈.xlsx</strong></td><td>数据集反馈表（总览 + 各数据集样本详情），用于记录数据来源、下载结果、样本分组和处理状态</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1738,10 +1743,55 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
             </div>
         </div>
 
-        <!-- ========== 22. 故障排除 ========== -->
+        <!-- ========== 23. IC50 ========== -->
+        <div class="grid" id="m-ic50">
+            <div class="card">
+                <div class="module-header">
+                    <div><div class="module-name">23. IC50 药物敏感性预测 <span class="badge badge-owner">iyunlyl</span></div><div class="module-desc">基于表达矩阵、风险评分和模型基因运行 pRRophetic / oncoPredict，比较分组间的药物响应与敏感性分数。</div></div>
+                </div>
+                <div class="code-block">/media/share/secure_dev/IC50/run.sh --help
+/media/share/secure_dev/IC50/run.sh init -o /media/share/Project/$(whoami)/项目名/IC50/init
+/media/share/secure_dev/IC50/run.sh full -c /media/share/Project/$(whoami)/项目名/IC50/init/IC50.config.ini -o /media/share/Project/$(whoami)/项目名/IC50/full</div>
+                <table class="matrix"><thead><tr><th>输入</th><th>输出</th><th>要点</th></tr></thead><tbody>
+                    <tr><td>表达矩阵、风险评分表、模型基因表、pRRophetic 药物列表；oncoPredict 使用已审核预测矩阵或训练表达/响应 RDS</td><td><code>result/pRRophetic__*</code>、<code>result/oncoPredict__*</code>、<code>result/IC50_report.docx</code></td><td>两种方法默认使用模型基因；全表达矩阵预测须分别调整 <code>[pRRophetic].gene_mode</code> 或 <code>[oncoPredict].gene_mode</code>。</td></tr>
+                </tbody></table>
+            </div>
+        </div>
+
+        <!-- ========== 24. DrugReflector ========== -->
+        <div class="grid" id="m-drugreflector">
+            <div class="card">
+                <div class="module-header">
+                    <div><div class="module-name">24. DrugReflector AI 虚拟药物筛选 <span class="badge badge-owner">iyunlyl</span></div><div class="module-desc">将目标基因集和 bulk 表达矩阵转换为反向治疗 signature，调用 DrugReflector checkpoint 预测候选药物排序。</div></div>
+                </div>
+                <div class="code-block">/media/share/secure_dev/DrugReflector/run.sh --help
+/media/share/secure_dev/DrugReflector/run.sh init -o /media/share/Project/$(whoami)/项目名/DrugReflector/init
+/media/share/secure_dev/DrugReflector/run.sh full -c /media/share/Project/$(whoami)/项目名/DrugReflector/init/DrugReflector.config.ini -o /media/share/Project/$(whoami)/项目名/DrugReflector/full</div>
+                <table class="matrix"><thead><tr><th>输入</th><th>输出</th><th>要点</th></tr></thead><tbody>
+                    <tr><td>bulk 表达矩阵、样本分组表、目标基因表；正式预测所需三折 checkpoint</td><td><code>result/04_table_bulk_disease_signature.tsv</code>、<code>result/07_table_drugreflector_ranked_compounds.csv</code>、<code>result/08_table_top_compounds.csv</code>、<code>result/DrugReflector_report.docx</code></td><td><code>group1</code> 为参考/好表型，<code>group2</code> 为疾病/坏表型；治疗 signature 默认表示 <code>group2 → group1</code>。</td></tr>
+                </tbody></table>
+            </div>
+        </div>
+
+        <!-- ========== 25. GraphBAN ========== -->
+        <div class="grid" id="m-graphban">
+            <div class="card">
+                <div class="module-header">
+                    <div><div class="module-name">25. GraphBAN 靶点蛋白候选小分子预测 <span class="badge badge-owner">iyunlyl</span></div><div class="module-desc">给定靶点蛋白和候选小分子库，生成药物-靶点候选评分、排序结果与正式报告。</div></div>
+                </div>
+                <div class="code-block">/media/share/secure_dev/GraphBAN/run.sh --help
+/media/share/secure_dev/GraphBAN/run.sh init -o /media/share/Project/$(whoami)/项目名/GraphBAN/init
+/media/share/secure_dev/GraphBAN/run.sh full -c /media/share/Project/$(whoami)/项目名/GraphBAN/init/GraphBAN.config.ini -o /media/share/Project/$(whoami)/项目名/GraphBAN/full</div>
+                <table class="matrix"><thead><tr><th>输入</th><th>输出</th><th>要点</th></tr></thead><tbody>
+                    <tr><td>靶点基因名或蛋白序列、候选小分子库、正式 GraphBAN checkpoint</td><td><code>result/01_table_graphban_input_candidates.csv</code>、<code>result/02_table_graphban_prediction_scores.csv</code>、<code>result/03_table_graphban_top_candidates.csv</code>、<code>result/GraphBAN_report.docx</code></td><td>可使用内置 ZINC250K；自建库通过 <code>compound_library_scope=file</code> 引用 Project CSV。结构过滤默认关闭，结构注释默认开启。</td></tr>
+                </tbody></table>
+            </div>
+        </div>
+
+        <!-- ========== 26. 故障排除 ========== -->
         <div class="grid" id="troubleshoot">
             <div class="card">
-                <h2 class="section-title">&#x1F527; 22. 故障排除</h2>
+                <h2 class="section-title">&#x1F527; 26. 故障排除</h2>
 
                 <h3>常见问题</h3>
                 <table class="matrix">
@@ -1765,7 +1815,7 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
                         <tr>
                             <td>输出目录删除失败</td>
                             <td>非创建者尝试删除</td>
-                            <td>只有 <code>.owner</code> 文件记录的用户可以 <code>--rm</code> 删除</td>
+                            <td>按该模块 <code>--help</code> 使用清理入口；模块会独立复核调用者、目标路径和删除授权</td>
                         </tr>
                         <tr>
                             <td>GEO 下载缓慢</td>
@@ -1815,27 +1865,30 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>1</td><td>GEO 下载</td><td><code>run_download_gse.sh</code></td><td>iyunlyl</td><td>GSE ID</td><td>dat.csv + group.csv</td></tr>
+                        <tr><td>1</td><td>GEO 下载</td><td><code>run_download_gse.sh</code></td><td>iyunlyl</td><td>GSE ID / gse_list.txt</td><td>表达矩阵 + pdata + 报告</td></tr>
                         <tr><td>2</td><td>分组提取</td><td><code>run_extract_groups.sh</code></td><td>iyunlyl</td><td>pdata.csv</td><td>group.csv</td></tr>
-                        <tr><td>3</td><td>Combine</td><td><code>run_combine.sh</code></td><td>iyunlyl</td><td>多个 dat.csv + group.csv</td><td>combat.dat.csv</td></tr>
-                        <tr><td>4</td><td>DEGs</td><td><code>run_degs.sh</code></td><td>iyunlyl</td><td>dat.csv + group.csv</td><td>DEG_all/sig.csv + 图表</td></tr>
-                        <tr><td>5</td><td>富集分析</td><td><code>run.sh</code></td><td>iyunlpf</td><td>gene_list.csv + ranked_list.csv</td><td>GO/KEGG/GSEA 结果</td></tr>
-                        <tr><td>6</td><td>MachineLearn</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>gene.csv + dat.csv + group.csv</td><td>各算法结果</td></tr>
-                        <tr><td>7</td><td>韦恩图</td><td><code>run_venn_plot.sh</code></td><td>iyunlpf</td><td>多个 gene_list.csv</td><td>Venn + UpSet 图</td></tr>
+                        <tr><td>3</td><td>Combine</td><td><code>run_combine.sh</code></td><td>iyunlyl</td><td>多个表达矩阵 + group.csv</td><td>合并矩阵 + 批次校正结果</td></tr>
+                        <tr><td>4</td><td>DEGs</td><td><code>run_degs.sh</code></td><td>iyunlyl</td><td>表达矩阵 + group.csv</td><td>DEG_all/sig.csv + 图表</td></tr>
+                        <tr><td>5</td><td>富集分析</td><td><code>run.sh</code></td><td>iyunlpf</td><td>gene_list.csv / ranked_list.csv</td><td>ORA/GSEA 结果</td></tr>
+                        <tr><td>6</td><td>MachineLearn</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>genes + expression + group</td><td>各算法特征结果</td></tr>
+                        <tr><td>7</td><td>韦恩图</td><td><code>run_venn_plot.sh</code></td><td>iyunlpf</td><td>多个 gene_list.csv</td><td>Venn / UpSet 图</td></tr>
                         <tr><td>8</td><td>表达验证</td><td><code>run_expression_verify.sh</code></td><td>iyunlyl</td><td>train/val expr + genes</td><td>统计 + 箱线图 + ROC</td></tr>
                         <tr><td>9</td><td>预后分析</td><td><code>run_prognosis.sh</code></td><td>iyunlyl</td><td>expr + survival + genes</td><td>Cox + KM + 风险模型</td></tr>
-                        <tr><td>10</td><td>列线图</td><td><code>run_nomogram.sh</code></td><td>iyunlyl</td><td>expr + group + genes</td><td>Nomogram + DCA + ROC</td></tr>
+                        <tr><td>10</td><td>列线图</td><td><code>run_nomogram.sh</code></td><td>iyunlyl</td><td>临床/模型变量</td><td>Nomogram + DCA + ROC</td></tr>
                         <tr><td>11</td><td>DEPTH2</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>expr + genes + riskscore</td><td>箱线图 + 相关性</td></tr>
-                        <tr><td>12</td><td>WGCNA</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>expr + group</td><td>模块 + 网络</td></tr>
+                        <tr><td>12</td><td>WGCNA</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>expr + trait/group</td><td>模块 + 网络</td></tr>
                         <tr><td>13</td><td>Friends</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>genes.csv</td><td>GO 相似性矩阵</td></tr>
-                        <tr><td>14</td><td>PPI</td><td><code>run_ppi.sh</code></td><td>iyunlyl</td><td>genes.csv</td><td>网络图 + 弦图</td></tr>
+                        <tr><td>14</td><td>PPI</td><td><code>run_ppi.sh</code> / <code>run_cytohubba.sh</code></td><td>iyunlyl</td><td>genes.csv</td><td>网络图 + 核心基因</td></tr>
                         <tr><td>15</td><td>免疫浸润</td><td><code>run_immune_infiltration.sh</code></td><td>iyunlyl</td><td>expr + group + config</td><td>8 种方法结果</td></tr>
                         <tr><td>16</td><td>染色体图</td><td><code>run_chromosome_plot.sh</code></td><td>iyunlyl</td><td>genes.csv</td><td>Circos 环形图</td></tr>
-                        <tr><td>17</td><td>TMB</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>riskscore + genes</td><td>突变景观 + KM</td></tr>
-                        <tr><td>18</td><td>MSI</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>riskscore + clinical</td><td>MSI 分析图</td></tr>
+                        <tr><td>17</td><td>TMB</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>MAF/TCGA + riskscore</td><td>突变景观 + KM</td></tr>
+                        <tr><td>18</td><td>MSI</td><td><code>run_analysis.sh</code></td><td>iyunlyl</td><td>MSI/clinical + riskscore</td><td>MSI 分析图</td></tr>
                         <tr><td>19</td><td>MR</td><td><code>run_mr.sh</code></td><td>iyunlyl</td><td>genes.csv + config</td><td>MR 报告</td></tr>
                         <tr><td>20</td><td>coloc</td><td><code>run_coloc.sh</code></td><td>iyunlyl</td><td>GWAS + eQTL/pQTL 配置</td><td>共定位结果与报告</td></tr>
                         <tr><td>21</td><td>TSG</td><td><code>run_tsg.sh</code></td><td>iyunlpf</td><td>config.ini</td><td>TWAS+SMR+MR 报告</td></tr>
+                        <tr><td>22</td><td>IC50</td><td><code>run.sh</code></td><td>iyunlyl</td><td>expr + riskscore + model genes</td><td>药敏预测 + 组间比较 + DOCX</td></tr>
+                        <tr><td>23</td><td>DrugReflector</td><td><code>run.sh</code></td><td>iyunlyl</td><td>bulk expr + group + target genes</td><td>候选药物排序 + 报告</td></tr>
+                        <tr><td>24</td><td>GraphBAN</td><td><code>run.sh</code></td><td>iyunlyl</td><td>target protein + compound library</td><td>DTI 预测排序 + 报告</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1843,8 +1896,8 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
 
         <!-- ========== Footer ========== -->
         <p class="footer-note">
-            生物信息学标准化分析流程 SOP &mdash; 版本 1.7 &mdash; 最后更新：2026-08-06<br>
-            脚本目录：<code>/media/share/secure/</code> &nbsp;|&nbsp; 输出目录：<code>/media/share/Project/</code> &nbsp;|&nbsp; 关联主规范：v1.4
+            生物信息学标准化分析流程 SOP &mdash; 版本 1.8 &mdash; 最后更新：2026-08-06<br>
+            脚本目录：<code>/media/share/secure/</code> 或文中明确的 <code>/media/share/secure_dev/</code> &nbsp;|&nbsp; 输出目录：<code>/media/share/Project/</code> &nbsp;|&nbsp; 关联主规范：v1.5
         </p>
 
     </div>

@@ -609,7 +609,7 @@ module_output/          # 模块结果目录
                 <section class="card">
                 <h2 class="section-title" id="sec-impl">&#x1F6E0;&#xFE0F; 具体保护实施方法</h2>
 
-                <h3 style="margin:18px 0 8px;color:#0f172a;">1. 文件权限控制（基础保护 — 所有语言通用）</h3>
+                <h3 style="margin:18px 0 8px;color:#0f172a;">1. 文件权限与模块独立写入边界（所有语言通用）</h3>
                 <pre class="code-block"># 目录：仅所有者和同组可进入
 chmod 770 scripts/
 
@@ -622,7 +622,10 @@ chmod 755 run.sh
 # 配置模板和 README：所有人可读
 chmod 644 config/*.example.* README.md CHANGELOG.md</pre>
                 <div class="lead-box">
-                    <strong>说明：</strong> <code>chmod 770</code> 让 <code>scripts/</code> 目录仅所有者和同组用户可访问；<code>chmod 750</code> 让脚本对组外用户不可读。适合<strong>内部团队协作</strong>场景，Linux/macOS 下有效。
+                    <strong>模块内闭环：</strong>每个模块都必须在自身目录和公开入口内独立实现调用者识别、输出路径规范化与边界校验、目录创建以及清理/删除授权；相关实现、测试和版本变更由该模块单独维护。
+                </div>
+                <div class="warn-box" style="margin-top:12px;">
+                    <strong>严禁跨模块依赖：</strong>不得在 <code>/media/share/secure/</code>、<code>/media/share/secure_dev/</code> 等共享根目录放置供多个模块加载的公共写入校验脚本，不得调用其他模块的校验实现，也不得仅依赖文件系统权限代替模块自身校验。规范可以统一，校验代码和生命周期必须归属于单个模块。
                 </div>
 
                 <h3 style="margin:18px 0 8px;color:#0f172a;">2. R 脚本保护</h3>
@@ -774,7 +777,8 @@ output/                     # 运行后生成的模块结果目录
                     <li><strong>Q：配置模板要不要一起交付？</strong><br> A：要。模板配置属于外部使用接口的一部分，不应因代码保护而缺失。</li>
                     <li><strong>Q：保护处理（如加密、编译等）后报错看不懂怎么办？</strong><br> A：需要在模块已公开 Shell 入口和日志中保留清晰的错误提示，不要把内部异常全部变成无意义的返回码。</li>
                     <li><strong>Q：可以只交付内部脚本，让用户自己写入口吗？</strong><br> A：不建议。这样会把外部接口设计责任转嫁给使用者，也不利于后续兼容与保护。</li>
-                    <li><strong>Q：流程调度脚本要不要对外说明？</strong><br> A：通常不需要。对外只说明主入口和必要参数，内部调度细节留在保护域内即可。</li>
+                    <li><strong>Q：流程调度脚本要不要对外说明？</strong><br> A：通常不用。对外只说明主入口和必要参数，内部调度细节留在保护域内即可。</li>
+                    <li><strong>Q：输出目录怎么创建？</strong><br> A：通过模块已公开的 Shell 入口指定 <code>/media/share/Project/&lt;用户名&gt;/</code> 下的结果目录；即使项目父目录已存在，模块自身入口仍须独立校验调用者、规范化路径，并在创建、覆盖或删除前复核边界。</li>
                 </ul>
             </section>
 
@@ -860,6 +864,7 @@ output/                     # 运行后生成的模块结果目录
                     <li>确认从模块目录外调用模块已公开 Shell 入口仍能正确定位内部脚本和模板；新建/升级模块使用 <code>/path/to/module/run.sh</code> 验证。</li>
                     <li>确认 <code>.run_id</code>、独立运行日志、缓存生产 run_id、结果和可选报告结构符合规范页要求。</li>
                     <li>确认 README、配置模板、帮助信息、日志字段和输出结构彼此一致，未保留旧参数或旧产物说明。</li>
+                    <li>确认调用者识别、Project 路径校验、目录创建和删除授权均由本模块入口独立实现，未依赖根目录公共脚本或其他模块。</li>
                     <li>确认保护处理（如加密、编译、二进制化等）后，仍可通过日志追溯到分析点、运行时间、配置副本、输出目录和上游引用。</li>
                     <li>确认 <code>requirements.txt</code> 或 <code>renv.lock</code> 已包含在交付包中，且依赖版本可复现。</li>
                     <li>确认路径使用 <code>normalizePath()</code> 或等价处理，保护后路径仍然跨平台兼容。</li>
@@ -880,7 +885,7 @@ output/                     # 运行后生成的模块结果目录
                 <p class="footer-note">这样拆分后，三个页面分别负责“怎么组织”“怎么保护”“怎么执行流程”，职责清晰，后续维护成本最低。</p>
             </section>
         </div>
-        <p class="footer-note"><strong>版本:</strong> v1.2 | <strong>更新日期:</strong> 2026-08-06 | 与《生信开发模块文件与输出规范 v1.4》配套</p>    </div>
+        <p class="footer-note"><strong>版本:</strong> v1.3 | <strong>更新日期:</strong> 2026-08-06 | 与《生信开发模块文件与输出规范 v1.5》配套</p>    </div>
 <script>
     (function() {
         var links = document.querySelectorAll('.sidebar a[href^="#"]');

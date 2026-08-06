@@ -289,6 +289,11 @@
                     <div style="margin-top:8px;">这里要明确分成两部分：<span class="text-red">脚本模块</span>只放入口、配置模板、真实业务脚本和 demo 输入；<span class="text-red">模块结果目录</span>只放运行产物。不要把 <code>log/</code>、<code>cache/</code>、<code>result/</code>、<code>report/</code> 混进脚本模块根目录。</div>
                 </div>
 
+                <div class="warn-box">
+                    <strong>🔐 模块独立边界：</strong> 每个模块必须在自身公开入口内独立完成调用者识别、输出路径规范化、Project 边界校验、目录创建和清理/删除授权；实现代码、测试与版本记录都保留在本模块内。<br>
+                    <strong>硬性禁止：</strong> 不得从 <code>/media/share/secure/</code>、<code>/media/share/secure_dev/</code> 等共享根目录加载供多个模块共用的写入校验脚本，不得借用其他模块的校验实现，也不得把文件系统权限视为模块级授权。普通调用者只能操作自身 Project 范围内由当前模块校验通过的路径。
+                </div>
+
                 <pre class="file-tree"><span class="folder">chromosome_plot/</span>  <span class="hidden-file"># 脚本模块示例</span>
 ├── <span class="file">run.sh</span>                
 ├── <span class="file">README.md</span>
@@ -1966,7 +1971,7 @@ output/
         </div>
 
         <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.4 | <strong>更新日期:</strong> 2026-08-06</p>
+        <p class="footer-note"><strong>版本:</strong> v1.5 | <strong>更新日期:</strong> 2026-08-06</p>
 
     </div>
 
