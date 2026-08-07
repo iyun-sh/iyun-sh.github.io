@@ -315,15 +315,12 @@
 <span class="folder">module_output/</span>  <span class="hidden-file"># 模块结果目录，以 chromosome_plot full 阶段为例</span>
 ├── <span class="hidden-file">.run_id</span>  <span class="hidden-file"># 最近一次成功调用的 run_id，如 20260806_143022</span>
 ├── <span class="folder">cache/</span>
-│   ├── <span class="folder">generations/</span>
-│   │   └── <span class="folder">20260806_120000/</span>  <span class="hidden-file"># 不可变缓存代次；名称为缓存生产 run_id</span>
-│   │       └── <span class="file">calculation.qs2</span>  <span class="hidden-file"># 足以重建全部约定图形的计算对象</span>
-│   └── <span class="file">cache_manifest.json</span>  <span class="hidden-file"># 当前有效代次、输入/参数指纹、校验和</span>
+│   ├── <span class="file">calculation.qs2</span>  <span class="hidden-file"># 固定路径；足以重建全部约定图形的计算对象</span>
+│   └── <span class="file">cache_manifest.json</span>  <span class="hidden-file"># 缓存版本、生产 run_id、输入/参数指纹、校验和</span>
 ├── <span class="folder">log/</span>
-│   └── <span class="folder">20260806_143022/</span>  <span class="hidden-file"># 本次 run_id</span>
-│       ├── <span class="config-file">input.config.ini</span>  <span class="hidden-file"># 用户输入配置只读快照</span>
-│       ├── <span class="config-file">effective.config.ini</span>  <span class="hidden-file"># 解析后的生效参数</span>
-│       └── <span class="log-file">full.log</span>
+│   ├── <span class="config-file">input.config.ini</span>  <span class="hidden-file"># 当前调用的用户输入配置只读快照</span>
+│   ├── <span class="config-file">effective.config.ini</span>  <span class="hidden-file"># 当前调用解析后的生效参数</span>
+│   └── <span class="log-file">full.log</span>  <span class="hidden-file"># 固定阶段日志；run_id 写在日志内容中</span>
 ├── <span class="folder">result/</span>
 │   ├── <span class="file">01_gene_positions.tsv</span>
 │   ├── <span class="file">02_circos.pdf</span>
@@ -374,7 +371,7 @@
                             <li><strong>计算与作图分离</strong>：<span class="text-red">同一分析点的计算逻辑和可视化逻辑应拆分为独立脚本</span>，如 <code>DEGs_analysis.R</code>（差异计算）与 <code>DEGs_plot.R</code>（热图/火山图等），便于只改图时不必重跑计算、提高复用性和调试效率</li>
                             <li>脚本命名使用驼峰命名法，清晰表明功能，建议按分析流程顺序命名</li>
                             <li><strong>配置模板</strong>：在 <code>config/</code> 下保存模块选定格式的一个示例配置（<code>*.config.example.*</code>）</li>
-                            <li><strong>模板与运行配置分离</strong>：模块内 <code>config/</code> 只保存只读示例模板；<code>init</code> 在用户指定的项目目录生成一份分析配置；每次运行再把输入配置与解析后的生效参数写入 <code>module_output/log/&lt;run_id&gt;/</code></li>
+                            <li><strong>模板与运行配置分离</strong>：模块内 <code>config/</code> 只保存只读示例模板；<code>init</code> 在用户指定的项目目录生成一份分析配置；每次运行再把输入配置与解析后的生效参数写入固定的 <code>module_output/log/</code></li>
                             <li><strong>读取文件推荐</strong>：R脚本推荐使用 <code>data.table</code> 包</li>
                             <li>示例：
                                 <ul>
@@ -428,13 +425,13 @@ plot_cache &lt;- list(
 
 fwrite(de_table, file.path(result_dir, "01.DEGs.tsv"), sep = "\t")
 
-# 每次生成不可变代次；input_fingerprint / compute_fingerprint 由稳定序列化规则计算
-generation_rel &lt;- file.path("generations", run_id)
-generation_dir &lt;- file.path(cache_dir, generation_rel)
-staging_dir &lt;- file.path(cache_dir, paste0(".staging-", run_id))
-if (dir.exists(generation_dir) || dir.exists(staging_dir)) stop("缓存代次已存在")
-dir.create(staging_dir, recursive = TRUE)
-artifact_tmp &lt;- file.path(staging_dir, "calculation.qs2")
+# 正式缓存使用固定路径；run_id 只写入 manifest，不进入目录名或正式文件名。
+# 临时文件仅用于同目录校验和替换，input_fingerprint / compute_fingerprint 由稳定序列化规则计算。
+dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+artifact_path &lt;- file.path(cache_dir, "calculation.qs2")
+manifest_path &lt;- file.path(cache_dir, "cache_manifest.json")
+artifact_tmp &lt;- file.path(cache_dir, ".calculation.qs2.tmp")
+manifest_tmp &lt;- file.path(cache_dir, ".cache_manifest.json.tmp")
 qs2::qs_save(plot_cache, artifact_tmp)
 
 manifest &lt;- list(
@@ -445,7 +442,7 @@ manifest &lt;- list(
     input_fingerprint = input_fingerprint,
     compute_fingerprint = compute_fingerprint,
     artifacts = list(list(
-        path = file.path(generation_rel, "calculation.qs2"),
+        path = "calculation.qs2",
         sha256 = digest::digest(file = artifact_tmp, algo = "sha256"),
         size = unname(file.info(artifact_tmp)$size)
     )),
@@ -457,16 +454,12 @@ manifest &lt;- list(
     )
 )
 
-# 校验 staging 后先发布不可变对象，最后原子替换顶层 manifest 作为提交点。
-# 若最后一步失败，旧 manifest 仍指向旧的有效代次；新代次只会成为可清理孤儿。
+# 校验临时对象和清单后，替换固定目标；replace_file_same_fs 由模块内部实现同文件系统替换。
+# 若两次替换之间中断，读取端的大小与 sha256 校验必须拒绝不一致组合，再由 calculate 覆盖修复。
 validate_staged_cache(plot_cache, manifest, artifact_tmp)
-dir.create(dirname(generation_dir), recursive = TRUE, showWarnings = FALSE)
-if (!file.rename(staging_dir, generation_dir)) stop("缓存对象发布失败")
-manifest_tmp &lt;- file.path(cache_dir, paste0("cache_manifest.json.tmp.", run_id))
 jsonlite::write_json(manifest, manifest_tmp, auto_unbox = TRUE, pretty = TRUE)
-if (!file.rename(manifest_tmp, file.path(cache_dir, "cache_manifest.json"))) {
-    stop("缓存清单发布失败；当前有效清单未改变")
-}</pre>
+replace_file_same_fs(artifact_tmp, artifact_path)
+replace_file_same_fs(manifest_tmp, manifest_path)</pre>
 
                         <strong style="display:block; margin-top:18px;">🎨 从缓存绘图示例（DEGs_plot.R，关键逻辑）：</strong>
                         <pre class="code-block"># validate_cache_manifest 必须校验 schema、绘图契约、输入/计算指纹、文件大小、sha256 和必需对象；
@@ -546,7 +539,7 @@ run_business_stage() {
                         <h4>📄 log/ - 日志文件夹 <span class="badge badge-required">核心</span></h4>
                         <ul>
                             <li>存放各阶段或模块入口的运行日志，推荐使用单数目录 <code>log/</code>，与 <code>chromosome_plot</code> 示例保持一致</li>
-                            <li>每次实际运行使用 <code>log/&lt;run_id&gt;/&lt;stage&gt;.log</code>，如 <code>log/20260806_143022/plot.log</code>；帮助与 <code>init</code> 不创建运行日志</li>
+                            <li>每个阶段使用固定日志路径 <code>log/&lt;stage&gt;.log</code>，如 <code>log/plot.log</code>；同阶段再次运行覆盖该固定文件，帮助与 <code>init</code> 不创建运行日志</li>
                             <li><strong>运行标识</strong>：日志从启动起记录本次 run_id、命令、阶段、输出目录和退出码；仅在该次调用成功完成后原子更新模块结果目录顶层 <code>.run_id</code></li>
                             <li><strong>缓存追溯</strong>：绘图日志同时记录当前绘图 run_id 和缓存生产 run_id，不得用当前 run_id 覆盖缓存来源</li>
                             <li><strong>支持中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
@@ -558,8 +551,8 @@ run_business_stage() {
                         <ul>
                             <li>存放正式用户结果：表格、图和最终报告；可复用对象放 <code>cache/</code>，日志和配置副本放 <code>log/</code></li>
                             <li>结果文件使用数字前缀排序（01_, 02_, 03_ 或 01., 02., 03.），文件名表达业务含义</li>
-                            <li>模块结果目录顶层 <code>.run_id</code> 只指向最近一次成功调用；失败运行仍保留自己的日志，但不得覆盖成功标识</li>
-                            <li><strong>配置文件</strong>：本次输入快照与生效参数分别写入 <code>log/&lt;run_id&gt;/input.config.*</code> 和 <code>effective.config.*</code></li>
+                            <li>模块结果目录顶层 <code>.run_id</code> 只记录最近一次成功调用；失败运行写入当前阶段固定日志，但不得覆盖成功标识</li>
+                            <li><strong>配置文件</strong>：当前调用的输入快照与生效参数分别写入 <code>log/input.config.&lt;ext&gt;</code> 和 <code>log/effective.config.&lt;ext&gt;</code>；扩展名沿用该模块选定的唯一配置格式，路径不随 run_id 改变</li>
                             <li><strong>图表文件</strong>：默认同时保存 PNG 和 PDF；模块也可按 <code>[Plot].formats</code> 生成经过校验的请求格式</li>
                             <li>示例：
                                 <ul>
@@ -636,7 +629,7 @@ run_business_stage() {
   "input_fingerprint": "sha256:...",
   "compute_fingerprint": "sha256:...",
   "artifacts": [
-    {"path": "generations/20260806_120000/calculation.qs2", "sha256": "...", "size": 123456}
+    {"path": "calculation.qs2", "sha256": "...", "size": 123456}
   ],
   "plot_contract": {
     "figures": ["02_heatmap", "03_volcano"]
@@ -673,7 +666,7 @@ run_business_stage() {
                         <tr><td><strong>来源元数据</strong></td><td>运行时探测并记录缓存 schema/version、模块版本、生产缓存的 run_id、生成时间、实际解释器路径与版本及关键包版本；不得在模板中写死版本号</td><td>判断旧缓存能否被当前绘图代码读取，并区分项目 profile 与 fallback 环境</td></tr>
                         <tr><td><strong>有效性指纹</strong></td><td>记录输入文件身份和计算参数指纹；纯绘图参数不参与计算缓存失效判断</td><td>改颜色、尺寸、主题或字体时可复用缓存，改输入或计算参数时拒绝旧缓存</td></tr>
                         <tr><td><strong>完整性校验</strong></td><td>读取前校验清单、必需对象、文件非空和校验和；缺失、损坏或不兼容时明确报错并非零退出</td><td>避免使用半成品或错误版本缓存</td></tr>
-                        <tr><td><strong>原子发布</strong></td><td>先在同一文件系统写入并校验不可变缓存代次，最后原子替换顶层 manifest 作为唯一提交点；manifest 只能指向已完整发布且校验通过的代次</td><td>失败时旧 manifest 仍然有效，新半成品或孤儿代次不得被读取为当前缓存</td></tr>
+                        <tr><td><strong>固定路径发布</strong></td><td>正式对象固定为 <code>cache/calculation.qs2</code>，清单固定为 <code>cache/cache_manifest.json</code>；先在同目录写入并校验临时文件，再依次替换正式对象和清单，禁止创建按 run_id 命名的缓存子目录</td><td>复用方无需查找缓存代次；替换中断造成的不一致必须由读取端完整性校验明确拒绝</td></tr>
                         <tr><td><strong>保留策略</strong></td><td><code>cache/</code> 是正式可复用产物，不随 <code>_tmp/</code> 或通用中间文件清理；删除须使用独立、显式且有日志的策略</td><td>保证后续能够重新绘图</td></tr>
                     </tbody>
                 </table>
@@ -684,8 +677,8 @@ run_business_stage() {
                     <tbody>
                         <tr><td><strong>模块模板</strong></td><td><code>module/config/&lt;module&gt;.config.example.*</code></td><td>随模块交付，只读维护；每个模块选定一种主要格式</td></tr>
                         <tr><td><strong>分析配置</strong></td><td><code>init</code> 在用户目标目录生成一份可编辑配置</td><td>所有参数使用稳定英文键名，并附中文注释、默认值、类型、单位、允许值及是否必填</td></tr>
-                        <tr><td><strong>输入快照</strong></td><td><code>log/&lt;run_id&gt;/input.config.*</code></td><td>保留用户传入文件的只读副本；源和目标规范化后相同则直接复用，不复制自身</td></tr>
-                        <tr><td><strong>生效参数</strong></td><td><code>log/&lt;run_id&gt;/effective.config.*</code> 与阶段日志</td><td>记录默认值、配置值和合法命令行覆盖合并后的最终值，不混入运行统计或输出结果</td></tr>
+                        <tr><td><strong>输入快照</strong></td><td><code>log/input.config.&lt;ext&gt;</code></td><td>保存当前调用传入文件的只读副本；扩展名沿用模块选定格式，源和目标规范化后相同则直接复用，不复制自身</td></tr>
+                        <tr><td><strong>生效参数</strong></td><td><code>log/effective.config.&lt;ext&gt;</code> 与固定阶段日志</td><td>记录当前调用中默认值、配置值和合法命令行覆盖合并后的最终值，不混入运行统计或输出结果</td></tr>
                     </tbody>
                 </table>
                 <ul style="margin-top:12px; padding-left:20px;">
@@ -756,7 +749,7 @@ base_size=11</pre>
                             <ul style="margin-top:8px; padding-left:20px;">
                                 <li><strong>文件名固定</strong>：隐藏文件始终命名为 <code>.run_id</code>，不要把时间戳写进文件名</li>
                                 <li><strong>内容可读且唯一</strong>：默认写入 <code>YYYYMMDD_HHMMSS</code>；若存在并发调用，还须追加进程号、随机后缀或等价唯一标识</li>
-                                <li><strong>便于追溯</strong>：日志、缓存、结果和报告都通过同一个 run_id 串联</li>
+                                <li><strong>便于追溯</strong>：run_id 写入 <code>.run_id</code>、缓存清单和日志内容，不写入缓存或日志的路径名</li>
                             </ul>
                         </div>
                     </div>
@@ -767,9 +760,9 @@ base_size=11</pre>
                             <thead><tr><th>文件类型</th><th>命名格式</th><th>示例</th><th>说明</th></tr></thead>
                             <tbody>
                                 <tr><td>入口与内部脚本</td><td><code>功能名.扩展名</code></td><td><code>run.sh</code>, <code>scripts/main.R</code>, <code>scripts/plot/plot_from_cache.R</code></td><td>新建/升级模块的顶层入口固定为 <code>run.sh</code>；未升级模块保留已公开入口，内部脚本放在 <code>scripts/</code> 下并清晰表达阶段或功能</td></tr>
-                                <tr><td>日志文件</td><td><code>log/&lt;run_id&gt;/&lt;stage&gt;.log</code></td><td><code>log/20260806_143022/plot.log</code></td><td>每次调用独立保存；日志内同时记录当前 run_id 与缓存生产 run_id</td></tr>
+                                <tr><td>日志文件</td><td><code>log/&lt;stage&gt;.log</code></td><td><code>log/plot.log</code></td><td>阶段路径固定并由同阶段后续调用覆盖；日志内容同时记录当前 run_id 与缓存生产 run_id</td></tr>
                                 <tr><td>结果文件</td><td><code>序号_描述.扩展名</code></td><td><code>01_gene_positions.tsv</code>, <code>02_circos.png</code></td><td>数字前缀排序；表格根据字段内容选择 TSV/CSV，含逗号风险用 TSV</td></tr>
-                                <tr><td>配置快照</td><td><code>log/&lt;run_id&gt;/input.config.*</code><br><code>effective.config.*</code></td><td><code>log/20260806_143022/effective.config.ini</code></td><td>分别保留原始输入和最终生效参数，不覆盖历史</td></tr>
+                                <tr><td>配置快照</td><td><code>log/input.config.&lt;ext&gt;</code><br><code>log/effective.config.&lt;ext&gt;</code></td><td><code>log/effective.config.ini</code></td><td>扩展名沿用模块选定格式，固定路径分别保存当前调用的原始输入和最终生效参数</td></tr>
                                 <tr><td>运行标识文件</td><td><code>.run_id</code></td><td><code>.run_id</code> 内容为 <code>20260806_143022</code></td><td>仅在调用成功后原子更新，指向最近一次成功调用</td></tr>
                                 <tr><td>报告文件</td><td><code>描述.docx</code></td><td><code>chromosome_plot_report.docx</code></td><td>正式报告名表达模块和业务含义</td></tr>
                             </tbody>
@@ -789,7 +782,7 @@ base_size=11</pre>
                             <strong>💡 选择建议：</strong> 根据项目需求在 .ini 与 .yaml 中选择一种主要格式。<code>init</code> 只生成该格式的一份分析配置，不同时生成两份等价配置。
                         </div>
                         <div class="lead-box" style="margin-top:12px;">
-                            <strong>📌 设计原则：</strong> 配置模板保持在 <code>config/</code>；本次输入快照和生效参数写入 <code>log/&lt;run_id&gt;/</code>。追溯历史以独立运行日志为准，<code>.run_id</code> 只定位最近一次成功调用。
+                            <strong>📌 设计原则：</strong> 配置模板保持在 <code>config/</code>；当前调用的输入快照和生效参数写入固定的 <code>log/</code>。run_id 记录在快照、日志内容及 <code>.run_id</code> 中，不作为目录名。
                         </div>
                     </div>
 
@@ -887,8 +880,8 @@ qs2版本: &lt;runtime-detected-version&gt;
 配置
 ----------------------------------------
 配置来源: /project/config/DEGs.config.ini
-输入快照: /project/output/log/20260806_143022/input.config.ini
-生效快照: /project/output/log/20260806_143022/effective.config.ini
+输入快照: /project/output/log/input.config.ini
+生效快照: /project/output/log/effective.config.ini
 命令行覆盖: 无
 计算参数: p_value_cutoff=0.05, log2fc_cutoff=1.0, method=DESeq2
 绘图参数: formats=png,pdf; width=6; height=4; size_unit=in; dpi=300
@@ -902,7 +895,7 @@ schema_version: 1
 缓存生产运行ID: 20260806_120000
 输入指纹: sha256:... [MATCH]
 计算参数指纹: sha256:... [MATCH]
-对象: cache/generations/20260806_120000/calculation.qs2 [SIZE OK, SHA256 OK]
+对象: cache/calculation.qs2 [SIZE OK, SHA256 OK]
 必需对象: de_table, top_genes_mat, heatmap_annotation [OK]
 
 ----------------------------------------
@@ -913,7 +906,7 @@ schema_version: 1
 [14:30:25] 生成火山图... 完成
 输出: result/02.heatmap.png, result/02.heatmap.pdf
 输出: result/03.volcano.png, result/03.volcano.pdf
-日志文件: log/20260806_143022/plot.log
+日志文件: log/plot.log
 
 退出码: 0
 状态: plot 成功；未调用 calculate；顶层 .run_id 已更新为 20260806_143022
@@ -925,8 +918,8 @@ schema_version: 1
                         <table class="matrix">
                             <thead><tr><th>对比项</th><th>日志文件</th><th>配置文件</th></tr></thead>
                             <tbody>
-                                <tr><td><strong>文件名</strong></td><td><code>log/&lt;run_id&gt;/&lt;stage&gt;.log</code></td><td><code>input.config.*</code> / <code>effective.config.*</code></td></tr>
-                                <tr><td><strong>是否覆盖</strong></td><td>每次调用创建独立文件</td><td>每次调用创建独立快照，不覆盖历史</td></tr>
+                                <tr><td><strong>文件名</strong></td><td><code>log/&lt;stage&gt;.log</code></td><td><code>log/input.config.&lt;ext&gt;</code> / <code>log/effective.config.&lt;ext&gt;</code></td></tr>
+                                <tr><td><strong>是否覆盖</strong></td><td>同阶段再次调用覆盖固定日志</td><td>每次调用覆盖固定快照</td></tr>
                                 <tr><td><strong>内容</strong></td><td>参数 + 过程 + 统计 + 缓存事件 + 警告 + 退出码</td><td>原始输入或解析后的最终参数</td></tr>
                                 <tr><td><strong>可读性</strong></td><td>文本格式，易于人工阅读</td><td>结构化格式，便于程序解析</td></tr>
                                 <tr><td><strong>语言支持</strong></td><td>支持中文</td><td>建议使用英文（键名）</td></tr>
@@ -964,7 +957,7 @@ schema_version: 1
                         <h4>🔄 run_id 生成和使用流程</h4>
                         <ol class="steps">
                             <li><strong>解析阶段</strong>：无参数或 <code>--help</code> 直接显示帮助；其他调用先解析参数、校验阶段、配置、输入和输出边界，不提前创建产物目录</li>
-                            <li><strong>开始运行</strong>：为实际计算、绘图或报告调用生成当前 <code>run_id</code>，创建 <code>log/&lt;run_id&gt;/</code>，记录命令、配置来源、运行目录、输出目录和上游引用</li>
+                            <li><strong>开始运行</strong>：为实际计算、绘图或报告调用生成当前 <code>run_id</code>，创建固定的 <code>log/</code> 并写入当前阶段日志，记录命令、配置来源、运行目录、输出目录和上游引用</li>
                             <li><strong>阶段编排</strong>：由 <code>run.sh</code> 调度计算、作图、报告或全流程；业务算法保留在内部脚本中，未启用阶段不创建目录</li>
                             <li><strong>保存结果</strong>：正式用户结果写入 <code>result/</code>；绘图可复用的正式计算对象和清单写入 <code>cache/</code>；一次性临时文件写入 <code>_tmp/</code></li>
                             <li><strong>保存追溯快照</strong>：写入输入配置快照和生效参数，不覆盖用户分析配置；绘图日志保留缓存生产 run_id</li>
@@ -975,13 +968,13 @@ schema_version: 1
                     <div id="track-relations" class="tab-content">
                         <h4>🔗 追溯关系</h4>
                         <ul>
-                            <li><strong>结果 → 日志</strong>：通过模块结果目录顶层 <code>.run_id</code> 读取最近一次成功调用的 run_id，再进入对应日志目录</li>
-                            <li><strong>结果 → 参数</strong>：通过 <code>log/&lt;run_id&gt;/effective.config.*</code> 和阶段日志查看最终生效参数</li>
+                            <li><strong>结果 → 日志</strong>：读取模块结果目录顶层 <code>.run_id</code>，并与固定阶段日志中的当前 run_id 对照；日志无需按日期目录查找</li>
+                            <li><strong>结果 → 参数</strong>：通过固定的 <code>log/effective.config.&lt;ext&gt;</code> 和阶段日志查看当前调用的最终生效参数</li>
                             <li><strong>日志 → 报告</strong>：通过日志中的 run_id 和报告路径找到对应的分析报告</li>
                             <li><strong>完整链条</strong>：run.sh → 输入配置与生效快照 → 内部脚本 → 日志 → cache 正式计算对象 → result 正式结果 → 可选报告</li>
                             <li><strong>阶段引用</strong>：后一阶段只能读取前一阶段公开约定的标准产物，不应扫描临时目录或依赖未文档化的内部文件</li>
                             <li><strong>命名一致</strong>：单阶段运行与 full 全流程运行应生成同名同义的正式结果，避免下游因运行方式不同而改解析规则</li>
-                            <li><strong>查找最近成功运行</strong>：读取 <code>.run_id</code>，再进入同名 <code>log/&lt;run_id&gt;/</code>；不能用目录排序代替成功状态</li>
+                            <li><strong>查找最近成功运行</strong>：读取 <code>.run_id</code>；日志直接使用 <code>log/&lt;stage&gt;.log</code> 固定路径，并通过日志内容中的 run_id 判断是否对应</li>
                         </ul>
                     </div>
 
@@ -991,8 +984,8 @@ schema_version: 1
 stage=plot
 module_version=1.4.0
 config_source=/project/config/DEGs.config.ini
-input_snapshot=log/20260806_143022/input.config.ini
-effective_config=log/20260806_143022/effective.config.ini
+input_snapshot=log/input.config.ini
+effective_config=log/effective.config.ini
 cache_action=hit
 cache_schema=1
 cache_producer_run_id=20260806_120000
@@ -1198,7 +1191,7 @@ usage() {
 
 输出与边界:
   result/ 保存正式表格和图形；cache/ 保存可校验的正式计算缓存；
-  log/&lt;run_id&gt;/ 保存日志和配置快照。plot 不重新计算，本模块不提供独立 report 阶段。
+  log/ 以固定路径保存阶段日志和配置快照。plot 不重新计算，本模块不提供独立 report 阶段。
 
 示例:
   $(basename "$0") init --target ./project
@@ -1262,9 +1255,10 @@ fi
 # 这里只校验参数、输出写入边界和日志目录边界，不读取正式缓存。
 "$MODULE_DIR/scripts/validate_arguments.sh" "$STAGE" "$CONFIG" "$OUTPUT_DIR"
 RUN_ID="$(date +%Y%m%d_%H%M%S)_$$"
-LOG_DIR="$OUTPUT_DIR/log/$RUN_ID"
+LOG_DIR="$OUTPUT_DIR/log"
+LOG_FILE="$LOG_DIR/$STAGE.log"
 mkdir -p "$LOG_DIR"
-exec &gt; &gt;(tee "$LOG_DIR/$STAGE.log") 2&gt;&amp;1
+exec &gt; &gt;(tee "$LOG_FILE") 2&gt;&amp;1
 printf 'run_id=%s stage=%s command=%s cwd=%q\n' "$RUN_ID" "$STAGE" "$RAW_COMMAND" "$PWD"
 
 # 输入、配置和缓存校验发生在日志初始化之后，拒绝原因因此可以追溯。
@@ -1276,7 +1270,7 @@ printf 'run_id=%s stage=%s command=%s cwd=%q\n' "$RUN_ID" "$STAGE" "$RAW_COMMAND
 }
 
 # 全部阶段与产物校验成功后，才更新最近成功运行标识。
-RUN_ID_TMP="$OUTPUT_DIR/.run_id.tmp.$RUN_ID"
+RUN_ID_TMP="$OUTPUT_DIR/.run_id.tmp"
 printf "%s\n" "$RUN_ID" &gt; "$RUN_ID_TMP"
 mv -f "$RUN_ID_TMP" "$OUTPUT_DIR/.run_id"
 printf 'exit_code=0 status=success\n'</pre>
@@ -1612,7 +1606,8 @@ DEMO_OUTPUT=${1:-demo_output}
 ./run.sh full --config demo/data/chromosome_plot_config.ini --output "$DEMO_OUTPUT"
 
 RUN_ID=$(tr -d '\r\n' &lt; "$DEMO_OUTPUT/.run_id")
-LOG_FILE="$DEMO_OUTPUT/log/$RUN_ID/full.log"
+[[ -n "$RUN_ID" ]] || { echo "[FAIL] .run_id 为空"; exit 1; }
+LOG_FILE="$DEMO_OUTPUT/log/full.log"
 
 # 只检查关键产物是否由本次运行生成，不与预先保存的输出文件做 diff
 for f in "$DEMO_OUTPUT/.run_id" "$LOG_FILE" "$DEMO_OUTPUT/cache/cache_manifest.json" "$DEMO_OUTPUT/result/01_gene_positions.tsv" "$DEMO_OUTPUT/result/02_circos.png" "$DEMO_OUTPUT/result/02_circos.pdf"; do
@@ -1622,7 +1617,7 @@ for f in "$DEMO_OUTPUT/.run_id" "$LOG_FILE" "$DEMO_OUTPUT/cache/cache_manifest.j
     fi
 done
 
-# 同时验证 manifest 指向的不可变缓存对象非空、未越界且校验和一致
+# 同时验证 manifest 指向的固定缓存对象非空、未越界且校验和一致
 Rscript --vanilla - "$DEMO_OUTPUT/cache" &lt;&lt;'RS'
 args &lt;- commandArgs(trailingOnly = TRUE)
 cache_dir &lt;- normalizePath(args[[1]], mustWork = TRUE)
@@ -1675,7 +1670,7 @@ echo "=== demo 验证完成：仅代表 demo 输入跑通 ==="</pre>
                         <tr><td><strong>输出文件说明</strong></td><td>列出所有输出文件名、所在目录、关键列，并区分 <code>result/</code>、<code>cache/</code>、<code>log/</code> 与 <code>report/</code></td><td>正式结果和可复用缓存的边界属于模块公开 API</td></tr>
                         <tr><td><strong>参数说明</strong></td><td>所有可配置业务与绘图参数、默认值、取值范围和中文注释</td><td>说明命令行覆盖 &gt; 配置 &gt; 默认值；输出位置由入口显式传入</td></tr>
                         <tr><td><strong>缓存契约</strong></td><td>列出缓存文件、清单字段、失效条件、<code>plot</code> 行为和显式清理方式</td><td>明确缓存承载绘图所需计算对象，不把它描述为完整报告归档</td></tr>
-                        <tr><td><strong>日志与排错</strong></td><td>说明 <code>log/&lt;run_id&gt;/</code>、常见退出码、缓存拒绝原因和最近成功运行定位方式</td><td>帮助、init 和实际运行的副作用边界必须写清楚</td></tr>
+                        <tr><td><strong>日志与排错</strong></td><td>说明 <code>log/&lt;stage&gt;.log</code> 固定路径、常见退出码、缓存拒绝原因和 run_id 记录方式</td><td>帮助、init 和实际运行的副作用边界必须写清楚</td></tr>
                         <tr><td><strong>目录结构</strong></td><td>展示模块内部目录树（可简化）</td><td>帮助快速定位文件，并说明源码目录与运行产物目录边界</td></tr>
                         <tr><td><strong>验证方式</strong></td><td>说明最小验证命令、应生成的关键输出和验证类型</td><td>需标注是真实业务验证、契约/接口验证、烟测验证还是 demo 验证</td></tr>
                     </tbody>
@@ -1732,7 +1727,7 @@ echo "=== demo 验证完成：仅代表 demo 输入跑通 ==="</pre>
 | 01.DEGs.tsv            | result/DEGs/  | 差异基因列表（含逗号风险用 TSV；无逗号问题可用 CSV） |
 | 02.heatmap.png/.pdf    | result/DEGs/  | Top 基因热图    |
 | 03.volcano.png/.pdf    | result/DEGs/  | 火山图          |
-| calculation.qs2        | cache/generations/&lt;producer_run_id&gt;/ | 绘图所需正式计算对象 |
+| calculation.qs2        | cache/        | 固定路径的绘图所需正式计算对象 |
 | cache_manifest.json    | cache/        | 缓存版本、指纹、完整性与生产 run_id |
 
 ## 参数说明
@@ -1766,8 +1761,13 @@ echo "=== demo 验证完成：仅代表 demo 输入跑通 ==="</pre>
 ```text
 output/
 ├── .run_id
-├── cache/               # 正式缓存代次 + cache_manifest.json
-├── log/&lt;run_id&gt;/       # 阶段日志、输入配置和生效配置快照
+├── cache/
+│   ├── calculation.qs2
+│   └── cache_manifest.json
+├── log/
+│   ├── input.config.ini
+│   ├── effective.config.ini
+│   └── &lt;stage&gt;.log
 └── result/              # 正式表格和图形
 ```
 
@@ -1776,11 +1776,11 @@ output/
 - 缓存包含 `de_table`、`top_genes_mat` 和 `heatmap_annotation`，足以重建本模块全部约定图形。
 - `cache_manifest.json` 记录 schema、生产 run_id、输入/计算指纹、对象校验和及实际运行时版本。
 - 输入或计算参数变化、清单不兼容、对象缺失或校验和不符时，`plot` 非零退出且不静默重算。
-- 正式缓存不随临时文件清理；显式清理方式及保留代次数见 `./run.sh --help`。
+- 正式缓存不随临时文件清理；显式清理或重建方式见 `./run.sh --help`。
 
 ## 日志与排错
 
-- 读取 `.run_id` 定位最近成功调用，再查看 `log/&lt;run_id&gt;/&lt;stage&gt;.log`。
+- 读取 `.run_id` 获取最近成功调用标识；阶段日志固定为 `log/&lt;stage&gt;.log`，run_id 写在日志内容中。
 - 失败调用不会覆盖 `.run_id`；其 stderr 会给出对应日志路径和退出码。
 - 日志同时记录当前 run_id 与缓存生产 run_id、配置来源/覆盖项、缓存命中或拒绝原因。
 

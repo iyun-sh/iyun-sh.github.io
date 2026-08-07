@@ -411,7 +411,7 @@
 └── renv.lock           # R 依赖锁定（二选一或同时保有）
 
 module_output/          # 模块结果目录
-├── log/&lt;run_id&gt;/      # 实际运行时按需创建
+├── log/                 # 实际运行时按需创建；阶段日志和配置快照使用固定路径
 ├── cache/              # calculate 发布正式计算缓存时创建
 ├── result/             # 产生正式表格或图形时创建
 └── report/             # 可选；仅模块实际生成独立报告时创建</pre>
@@ -759,7 +759,7 @@ rm -f scripts/scripts.sh.x.c
 └── renv.lock               # R 依赖（如适用）
 
 output/                     # 运行后生成的模块结果目录
-├── log/&lt;run_id&gt;/          # 实际运行日志与配置快照
+├── log/                     # 固定路径的实际运行日志与配置快照
 ├── cache/                  # 正式计算缓存及 manifest
 ├── result/                 # 正式表格、图形及默认报告位置
 └── report/                 # 可选；仅实际使用独立报告目录时创建</pre>

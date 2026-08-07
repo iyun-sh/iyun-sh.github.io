@@ -1839,12 +1839,12 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
                 <div class="success-box">
                     <strong>&#x1F4CB; 按实际阶段查看：</strong>
                     <ul style="margin-top:8px">
-                        <li><strong>log/&lt;run_id&gt;/</strong>：新建或升级模块的独立运行日志与配置快照；既有模块若仍使用 <code>logs/</code>，以模块帮助为准</li>
+                        <li><strong>log/</strong>：新建或升级模块以固定路径保存阶段日志与配置快照；既有模块若仍使用 <code>logs/</code>，以模块帮助为准</li>
                         <li><strong>cache/</strong>：支持分阶段重绘的模块保存正式计算缓存及清单，<code>plot</code> 不得静默重新计算</li>
                         <li><strong>result/</strong>：分析结果（CSV + 图表）</li>
                         <li><strong>report/</strong>：仅明确支持独立报告目录的模块按需创建；正式报告的既有位置以模块 README 为准</li>
                     </ul>
-                    遇到问题时，先读取 <code>.run_id</code> 定位最近成功调用，再查看对应运行日志；失败运行按其输出的日志路径排查，不能只按文件名排序猜测“最新”。
+                    遇到问题时，先读取 <code>.run_id</code> 获取最近成功调用标识，再查看固定阶段日志并核对其中的 run_id；失败运行按其输出的日志路径排查。
                 </div>
             </div>
         </div>
