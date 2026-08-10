@@ -1,0 +1,261 @@
+---
+title: "富集分析报告"
+author: "{{< meta author >}}"
+date: "{{< meta date >}}"
+format:
+  docx:
+    echo: false
+    toc: true
+    toc-depth: 3
+  html:
+    echo: false
+    toc: true
+    self-contained: true
+  pdf:
+    echo: false
+    documentclass: ctexart
+    toc: true
+params:
+  project_name: "Enrichment Analysis"
+  author: "IKL"
+  date: "`r Sys.Date()`"
+  results_dir: "."
+  species: "hsapiens"
+  analysis_type: "combined"
+  go_enabled: true
+  kegg_enabled: true
+  gsea_enabled: true
+  n_go_terms: 0
+  n_kegg_terms: 0
+  n_gsea_terms: 0
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, error = FALSE)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# 从参数获取值
+project_name <- params$project_name
+results_dir <- params$results_dir
+species <- params$species
+analysis_type <- params$analysis_type
+go_enabled <- params$go_enabled
+kegg_enabled <- params$kegg_enabled
+gsea_enabled <- params$gsea_enabled
+
+# 物种名称映射
+species_name <- switch(species,
+  "hsapiens" = "人类 (Homo sapiens)",
+  "mmusculus" = "小鼠 (Mus musculus)",
+  "rnorvegicus" = "大鼠 (Rattus norvegicus)",
+  species
+)
+
+# 检查结果文件
+go_dir <- file.path(results_dir, "go")
+kegg_dir <- file.path(results_dir, "kegg")
+gsea_dir <- file.path(results_dir, "gsea")
+plots_dir <- file.path(results_dir, "plots")
+
+# GO 结果
+go_files <- list(
+  bp = file.path(go_dir, "GO_BP_results.csv"),
+  cc = file.path(go_dir, "GO_CC_results.csv"),
+  mf = file.path(go_dir, "GO_MF_results.csv"),
+  dotplot = file.path(plots_dir, "GO_dotplot.pdf"),
+  barplot = file.path(plots_dir, "GO_barplot.pdf")
+)
+
+# KEGG 结果
+kegg_files <- list(
+  results = file.path(kegg_dir, "KEGG_results.csv"),
+  dotplot = file.path(plots_dir, "KEGG_dotplot.pdf"),
+  barplot = file.path(plots_dir, "KEGG_barplot.pdf"),
+  pathway = file.path(plots_dir, "KEGG_pathway.pdf")
+)
+
+# GSEA 结果
+gsea_files <- list(
+  results = file.path(gsea_dir, "GSEA_results.csv"),
+  ridgeplot = file.path(plots_dir, "GSEA_ridgeplot.pdf"),
+  dotplot = file.path(plots_dir, "GSEA_dotplot.pdf"),
+  gseaplot = file.path(plots_dir, "GSEA_enrichment_score.pdf")
+)
+
+# 读取数据
+if (file.exists(go_files$bp)) {
+  go_bp <- read.csv(go_files$bp, stringsAsFactors = FALSE)
+}
+if (file.exists(kegg_files$results)) {
+  kegg_results <- read.csv(kegg_files$results, stringsAsFactors = FALSE)
+}
+if (file.exists(gsea_files$results)) {
+  gsea_results <- read.csv(gsea_files$results, stringsAsFactors = FALSE)
+}
+```
+
+# 分析概述
+
+**项目名称**: `r project_name`
+
+**分析日期**: `r params$date`
+
+**物种**: `r species_name`
+
+**分析类型**: `r analysis_type`
+
+## 分析内容
+
+| 分析类型 | 状态 |
+|----------|------|
+| GO 富集分析 | `r ifelse(go_enabled, "已启用", "未启用")` |
+| KEGG 通路分析 | `r ifelse(kegg_enabled, "已启用", "未启用")` |
+| GSEA 分析 | `r ifelse(gsea_enabled, "已启用", "未启用")` |
+
+```{r summary-stats}
+stats <- data.frame(
+  分析类型 = c(),
+  显著条目数 = c()
+)
+
+if (go_enabled && exists("go_bp")) {
+  stats <- rbind(stats, data.frame(
+    分析类型 = "GO Biological Process",
+    显著条目数 = nrow(go_bp)
+  ))
+}
+
+if (kegg_enabled && exists("kegg_results")) {
+  stats <- rbind(stats, data.frame(
+    分析类型 = "KEGG Pathway",
+    显著条目数 = nrow(kegg_results)
+  ))
+}
+
+if (gsea_enabled && exists("gsea_results")) {
+  stats <- rbind(stats, data.frame(
+    分析类型 = "GSEA",
+    显著条目数 = nrow(gsea_results)
+  ))
+}
+
+if (nrow(stats) > 0) {
+  kable(stats, caption = "分析结果统计", format = "simple")
+}
+```
+
+# GO 富集分析
+
+```{r go-check, include=FALSE}
+go_has_results <- go_enabled && (exists("go_bp") && nrow(go_bp) > 0)
+```
+
+```{r go-section, eval=go_has_results, results='asis'}
+cat("GO (Gene Ontology) 富集分析从生物过程 (BP)、细胞组分 (CC) 和分子功能 (MF) 三个层面解析基因功能。\n\n")
+```
+
+## GO 结果可视化
+
+```{r go-dotplot, fig.width=10, fig.height=8, fig.cap="GO 富集分析点图", eval=go_has_results}
+if (file.exists(go_files$dotplot)) {
+  knitr::include_graphics(go_files$dotplot)
+}
+```
+
+## GO 富集条目 (Top 10)
+
+```{r go-table, eval=go_has_results}
+if (exists("go_bp") && nrow(go_bp) > 0) {
+  display_cols <- intersect(c("Description", "GeneRatio", "p.adjust", "Count"), colnames(go_bp))
+  kable(head(go_bp[, display_cols, drop=FALSE], 10),
+        caption = "GO Biological Process Top 10",
+        format = "simple",
+        digits = 3,
+        row.names = FALSE)
+}
+```
+
+# KEGG 通路分析
+
+```{r kegg-check, include=FALSE}
+kegg_has_results <- kegg_enabled && (exists("kegg_results") && nrow(kegg_results) > 0)
+```
+
+```{r kegg-section, eval=kegg_has_results, results='asis'}
+cat("KEGG (Kyoto Encyclopedia of Genes and Genomes) 通路分析识别基因参与的代谢和信号通路。\n\n")
+```
+
+## KEGG 结果可视化
+
+```{r kegg-dotplot, fig.width=10, fig.height=8, fig.cap="KEGG 通路富集分析点图", eval=kegg_has_results}
+if (file.exists(kegg_files$dotplot)) {
+  knitr::include_graphics(kegg_files$dotplot)
+}
+```
+
+## KEGG 通路条目 (Top 10)
+
+```{r kegg-table, eval=kegg_has_results}
+if (exists("kegg_results") && nrow(kegg_results) > 0) {
+  display_cols <- intersect(c("Description", "GeneRatio", "p.adjust", "Count"), colnames(kegg_results))
+  kable(head(kegg_results[, display_cols, drop=FALSE], 10),
+        caption = "KEGG Pathway Top 10",
+        format = "simple",
+        digits = 3,
+        row.names = FALSE)
+}
+```
+
+# GSEA 分析
+
+```{r gsea-check, include=FALSE}
+gsea_has_results <- gsea_enabled && (exists("gsea_results") && nrow(gsea_results) > 0)
+```
+
+```{r gsea-section, eval=gsea_has_results, results='asis'}
+cat("GSEA (Gene Set Enrichment Analysis) 基于基因排序进行富集分析，可识别更微弱的生物学信号。\n\n")
+```
+
+## GSEA 结果可视化
+
+```{r gsea-ridgeplot, fig.width=10, fig.height=8, fig.cap="GSEA 山脊图", eval=gsea_has_results}
+if (file.exists(gsea_files$ridgeplot)) {
+  knitr::include_graphics(gsea_files$ridgeplot)
+}
+```
+
+## GSEA 富集条目 (Top 10)
+
+```{r gsea-table, eval=gsea_has_results}
+if (exists("gsea_results") && nrow(gsea_results) > 0) {
+  display_cols <- intersect(c("Description", "NES", "pvalue", "p.adjust"), colnames(gsea_results))
+  kable(head(gsea_results[, display_cols, drop=FALSE], 10),
+        caption = "GSEA Top 10 Pathways",
+        format = "simple",
+        digits = 3,
+        row.names = FALSE)
+}
+```
+
+# 结论
+
+```{r conclusion}
+cat("本次富集分析完成以下内容：\n\n")
+
+if (go_enabled && exists("go_bp") && nrow(go_bp) > 0) {
+  cat(sprintf("- GO 分析识别出 %d 个显著富集的生物过程\n", nrow(go_bp)))
+}
+if (kegg_enabled && exists("kegg_results") && nrow(kegg_results) > 0) {
+  cat(sprintf("- KEGG 分析识别出 %d 个显著富集的通路\n", nrow(kegg_results)))
+}
+if (gsea_enabled && exists("gsea_results") && nrow(gsea_results) > 0) {
+  cat(sprintf("- GSEA 分析识别出 %d 个显著富集的基因集\n", nrow(gsea_results)))
+}
+```
+
+---
+
+*报告由 Quarto 自动生成*

@@ -1,0 +1,12 @@
+results/*
+!results/.gitkeep
+report/*
+!report/.gitkeep
+logs/*
+!logs/.gitkeep
+
+*.qs2
+*.qs
+.20*
+Rplots.pdf
+Enrichment_Report_*.docx
