@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>生信开发模块文件与输出规范 v2.0</title>
+    <title>生信开发模块文件与输出规范 v2.1</title>
     <style>
         :root {
             --bg: #eff6ff;
@@ -159,7 +159,7 @@
 <body>
     <button class="sidebar-toggle" type="button" aria-label="打开目录">☰</button>
     <nav class="sidebar" aria-label="章节目录">
-        <div class="sidebar-title">模块规范 v2.0</div>
+        <div class="sidebar-title">模块规范 v2.1</div>
         <a href="#authority">权威源与适用范围</a>
         <a href="#principles">精简原则</a>
         <a href="#boundary">开发前冻结边界</a>
@@ -242,7 +242,8 @@
                 <h2>5. 入口与命令</h2>
                 <ul class="rule-list">
                     <li><code>run.sh</code> 是稳定公开入口，只负责解析、校验、调度、日志和发布。</li>
-                    <li>无参数或 <code>--help</code> 返回 0，且不创建任何文件。</li>
+                    <li>无参数或 <code>--help</code> 返回 0，且不创建任何文件；已公开的 <code>-h</code> 或 <code>help</code> 必须显示同一份帮助。</li>
+                    <li>帮助标题、功能说明、参数解释、运行约束、错误定位说明和示例注释以简体中文为主；命令、选项、路径、环境变量、API、包名、数据格式及必要专业术语保留英文标识。</li>
                     <li>有配置时提供幂等 <code>init</code>；没有配置时不造空初始化命令。</li>
                     <li><code>calculate</code>、<code>plot</code>、<code>report</code> 只是常用名称，不是固定套餐。</li>
                     <li><code>full</code> 只用于两个及以上真实写阶段，等价于已声明子命令的组合。</li>
@@ -387,7 +388,7 @@ show_labels = true</pre>
             </section>
         </div>
 
-        <p class="footer-note"><strong>版本：</strong>v2.0 · <strong>更新日期：</strong>2026-08-11 · 人类可读版；开发权威源为 secure_dev 的 <code>module-development-requirements.md</code></p>
+        <p class="footer-note"><strong>版本：</strong>v2.1 · <strong>更新日期：</strong>2026-08-11 · 人类可读版；开发权威源为 secure_dev 的 <code>module-development-requirements.md</code></p>
     </main>
 
     <script>

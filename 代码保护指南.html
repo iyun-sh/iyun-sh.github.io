@@ -478,7 +478,7 @@ module_output/          # 独立的模块结果目录
                 <ul class="rule-list">
                     <li><span class="text-red">必须提供清晰的参数入口</span>，优先支持配置文件路径、输入数据路径、输出目录等核心参数。</li>
                     <li><code>run.sh</code> 必须带 shebang 和可执行权限，保护前后均支持从任意工作目录直接执行。</li>
-                    <li>无参数和 <code>--help</code> 只显示用途、阶段、输入模式、参数、输出与示例，返回 0 且不创建文件。</li>
+                    <li>无参数和 <code>--help</code> 显示同一份简体中文帮助，说明用途、真实能力、输入模式、参数、输出、约束与示例，返回 0 且不创建文件；技术标识保留必要英文。</li>
                     <li>只公开真实存在的命令；有配置时提供幂等 <code>init</code>，有真实图件或报告时才提供 <code>plot</code> 或 <code>report</code>，<code>full</code> 只编排两个及以上真实写阶段。</li>
                     <li><span class="text-red">必须输出可定位问题的日志路径</span>，不把错误完全吞掉。</li>
                     <li>内部脚本名可以变化，但 <code>run.sh</code> 的调用方式<span class="text-red">不能随保护策略频繁变化</span>。</li>
@@ -505,8 +505,8 @@ module_output/          # 独立的模块结果目录
                     <tbody>
                         <tr>
                             <td>帮助信息</td>
-                            <td>无参数、<code>-h</code> 或 <code>--help</code> 均显示帮助</td>
-                            <td>帮助至少说明用途、阶段、输入模式、参数、示例、输出和功能边界；不得创建日志或输出目录。</td>
+                            <td>无参数、<code>--help</code> 及已公开的 <code>-h</code>/<code>help</code> 均显示同一份帮助</td>
+                            <td>帮助标题与说明以简体中文为主，至少覆盖用途、真实能力、输入模式、参数、示例、输出和功能边界；命令、选项、路径、环境变量和软件标识可保留英文；不得创建日志或输出目录。</td>
                         </tr>
                         <tr>
                             <td>配置入口</td>
@@ -854,7 +854,7 @@ output/                     # 运行后生成的模块结果目录
                     <li>确认 <code>config/</code> 中只保留一份规范模板，每个公开参数有完整的紧邻中文注释、由生产代码真实消费，并与 Schema 一致。</li>
                     <li>确认交付包中不包含调试脚本、旧结果、demo 输出、历史输出和无关缓存。</li>
                     <li>确认开发历史缓存不进入交付包；运行缓存只在后续命令真实复用时进入 <code>cache/</code>，元数据写入对象自身，不另生成 manifest。</li>
-                    <li>确认无参数和 <code>--help</code> 返回 0、帮助完整且不创建文件；未知参数非零退出。</li>
+                    <li>确认无参数、<code>--help</code> 及已公开的 <code>-h</code>/<code>help</code> 返回 0、显示同一份简体中文帮助且不创建文件；未知参数非零退出。</li>
                     <li>确认模块只公开真实命令；有配置时 <code>init</code> 只生成一份配置并保持幂等，不会预建运行目录。</li>
                     <li>模块存在独立 <code>plot</code> 时，确认它从有效来源重建约定图形且不静默重算；每幅图有独立配置并真实生效。</li>
                     <li>确认未启用报告能力时不创建空 <code>report/</code>；启用时只将最终报告发布到 <code>report/</code>，不遗留渲染 sidecar。</li>
@@ -882,7 +882,7 @@ output/                     # 运行后生成的模块结果目录
                 <p class="footer-note">这样拆分后，三个页面分别负责“怎么组织”“怎么保护”“怎么执行流程”，职责清晰，后续维护成本最低。</p>
             </section>
         </div>
-        <p class="footer-note"><strong>版本:</strong> v1.4 | <strong>更新日期:</strong> 2026-08-11 | 与《生信开发模块文件与输出规范 v2.0》配套</p>    </div>
+        <p class="footer-note"><strong>版本:</strong> v1.5 | <strong>更新日期:</strong> 2026-08-11 | 与《生信开发模块文件与输出规范 v2.1》配套</p>    </div>
 <script>
     (function() {
         var links = document.querySelectorAll('.sidebar a[href^="#"]');

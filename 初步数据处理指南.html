@@ -724,7 +724,7 @@ stopifnot("sample 不匹配" = length(setdiff(group_samples, expr_samples)) == 0
                 <h2 class="section-title" id="sec-cmd">🖥️ 标准化模块执行命令 <span class="badge badge-required">核心</span></h2>
 
                 <div class="lead-box">
-                    <strong>📌 命令规范：</strong>新建或升级模块通过可直接执行的顶层 <code>./run.sh</code> 调用，只公开真实存在的能力命令，不强制采用固定阶段套餐。下列示例保留已部署模块的兼容语法，具体参数以对应 <code>--help</code> 为准，不应机械改写。执行前校验输入，执行后检查正式结果和 <code>log/run_record.json</code>。
+                    <strong>📌 命令规范：</strong>新建或升级模块通过可直接执行的顶层 <code>./run.sh</code> 调用，只公开真实存在的能力命令，不强制采用固定阶段套餐；帮助标题与说明以简体中文为主，技术标识保留必要英文。下列示例保留已部署模块的兼容语法，具体参数以对应 <code>--help</code> 为准，不应机械改写。执行前校验输入，执行后检查正式结果和 <code>log/run_record.json</code>。
                 </div>
 
                 <div class="tabs-container">
@@ -1306,7 +1306,7 @@ setdiff(group_samples, expr_samples)</pre>
         </div>
 
         <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.3 | 更新日期: 2026-08-11 | 关联文档：《生信开发模块文件与输出规范 v2.0》</p>
+        <p class="footer-note"><strong>版本:</strong> v1.4 | 更新日期: 2026-08-11 | 关联文档：《生信开发模块文件与输出规范 v2.1》</p>
 
     </div>
 
