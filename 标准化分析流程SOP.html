@@ -305,12 +305,20 @@
         <!-- ========== Hero ========== -->
         <div class="hero">
             <h1>&#x1F9EC; 标准化分析流程 SOP</h1>
-            <p>涵盖 24 个生物信息学分析模块的标准操作流程，从 GEO 数据下载、统计建模到药物预测与因果推断全链路覆盖。所有模块统一通过入口脚本调用，输出写入 Project 目录。</p>
+            <p>记录 24 个已部署生物信息学模块的当前入口、输入与输出实况，从 GEO 数据下载、统计建模到药物预测与因果推断全链路覆盖。所有模块通过公开入口调用，输出写入 Project 目录。</p>
             <div class="pill-row">
                 <span class="pill primary">&#x1F4CB; 24 个分析模块</span>
                 <span class="pill accent">&#x1F512; 代码保护机制</span>
                 <span class="pill warn">&#x1F4C4; 自动报告生成</span>
                 <span class="pill danger">&#x26A0;&#xFE0F; 只用入口脚本运行</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="warn-box" style="margin-top:0">
+                    <strong>&#x1F4CC; 文档定位：</strong>本页是已部署模块的运行实况索引，不是新模块模板，也不构成规范符合性证明。表中旧命令、报告位置和历史输出仅用于兼容定位；新建或升级模块统一遵循《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范 v2.0</a>》及其机器合同。
+                </div>
             </div>
         </div>
 
@@ -467,7 +475,7 @@
 </div>
 
                 <div class="warn-box" style="margin-top:14px">
-                    <strong>&#x1F4CC; 新旧接口边界：</strong> 下方 <code>run_*.sh</code>、<code>--init</code>、<code>-c</code>、<code>--stage full/all</code> 是已部署模块的兼容接口，不应机械改写。新建或升级模块按《生信开发模块文件与输出规范》使用可直接执行的 <code>./run.sh</code>、<code>init</code> / <code>calculate</code> / <code>plot</code> / <code>full</code> 阶段和稳定长参数；兼容映射必须同时写入模块 README 与帮助信息。
+                    <strong>&#x1F4CC; 新旧接口边界：</strong> 下方 <code>run_*.sh</code>、<code>--init</code>、<code>-c</code>、<code>--stage full/all</code> 是已部署模块的兼容接口，不应机械改写。新建或升级模块使用可直接执行的 <code>./run.sh</code> 和稳定长参数，只公开真实存在的命令；配置、绘图、报告和缓存能力不存在时不得创建空阶段。兼容映射必须同时写入模块 README 与帮助信息。
                 </div>
                 <div class="info-box" style="margin-top:10px">
                     <strong>&#x1F4CD; 当前部署路径：</strong><code>IC50</code>、<code>DrugReflector</code> 和 <code>GraphBAN</code> 当前入口位于 <code>/media/share/secure_dev/</code>；其余模块按各自章节保留 <code>/media/share/secure/</code> 的已部署路径。路径迁移前不得自行替换。
@@ -1837,12 +1845,12 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
 
                 <h3>日志、缓存与报告</h3>
                 <div class="success-box">
-                    <strong>&#x1F4CB; 按实际阶段查看：</strong>
+                    <strong>&#x1F4CB; 按实际能力查看：</strong>
                     <ul style="margin-top:8px">
-                        <li><strong>log/</strong>：新建或升级模块以固定路径保存阶段日志与配置快照；既有模块若仍使用 <code>logs/</code>，以模块帮助为准</li>
-                        <li><strong>cache/</strong>：支持分阶段重绘的模块保存正式计算缓存及清单，<code>plot</code> 不得静默重新计算</li>
-                        <li><strong>result/</strong>：分析结果（CSV + 图表）</li>
-                        <li><strong>report/</strong>：仅明确支持独立报告目录的模块按需创建；正式报告的既有位置以模块 README 为准</li>
+                        <li><strong>log/</strong>：新建或升级模块以 <code>run_record.json</code> 统一记录运行事实，并按需保存配置快照；既有 <code>logs/</code> 路径仅是历史实况</li>
+                        <li><strong>cache/</strong>：仅在后续命令真实复用时保存有版本对象，不另建 manifest；缓存无效时不得静默重算</li>
+                        <li><strong>result/</strong>：只保存业务或科学分析结果，不保存审核、判断、证明或参数回显文件</li>
+                        <li><strong>report/</strong>：新建或升级模块的正式报告固定进入此目录；下表若记录报告位于 <code>result/</code>，仅表示存量兼容差距</li>
                     </ul>
                     遇到问题时，先读取 <code>.run_id</code> 获取最近成功调用标识，再查看固定阶段日志并核对其中的 run_id；失败运行按其输出的日志路径排查。
                 </div>
@@ -1896,8 +1904,8 @@ base_dir = <span class="path">/media/share/Project/myproject/16_MSI</span></div>
 
         <!-- ========== Footer ========== -->
         <p class="footer-note">
-            生物信息学标准化分析流程 SOP &mdash; 版本 1.8 &mdash; 最后更新：2026-08-06<br>
-            脚本目录：<code>/media/share/secure/</code> 或文中明确的 <code>/media/share/secure_dev/</code> &nbsp;|&nbsp; 输出目录：<code>/media/share/Project/</code> &nbsp;|&nbsp; 关联主规范：v1.5
+            生物信息学标准化分析流程 SOP &mdash; 版本 1.9 &mdash; 最后更新：2026-08-11<br>
+            脚本目录：<code>/media/share/secure/</code> 或文中明确的 <code>/media/share/secure_dev/</code> &nbsp;|&nbsp; 输出目录：<code>/media/share/Project/</code> &nbsp;|&nbsp; 关联主规范：v2.0
         </p>
 
     </div>

@@ -395,28 +395,25 @@
 
             <section class="card two-col">
                 <h2 class="section-title" id="sec-dir">&#x1F4C1; 推荐目录边界</h2>
-                <pre class="code-block">module_name/            # 新建或升级后的脚本模块示例
+                <pre class="code-block">module_name/            # 新建或升级后的脚本模块
 ├── run.sh
-├── scripts/
-│   ├── scripts.sh
-│   ├── RawData.R
-│   └── DEGs.py
-├── config/
-│   └── DEGs.config.example.ini
-├── README.md           # 必备（参见《规范》README 必备内容章节）
-├── demo/               # demo 输入数据（只放输入和必要配置，不放输出结果）
-├── CHANGELOG.md        # 版本变更记录
-├── cleanup.sh          # 临时文件清理脚本
-├── requirements.txt    # Python 依赖锁定
-└── renv.lock           # R 依赖锁定（二选一或同时保有）
+├── README.md
+├── module_contract.yaml
+├── tests/
+├── [scripts/]          # 有入口之外的真实实现
+├── [config/]           # 一份规范配置模板；有配置或图件时
+├── [report_templates/] # 确实生成报告时
+├── [demo/data/]        # 受控 demo 输入，不放输出
+└── [schemas/]          # 有稳定表、缓存或模型结构时
 
-module_output/          # 模块结果目录
-├── log/                 # 实际运行时按需创建；阶段日志和配置快照使用固定路径
-├── cache/              # calculate 发布正式计算缓存时创建
-├── result/             # 产生正式表格或图形时创建
-└── report/             # 可选；仅模块实际生成独立报告时创建</pre>
+module_output/          # 独立的模块结果目录
+├── .run_id
+├── result/             # 正式分析结果
+├── [report/]           # 正式报告
+├── [cache/]            # 有真实下游复用时
+└── log/                # run_record 与配置快照</pre>
                 <div class="lead-box">
-                    <strong>推荐做法：</strong> 对外文档只讲清楚模块已公开 Shell 入口的用法、输入、输出和错误定位方式；新建/升级模块使用 <code>run.sh</code>。<code>scripts/</code> 仅作为内部实现目录维护，<code>log/</code> / <code>cache/</code> / <code>result/</code> / <code>report/</code> 应落在独立的模块结果目录而不是脚本模块根目录。
+                    <strong>推荐做法：</strong> 对外文档只讲清楚模块已公开 Shell 入口的用法、输入、输出和错误定位方式；新建/升级模块使用 <code>run.sh</code>。方括号目录按真实能力创建，不保留空目录或占位文件；<code>log/</code> / <code>cache/</code> / <code>result/</code> / <code>report/</code> 落在独立结果目录，不混入脚本模块根目录。
                 </div>
             </section>
 
@@ -442,9 +439,9 @@ module_output/          # 模块结果目录
                             <td>记录运行方式、输入输出说明、依赖要求，属于外部使用所必需（参见《规范》README 必备内容章节）。</td>
                         </tr>
                         <tr>
-                            <td><code>config/*.config.example.*</code></td>
+                            <td>规范配置模板</td>
                             <td>公开</td>
-                            <td>每个模块保留一种主要格式的参数模板；所有参数应带中文注释、默认值、类型、单位和允许值。</td>
+                            <td>每个模块只保留一份规范模板；所有参数带紧邻中文注释，说明用途与影响、类型、默认值、必填性、单位、允许值或范围，并由生产代码真实消费。</td>
                         </tr>
                         <tr>
                             <td><code>scripts/*.R</code>、<code>scripts/*.py</code></td>
@@ -477,12 +474,12 @@ module_output/          # 模块结果目录
 
             <section class="card two-col">
                 <h2 class="section-title" id="sec-runsh">&#x1F510; 公开 Shell 入口的保护要求</h2>
-                <div class="lead-box"><strong>适用范围：</strong> 本节阶段式接口用于新建或进入升级范围的模块；存量模块先保持其 README 与 <code>--help</code> 已公开的 Shell 入口，升级时再提供有记录的兼容映射。</div>
+                <div class="lead-box"><strong>适用范围：</strong> 本节能力驱动接口用于新建或进入升级范围的模块；存量模块先保持其 README 与 <code>--help</code> 已公开的 Shell 入口，升级时再提供有记录的兼容映射。</div>
                 <ul class="rule-list">
                     <li><span class="text-red">必须提供清晰的参数入口</span>，优先支持配置文件路径、输入数据路径、输出目录等核心参数。</li>
                     <li><code>run.sh</code> 必须带 shebang 和可执行权限，保护前后均支持从任意工作目录直接执行。</li>
                     <li>无参数和 <code>--help</code> 只显示用途、阶段、输入模式、参数、输出与示例，返回 0 且不创建文件。</li>
-                    <li>公开阶段至少保持 <code>init</code>、<code>calculate</code>、<code>plot</code>、<code>full</code> 的语义稳定；<code>report</code> 仅在模块确实支持时公开。</li>
+                    <li>只公开真实存在的命令；有配置时提供幂等 <code>init</code>，有真实图件或报告时才提供 <code>plot</code> 或 <code>report</code>，<code>full</code> 只编排两个及以上真实写阶段。</li>
                     <li><span class="text-red">必须输出可定位问题的日志路径</span>，不把错误完全吞掉。</li>
                     <li>内部脚本名可以变化，但 <code>run.sh</code> 的调用方式<span class="text-red">不能随保护策略频繁变化</span>。</li>
                     <li>如果内部脚本经过保护处理（如加密、编译等），<code>run.sh</code> 仍应保持原有帮助信息和返回行为。</li>
@@ -523,8 +520,8 @@ module_output/          # 模块结果目录
                         </tr>
                         <tr>
                             <td>计算与绘图</td>
-                            <td><code>calculate</code> 发布正式缓存，<code>plot</code> 只读有效缓存</td>
-                            <td>保护实现不得让 <code>plot</code> 静默调用计算代码；缓存无效应明确报错并非零退出。</td>
+                            <td>命令与缓存按真实能力声明</td>
+                            <td>只有下游命令真实复用时才发布缓存；独立 <code>plot</code> 存在时只读有效来源，缓存无效应明确报错，不静默重算。</td>
                         </tr>
                         <tr>
                             <td>输入输出参数</td>
@@ -748,25 +745,25 @@ rm -f scripts/scripts.sh.x.c
                 <h2 class="section-title" id="sec-package">&#x1F4E6; 推荐交付包结构（新建/升级模块示例）</h2>
                 <pre class="code-block">deliverable/                 # 交付的脚本模块
 ├── run.sh
-├── README.md               # 必备（参见《规范》README 必备内容章节）
-├── CHANGELOG.md            # 版本变更记录
-├── scripts/
-│   └── protected_runtime/
-├── config/
-│   └── DEGs.config.example.ini
-├── demo/                   # demo 输入数据，不包含输出结果
-├── requirements.txt        # Python 依赖（如适用）
-└── renv.lock               # R 依赖（如适用）
+├── README.md
+├── module_contract.yaml
+├── tests/
+├── [scripts/protected_runtime/] # 确有内部实现时
+├── [config/module.ini]          # 唯一规范模板
+├── [demo/data/]                 # demo 输入，不含输出
+├── [schemas/]                   # 稳定数据结构合同
+└── [依赖锁文件]                 # 已存在且适用时
 
 output/                     # 运行后生成的模块结果目录
-├── log/                     # 固定路径的实际运行日志与配置快照
-├── cache/                  # 正式计算缓存及 manifest
-├── result/                 # 正式表格、图形及默认报告位置
-└── report/                 # 可选；仅实际使用独立报告目录时创建</pre>
+├── .run_id
+├── result/                 # 正式分析结果
+├── [report/]               # 正式报告
+├── [cache/]                # 有真实下游复用时
+└── log/                    # run_record 与配置快照</pre>
                 <ul class="rule-list" style="margin-top: 14px;">
                     <li><code>README.md</code> 只说明运行方式、输入输出要求和常见错误定位。</li>
-                    <li><code>scripts/protected_runtime/</code> 可以是受保护产物（如加密脚本、编译产物、二进制文件等）目录。</li>
-                    <li><span class="text-red">不要把运行生成的 log/cache/result/report 打包回脚本模块目录</span>；这些目录在独立输出根下按实际阶段创建，未启用报告时不得留下空 <code>report/</code>。</li>
+                    <li><code>scripts/protected_runtime/</code> 可以是受保护产物目录；第三方二进制必须声明许可证、构建或官方下载来源、平台、版本、SHA-256、更新与回滚方式。</li>
+                    <li><span class="text-red">不要把运行生成的 log/cache/result/report 打包回脚本模块目录</span>；这些目录在独立输出根下按实际能力创建，未启用报告时不得留下空 <code>report/</code>。</li>
                     <li>如果不需要对外暴露源码，避免把原始 <code>.R</code>、<code>.py</code> 文件直接放入交付包。</li>
                 </ul>
             </section>
@@ -854,15 +851,15 @@ output/                     # 运行后生成的模块结果目录
                 <h2 class="section-title" id="sec-checklist">&#x2705; 交付前检查清单</h2>
                 <ul class="check-list">
                     <li>确认对外文档只描述模块已公开 Shell 入口的用法；新建/升级模块使用 <code>run.sh</code>，且不要求用户直接调用内部脚本。</li>
-                    <li>确认 <code>config/</code> 中只保留模块选定格式的可读模板，所有参数有中文注释且与当前版本一致。</li>
+                    <li>确认 <code>config/</code> 中只保留一份规范模板，每个公开参数有完整的紧邻中文注释、由生产代码真实消费，并与 Schema 一致。</li>
                     <li>确认交付包中不包含调试脚本、旧结果、demo 输出、历史输出和无关缓存。</li>
-                    <li>确认开发历史缓存不进入交付包，同时保护后的 <code>calculate</code> 仍能在独立输出目录发布正式计算缓存及 manifest。</li>
+                    <li>确认开发历史缓存不进入交付包；运行缓存只在后续命令真实复用时进入 <code>cache/</code>，元数据写入对象自身，不另生成 manifest。</li>
                     <li>确认无参数和 <code>--help</code> 返回 0、帮助完整且不创建文件；未知参数非零退出。</li>
-                    <li>确认 <code>init</code> 只生成一份分析配置，重复执行幂等，不会预建运行目录。</li>
-                    <li>确认 <code>plot</code> 从有效缓存重建全部约定图形且不调用计算；缓存损坏或不兼容时明确失败。</li>
-                    <li>确认未启用报告阶段时不创建空 <code>report/</code>，已有正式报告位置仍遵循模块 README。</li>
+                    <li>确认模块只公开真实命令；有配置时 <code>init</code> 只生成一份配置并保持幂等，不会预建运行目录。</li>
+                    <li>模块存在独立 <code>plot</code> 时，确认它从有效来源重建约定图形且不静默重算；每幅图有独立配置并真实生效。</li>
+                    <li>确认未启用报告能力时不创建空 <code>report/</code>；启用时只将最终报告发布到 <code>report/</code>，不遗留渲染 sidecar。</li>
                     <li>确认从模块目录外调用模块已公开 Shell 入口仍能正确定位内部脚本和模板；新建/升级模块使用 <code>/path/to/module/run.sh</code> 验证。</li>
-                    <li>确认 <code>.run_id</code>、独立运行日志、缓存生产 run_id、结果和可选报告结构符合规范页要求。</li>
+                    <li>确认 <code>.run_id</code>、<code>log/run_record.json</code>、结果、按需缓存和报告结构符合规范页要求；审核证据不进入 <code>result/</code>。</li>
                     <li>确认 README、配置模板、帮助信息、日志字段和输出结构彼此一致，未保留旧参数或旧产物说明。</li>
                     <li>确认调用者识别、Project 路径校验、目录创建和删除授权均由本模块入口独立实现，未依赖根目录公共脚本或其他模块。</li>
                     <li>确认保护处理（如加密、编译、二进制化等）后，仍可通过日志追溯到分析点、运行时间、配置副本、输出目录和上游引用。</li>
@@ -885,7 +882,7 @@ output/                     # 运行后生成的模块结果目录
                 <p class="footer-note">这样拆分后，三个页面分别负责“怎么组织”“怎么保护”“怎么执行流程”，职责清晰，后续维护成本最低。</p>
             </section>
         </div>
-        <p class="footer-note"><strong>版本:</strong> v1.3 | <strong>更新日期:</strong> 2026-08-06 | 与《生信开发模块文件与输出规范 v1.5》配套</p>    </div>
+        <p class="footer-note"><strong>版本:</strong> v1.4 | <strong>更新日期:</strong> 2026-08-11 | 与《生信开发模块文件与输出规范 v2.0》配套</p>    </div>
 <script>
     (function() {
         var links = document.querySelectorAll('.sidebar a[href^="#"]');

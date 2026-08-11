@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>生信开发模块文件与输出规范</title>
+    <title>生信开发模块文件与输出规范 v2.0</title>
     <style>
         :root {
             --bg: #eff6ff;
@@ -22,2028 +22,406 @@
             --shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
+            margin: 0;
+            color: var(--text);
             font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            line-height: 1.72;
             background:
-                radial-gradient(circle at top left, rgba(29,78,216,0.08), transparent 28%),
-                radial-gradient(circle at top right, rgba(37,99,235,0.06), transparent 24%),
+                radial-gradient(circle at top left, rgba(29, 78, 216, 0.09), transparent 28%),
+                radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 24%),
                 var(--bg);
             background-attachment: fixed;
-            color: var(--text);
-            line-height: 1.7;
         }
+        a { color: var(--primary); }
+        code, pre { font-family: Consolas, "Courier New", monospace; }
+        code { padding: 2px 6px; color: #3730a3; background: #eef2ff; border-radius: 6px; }
+        [id] { scroll-margin-top: 24px; }
 
-        .container {
-            max-width: 1100px;
-            margin-left: 280px;
-            padding: 32px 20px 56px;
-        }
-
-        /* Hero */
-        .hero {
-            padding: 32px;
-            border-radius: 24px;
-            background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 55%, #ecfeff 100%);
+        .sidebar {
+            position: fixed;
+            top: 28px;
+            left: 16px;
+            z-index: 100;
+            width: 242px;
+            max-height: calc(100vh - 56px);
+            padding: 18px 14px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(217, 226, 239, 0.8);
+            border-radius: 16px;
             box-shadow: var(--shadow);
-            border: 1px solid rgba(255,255,255,0.7);
-            margin-bottom: 24px;
+            backdrop-filter: blur(14px);
         }
-        .hero h1 { margin: 0 0 10px; font-size: clamp(2rem,4vw,3rem); line-height: 1.15; color: #0f172a; }
-        .hero p  { margin: 0; max-width: 920px; color: var(--muted); font-size: 1.05rem; }
-
-        .pill-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-        .pill { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 999px; font-size: 0.92rem; font-weight: 600; }
-        .pill.primary { background: var(--primary-soft); color: var(--primary); }
-        .pill.accent  { background: var(--accent-soft);  color: var(--accent); }
-        .pill.warn    { background: var(--warn-soft);    color: var(--warn); }
-        .pill.danger  { background: var(--danger-soft);  color: var(--danger); }
-
-        /* Grid & Card */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(12, minmax(0,1fr));
-            gap: 18px;
-            margin-bottom: 18px;
+        .sidebar-title { margin: 0 0 10px; padding: 0 8px 10px; font-weight: 800; border-bottom: 2px solid var(--primary); }
+        .sidebar a {
+            display: block;
+            margin: 2px 0;
+            padding: 7px 10px;
+            color: var(--muted);
+            font-size: 0.88rem;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            border-radius: 8px;
         }
+        .sidebar a:hover, .sidebar a.active { color: var(--primary); background: var(--primary-soft); border-left-color: var(--primary); }
+        .sidebar-toggle {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 200;
+            display: none;
+            width: 42px;
+            height: 42px;
+            font-size: 1.25rem;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+        }
+        .container { max-width: 1120px; margin-left: 280px; padding: 30px 20px 56px; }
+        .hero {
+            padding: 34px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f8fbff, #ffffff 58%, #ecfeff);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+        }
+        .eyebrow { margin: 0 0 6px; color: var(--primary); font-weight: 800; letter-spacing: 0.08em; }
+        .hero h1 { margin: 0 0 10px; color: #0f172a; font-size: clamp(2rem, 4vw, 3.1rem); line-height: 1.15; }
+        .hero p { max-width: 900px; margin: 0; color: var(--muted); font-size: 1.04rem; }
+        .pill-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
+        .pill { padding: 7px 12px; font-size: 0.9rem; font-weight: 700; border-radius: 999px; }
+        .pill.primary { color: var(--primary); background: var(--primary-soft); }
+        .pill.accent { color: var(--accent); background: var(--accent-soft); }
+        .pill.warn { color: var(--warn); background: var(--warn-soft); }
+
+        .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; margin-bottom: 18px; }
         .card {
             grid-column: span 12;
+            padding: 24px;
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 10px 28px rgba(15,23,42,0.05);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
         }
-        .card.two-col { grid-column: span 6; }
+        .card.half { grid-column: span 6; }
+        .card h2 { margin: 0 0 14px; color: #0f172a; font-size: 1.36rem; }
+        .card h3 { margin: 20px 0 8px; color: #17345e; font-size: 1.08rem; }
+        .card p:first-of-type { margin-top: 0; }
+        ul, ol { padding-left: 22px; }
+        li { margin: 7px 0; }
+        .rule-list { margin-bottom: 0; }
 
-        .section-title { margin: 0 0 14px; font-size: 1.3rem; color: #0f172a; }
+        .callout { margin-top: 14px; padding: 15px 17px; border-radius: 14px; }
+        .callout.primary { background: #eff6ff; border: 1px solid #bfdbfe; }
+        .callout.accent { background: var(--accent-soft); border: 1px solid #99f6e4; }
+        .callout.warn { background: var(--warn-soft); border: 1px solid #fcd34d; }
+        .callout.danger { background: var(--danger-soft); border: 1px solid #fca5a5; }
 
-        /* Boxes */
-        .lead-box, .warn-box, .danger-box { border-radius: 16px; padding: 16px 18px; margin: 14px 0 0; }
-        .lead-box   { background: #f8fafc; border: 1px solid #dbeafe; }
-        .warn-box   { background: var(--warn-soft); border: 1px solid #fcd34d; }
-        .danger-box { background: var(--danger-soft); border: 1px solid #fca5a5; }
-
-        /* Table (matrix) */
-        .matrix { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; }
-        .matrix th, .matrix td { border: 1px solid var(--border); padding: 12px 14px; text-align: left; vertical-align: top; }
-        .matrix th { background: #eff6ff; color: #1e3a8a; }
-
-        /* Code */
-        code, .code-block { font-family: Consolas, "Courier New", monospace; }
-        code { background: #eef2ff; color: #3730a3; padding: 2px 6px; border-radius: 6px; }
+        .matrix { width: 100%; border-collapse: collapse; }
+        .matrix th, .matrix td { padding: 11px 13px; text-align: left; vertical-align: top; border: 1px solid var(--border); }
+        .matrix th { color: #1e3a8a; background: #eff6ff; }
         .code-block {
-            display: block; white-space: pre-wrap;
-            background: #0f172a; color: #e2e8f0;
-            border-radius: 16px; padding: 18px; margin: 14px 0 0; overflow-x: auto;
+            display: block;
+            padding: 18px;
+            margin: 14px 0 0;
+            overflow-x: auto;
+            color: #e2e8f0;
+            white-space: pre;
+            background: #0f172a;
+            border-radius: 15px;
+            line-height: 1.62;
         }
+        .check-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .check-item { padding: 13px 15px; background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; }
+        .footer-note { margin-top: 20px; color: var(--muted); text-align: center; }
 
-        /* File Tree */
-        .file-tree {
-            display: block; white-space: pre; overflow-x: auto;
-            background: #0f172a; color: #d4d4d4;
-            border-radius: 16px; padding: 18px; margin: 14px 0 0;
-            font-family: Consolas, "Courier New", monospace;
-            font-size: 0.85em; line-height: 1.7;
-        }
-        .folder      { color: #4ec9b0; font-weight: bold; }
-        .file        { color: #d4d4d4; }
-        .hidden-file { color: #808080; font-style: italic; }
-        .config-file { color: #ce9178; }
-        .log-file    { color: #6a9955; }
-
-        /* Lists */
-        .rule-list, .check-list { margin: 0; padding-left: 20px; }
-        .rule-list li, .check-list li { margin-bottom: 10px; }
-
-        ul { padding-left: 22px; }
-        li { margin: 6px 0; }
-
-        /* Steps (numbered circles) */
-        .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
-        .steps li { position: relative; padding-left: 54px; margin-bottom: 18px; min-height: 38px; }
-        .steps li::before {
-            counter-increment: step; content: counter(step);
-            position: absolute; left: 0; top: 0;
-            width: 36px; height: 36px; border-radius: 50%;
-            background: linear-gradient(135deg, #2563eb, #0f766e);
-            color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;
-        }
-
-        /* Tabs */
-        .tabs-container { margin: 18px 0 0; }
-        .tabs {
-            display: flex; gap: 8px; flex-wrap: wrap;
-            border-bottom: 2px solid var(--primary);
-        }
-        .tab {
-            padding: 10px 16px;
-            background: var(--primary-soft);
-            border: none; border-radius: 12px 12px 0 0;
-            cursor: pointer; font-size: 0.95rem; font-weight: 600;
-            color: var(--primary);
-            transition: background .2s, color .2s;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .tab:hover { background: #bfdbfe; }
-        .tab.active { background: var(--primary); color: #fff; }
-        .tab-content {
-            display: none;
-            padding: 20px;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-top: none;
-            border-radius: 0 0 16px 16px;
-        }
-        .tab-content.active { display: block; }
-        .tab-icon { font-size: 1.1em; }
-
-        /* Badges */
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 0.75em; font-weight: 700; margin-left: 6px; }
-        .badge-required { background: var(--danger-soft); color: var(--danger); }
-        .badge-recommended { background: var(--primary-soft); color: var(--primary); }
-
-        /* Emphasis utilities */
-        .text-red { color: var(--danger); font-weight: 700; }
-        .text-bold { font-weight: 700; }
-
-        /* Footer */
-        .footer-note { margin-top: 18px; color: var(--muted); font-size: 0.95rem; text-align: center; }
-
-        /* Responsive */
         @media (max-width: 900px) {
-            .sidebar { transform: translateX(-100%); transition: transform .3s; }
+            .sidebar { transform: translateX(-110%); transition: transform 0.2s ease; }
             .sidebar.open { transform: translateX(0); }
-            .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
-            .container { margin-left: 0; }
-            .card.two-col { grid-column: span 12; }
-            .hero { padding: 24px; }
+            .sidebar-toggle { display: block; }
+            .container { margin-left: 0; padding-top: 64px; }
+            .card.half { grid-column: span 12; }
+            .check-grid { grid-template-columns: 1fr; }
         }
         @media print {
-            .sidebar { display: none !important; }
-            .sidebar-toggle { display: none !important; }
-            .container { margin-left: 0 !important; max-width: 100%; }
-            body { background: #fff; }
-            .card { box-shadow: none; }
+            .sidebar, .sidebar-toggle { display: none !important; }
+            .container { max-width: none; margin: 0; }
+            body { background: white; }
+            .card, .hero { box-shadow: none; break-inside: avoid; }
         }
-    
-        [id] { scroll-margin-top: 80px; }
-
-        /* Sidebar - 悬浮卡片样式 */
-        .sidebar {
-            position: fixed; top: 32px; left: 16px;
-            width: 240px; max-height: calc(100vh - 52px);
-            overflow-y: auto;
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(217,226,239,0.7);
-            border-radius: 16px;
-            padding: 20px 14px;
-            z-index: 100;
-            box-shadow: 0 8px 32px rgba(15,23,42,0.12), 0 2px 8px rgba(15,23,42,0.06);
-        }
-        .sidebar::-webkit-scrollbar { width: 4px; }
-        .sidebar::-webkit-scrollbar-track { background: transparent; }
-        .sidebar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .sidebar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .sidebar-title {
-            font-size: 1rem; font-weight: 700; color: #0f172a;
-            margin: 0 0 14px; padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
-            display: flex; align-items: center; gap: 6px;
-        }
-        .sidebar a {
-            display: block; text-decoration: none; color: var(--muted);
-            padding: 6px 10px; border-radius: 8px; font-size: 0.85rem; line-height: 1.5;
-            transition: all .2s ease; border-left: 3px solid transparent;
-            margin-bottom: 1px;
-        }
-        .sidebar a:hover {
-            background: var(--primary-soft); color: var(--primary);
-            border-left-color: var(--primary); transform: translateX(2px);
-        }
-        .sidebar a.active {
-            background: linear-gradient(135deg, var(--primary), #2563eb);
-            color: #fff; font-weight: 600;
-            border-left-color: transparent;
-            box-shadow: 0 2px 8px rgba(29,78,216,0.25);
-        }
-        .sidebar-toggle {
-            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
-            width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--border);
-            background: rgba(255,255,255,0.9); backdrop-filter: blur(8px);
-            font-size: 1.3em; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transition: transform .2s, box-shadow .2s;
-        }
-        .sidebar-toggle:hover {
-            transform: scale(1.05); box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-        }
-</style>
+    </style>
 </head>
 <body>
-        <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">&#x2630;</button>
-    <nav class="sidebar">
-        <div class="sidebar-title">&#x1F4D1; 目录导航</div>
-        <a href="#sec-dir">模块目录结构</a>
-        <a href="#sec-runtime">运行阶段与缓存配置</a>
-        <a href="#sec-naming">文件命名规范</a>
-        <a href="#sec-log">日志文件规范</a>
-        <a href="#sec-track">结果追踪机制</a>
-        <a href="#sec-path">路径规范</a>
-        <a href="#sec-script">脚本开发规范</a>
-        <a href="#sec-best">推荐做法</a>
-        <a href="#sec-avoid">避免做法</a>
-        <a href="#sec-collab">模块协作与版本管理</a>
-        <a href="#sec-qa">质量保证规范</a>
-        <a href="#sec-readme">README.md 必备内容</a>
-        <a href="#sec-bioinfo">生信开发补充规范</a>
-        <a href="#sec-format">文件格式建议</a>
-        <a href="#sec-input">输入文件校验规范</a>
+    <button class="sidebar-toggle" type="button" aria-label="打开目录">☰</button>
+    <nav class="sidebar" aria-label="章节目录">
+        <div class="sidebar-title">模块规范 v2.0</div>
+        <a href="#authority">权威源与适用范围</a>
+        <a href="#principles">精简原则</a>
+        <a href="#boundary">开发前冻结边界</a>
+        <a href="#source">源码结构</a>
+        <a href="#commands">入口与命令</a>
+        <a href="#config">配置合同</a>
+        <a href="#output">输出与结果准入</a>
+        <a href="#figures">逐图配置</a>
+        <a href="#reports">报告合同</a>
+        <a href="#runtime">日志与缓存</a>
+        <a href="#code">代码质量</a>
+        <a href="#acceptance">验收与迁移</a>
     </nav>
-    <div class="container">
 
-        <!-- Hero -->
-        <section class="hero">
-            <h1>📋 生信开发模块文件与输出规范</h1>
-            <p>本规范适用于生信分析模块开发（如 RawData 处理、差异分析、富集分析等），用于统一脚本组织、参数记录、结果追溯与报告产出。</p>
+    <main class="container">
+        <header class="hero">
+            <p class="eyebrow">SECURE_DEV · HUMAN-READABLE STANDARD</p>
+            <h1>生信开发模块文件与输出规范</h1>
+            <p>新模块不追求阶段多、文件多或报告长，而要以最小公开接口稳定交付真实分析结果。复杂分析可以产生多个结果，但每个结果都必须回答独立问题、服务明确消费者，并受合同预算约束。</p>
             <div class="pill-row">
-                <span class="pill primary">🆔 .run_id 运行标识</span>
-                <span class="pill accent">📁 统一目录结构</span>
-                <span class="pill primary">💾 正式计算缓存</span>
-                <span class="pill warn">📄 日志优先追溯</span>
-                <span class="pill danger">🛠️ 脚本开发规范</span>
-                <span class="pill primary">🔄 模块协作与版本管理</span>
-                <span class="pill accent">🧪 质量保证</span>
+                <span class="pill primary">能力驱动，不凑阶段</span>
+                <span class="pill accent">结果回答分析问题</span>
+                <span class="pill primary">每幅图单独可调</span>
+                <span class="pill warn">证据与审核只进日志系统</span>
             </div>
-        </section>
+        </header>
 
-        <!-- ========== 模块目录结构 ========== -->
         <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-dir">📁 模块目录结构</h2>
+            <section class="card" id="authority">
+                <h2>1. 权威源与适用范围</h2>
+                <p>本页是便于阅读和协作的网页说明。开发与验收的规范权威源是 <code>/media/desk16/share/secure_dev/docs/agents/module-development-requirements.md</code>；单个模块公开行为与产物的机器权威源是该模块的 <code>module_contract.yaml</code>。README、代码、示例、SOP 和 Wiki 不得静默偏离二者。</p>
+                <div class="callout warn"><strong>存量模块不是模板。</strong>《标准化分析流程 SOP》记录已部署模块的真实入口和历史输出；它可以帮助定位兼容边界，但不能证明旧格式符合本规范。DEGs 只提供紧凑输出组织参考，报告质量和阶段设计仍按本规范重新判断。</div>
+            </section>
 
-                <div class="lead-box">
-                    <strong>📁 模块目录组织示例：</strong>
-                    <div style="margin-top:8px;">这里要明确分成两部分：<span class="text-red">脚本模块</span>只放入口、配置模板、真实业务脚本和 demo 输入；<span class="text-red">模块结果目录</span>只放运行产物。不要把 <code>log/</code>、<code>cache/</code>、<code>result/</code>、<code>report/</code> 混进脚本模块根目录。</div>
+            <section class="card" id="principles">
+                <h2>2. 精简原则</h2>
+                <div class="check-grid">
+                    <div class="check-item"><strong>一个事实一个位置</strong><br>科学结果进表或图，解释进报告，运行事实进 <code>run_record.json</code>。</div>
+                    <div class="check-item"><strong>没有消费者就没有产物</strong><br>“便于检查、以后可能用、证明已通过”不是正式消费者。</div>
+                    <div class="check-item"><strong>预算是上限</strong><br>合同允许多个文件，不代表需要写满；删除不损失能力的文件必须删除。</div>
+                    <div class="check-item"><strong>要求不反向制造实现</strong><br>没有报告、图、缓存或独立阶段的模块，不创建空能力和占位目录。</div>
                 </div>
+                <div class="callout danger"><strong>禁止：</strong>独立的审核表、证据表、validation summary、阶段状态表、参数回显表、产物 manifest、checksum 表和为了判定而生成的专用文件。需要追溯时写入固定的 <code>log/run_record.json</code>。</div>
+            </section>
 
-                <div class="warn-box">
-                    <strong>🔐 模块独立边界：</strong> 每个模块必须在自身公开入口内独立完成调用者识别、输出路径规范化、Project 边界校验、目录创建和清理/删除授权；实现代码、测试与版本记录都保留在本模块内。<br>
-                    <strong>硬性禁止：</strong> 不得从 <code>/media/share/secure/</code>、<code>/media/share/secure_dev/</code> 等共享根目录加载供多个模块共用的写入校验脚本，不得借用其他模块的校验实现，也不得把文件系统权限视为模块级授权。普通调用者只能操作自身 Project 范围内由当前模块校验通过的路径。
-                </div>
-
-                <pre class="file-tree"><span class="folder">chromosome_plot/</span>  <span class="hidden-file"># 脚本模块示例</span>
-├── <span class="file">run.sh</span>                
-├── <span class="file">README.md</span>
-├── <span class="file">CHANGELOG.md</span>
-├── <span class="folder">scripts/</span>
-│   ├── <span class="file">main.R</span>
-│   ├── <span class="folder">calculate/</span>
-│   │   └── <span class="file">lookup_gene_positions.R</span>
-│   ├── <span class="folder">plot/</span>
-│   │   ├── <span class="file">plot_circos.R</span>
-│   │   └── <span class="file">plot_from_cache.R</span>
-│   └── <span class="folder">report/</span>
-│       └── <span class="file">generate_report.R</span>
-├── <span class="folder">config/</span>
-│   └── <span class="config-file">chromosome_plot.config.example.ini</span>
-└── <span class="folder">demo/</span>
-    └── <span class="folder">data/</span>  <span class="hidden-file"># 只放 demo 输入数据，不放输出结果或历史结果</span>
-
-<span class="folder">module_output/</span>  <span class="hidden-file"># 模块结果目录，以 chromosome_plot full 阶段为例</span>
-├── <span class="hidden-file">.run_id</span>  <span class="hidden-file"># 最近一次成功调用的 run_id，如 20260806_143022</span>
-├── <span class="folder">cache/</span>
-│   ├── <span class="file">calculation.qs2</span>  <span class="hidden-file"># 固定路径；足以重建全部约定图形的计算对象</span>
-│   └── <span class="file">cache_manifest.json</span>  <span class="hidden-file"># 缓存版本、生产 run_id、输入/参数指纹、校验和</span>
-├── <span class="folder">log/</span>
-│   ├── <span class="config-file">input.config.ini</span>  <span class="hidden-file"># 当前调用的用户输入配置只读快照</span>
-│   ├── <span class="config-file">effective.config.ini</span>  <span class="hidden-file"># 当前调用解析后的生效参数</span>
-│   └── <span class="log-file">full.log</span>  <span class="hidden-file"># 固定阶段日志；run_id 写在日志内容中</span>
-├── <span class="folder">result/</span>
-│   ├── <span class="file">01_gene_positions.tsv</span>
-│   ├── <span class="file">02_circos.pdf</span>
-│   ├── <span class="file">02_circos.png</span>
-│   └── <span class="file">chromosome_plot_report.docx</span>  <span class="hidden-file"># 本模块声明报告归入 result/</span></pre>
-
-                <div class="warn-box" style="margin-top:14px;">
-                    <strong>报告位置是模块契约，不是双写规则：</strong> 上例沿用 <code>result/</code>。只有模块 README 明确声明独立报告目录时，才按需创建 <code>report/</code> 并把报告放在那里；同一正式报告不得在两个目录重复生成。
-                </div>
-
-                <div class="lead-box" style="margin-top:18px;">
-                    <strong>📌 使用约定：</strong>
-                    新建或进入本轮升级范围的模块，对外统一由顶层 <code>run.sh</code> <span class="text-red">作为唯一主入口</span>；<code>scripts/</code> 用于存放内部实现脚本，后续如需保护处理（如加密、编译、二进制化等）也<span class="text-red">应只影响内部实现，不改变外部使用方式</span>。尚未升级的已部署模块可继续保留公开的 <code>run_*.sh</code>，以模块 README 和 <code>--help</code> 为准，不因本目录示例被机械改名。
-                    <br><br>
-                    <strong>📦 结果边界：</strong>
-                    <span class="text-red">运行日志、分析结果、报告属于独立的模块结果目录</span>，不要和脚本模块根目录混放。
-                    <br><br>
-                    <strong>🔐 相关说明：</strong>
-                    代码保护、对外暴露边界与交付限制请结合独立的《代码保护指南》一并维护。
-                </div>
-
-                <h3 style="margin-top:28px; color:#0f172a; font-size:1.15rem;">目录说明</h3>
-
-                <div class="tabs-container">
-                    <div class="tabs">
-                        <button class="tab active" onclick="showTab('dir-scripts', event)">
-                            <span class="tab-icon">📂</span> scripts/
-                        </button>
-                        <button class="tab" onclick="showTab('dir-logs', event)">
-                            <span class="tab-icon">📄</span> output/log/
-                            <span class="badge badge-required">核心</span>
-                        </button>
-                        <button class="tab" onclick="showTab('dir-result', event)">
-                            <span class="tab-icon">📊</span> output/result/
-                        </button>
-                        <button class="tab" onclick="showTab('dir-report', event)">
-                            <span class="tab-icon">📝</span> report/（可选）
-                        </button>
-                    </div>
-
-                    <div id="dir-scripts" class="tab-content active">
-                        <h4>📂 scripts/ - 内部实现脚本目录</h4>
-                        <ul>
-                            <li><strong>顶层入口固定</strong>：新建或进入升级范围的模块统一执行顶层 <code>run.sh</code>，<span class="text-red">不直接面向 <code>scripts/</code> 内部脚本</span>；未升级模块仍以已公开入口为准</li>
-                            <li>存放该模块的内部实现脚本（.R、.py、.sh 等），可由 <code>scripts.sh</code> 或其他调度脚本串联执行</li>
-                            <li><strong>内部实现可调整</strong>：<code>scripts/</code> 内部脚本后续可做保护处理（如加密、编译、二进制化等）、替换或重构，但应保持 <code>run.sh</code> 的对外调用方式稳定</li>
-                            <li><strong>路径处理统一</strong>：所有输入、输出、配置、日志路径在使用前都应先做 <code>normalizePath</code> 或等价标准化处理，<span class="text-red">禁止直接拼接原始路径字符串后立即读写文件</span></li>
-                            <li><strong>计算与作图分离</strong>：<span class="text-red">同一分析点的计算逻辑和可视化逻辑应拆分为独立脚本</span>，如 <code>DEGs_analysis.R</code>（差异计算）与 <code>DEGs_plot.R</code>（热图/火山图等），便于只改图时不必重跑计算、提高复用性和调试效率</li>
-                            <li>脚本命名使用驼峰命名法，清晰表明功能，建议按分析流程顺序命名</li>
-                            <li><strong>配置模板</strong>：在 <code>config/</code> 下保存模块选定格式的一个示例配置（<code>*.config.example.*</code>）</li>
-                            <li><strong>模板与运行配置分离</strong>：模块内 <code>config/</code> 只保存只读示例模板；<code>init</code> 在用户指定的项目目录生成一份分析配置；每次运行再把输入配置与解析后的生效参数写入固定的 <code>module_output/log/</code></li>
-                            <li><strong>读取文件推荐</strong>：R脚本推荐使用 <code>data.table</code> 包</li>
-                            <li>示例：
-                                <ul>
-                                    <li><code>run.sh</code> - 模块对外执行入口</li>
-                                    <li><code>scripts/RawData.R</code> - 原始数据处理内部脚本</li>
-                                    <li><code>scripts/DEGs_analysis.R</code> - 差异表达计算脚本</li>
-                                    <li><code>scripts/DEGs_plot.R</code> - 差异表达可视化脚本</li>
-                                    <li><code>scripts/scripts.sh</code> - 内部流程调度脚本</li>
-                                    <li><code>config/DEGs.config.example.yaml</code> - 参数模板</li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <div class="lead-box">
-                            <strong>💡 计算与作图分离 — 实施约定</strong>
-                            <ul style="margin-top:8px; padding-left:20px;">
-                                <li><strong>中间结果格式</strong>：计算脚本将分析结果保存为 <code>.qs2</code>（R）或 <code>.tsv</code>/<code>.csv</code>（通用表格：含化合物名、药物名、描述等可能带逗号字段时用 TSV；确认无逗号解析风险时可用 CSV），<span class="text-red">作图脚本直接读取中间结果文件，不重复执行计算逻辑</span></li>
-                                <li><strong>正式缓存位置</strong>：绘图可复用的正式计算对象统一写入 <code>module_output/cache/</code>；仅供单次运行使用、失败后可丢弃的临时文件才放入 <code>_tmp/</code>，二者不得混用</li>
-                                <li><strong>命名规范</strong>：计算脚本以 <code>_analysis</code> 结尾，作图脚本以 <code>_plot</code> 结尾，如 <code>DEGs_analysis.R</code> / <code>DEGs_plot.R</code>、<code>GSEA_analysis.R</code> / <code>GSEA_plot.R</code></li>
-                                <li><strong>调度串联</strong>：<code>scripts.sh</code> 或 <code>run.sh</code> 中先调用计算脚本再调用作图脚本，<span class="text-red">并支持 <code>./run.sh plot</code> 从有效缓存重建全部图形而不触发计算</span>；既有 <code>--plot-only</code> 只能作为明确记录的兼容别名</li>
-                                <li><strong>参数传递</strong>：作图脚本的可视化参数（色板、字号、图幅尺寸等）应独立于分析参数，可在配置文件中设专用 <code>[Plot]</code> 段</li>
-                                <li><strong>日志独立</strong>：如计算和作图分开运行，各自的日志应能独立追溯；若串联运行，可合并到同一份日志中按步骤分段记录</li>
-                            </ul>
-                        </div>
-
-                        <strong style="display:block; margin-top:18px;">📝 计算与缓存发布示例（DEGs_analysis.R，关键逻辑）：</strong>
-                        <pre class="code-block"># 输入：表达矩阵 + 分组信息
-# 输出：正式表格 + 足以绘制全部约定图形的命名对象
-library(data.table)
-library(DESeq2)
-library(qs2)
-
-expr_mat  &lt;- fread(normalizePath(input_expr), data.table = FALSE)
-group_info &lt;- fread(normalizePath(input_group), data.table = FALSE)
-
-dds &lt;- DESeqDataSetFromMatrix(expr_mat, group_info, design = ~group)
-dds &lt;- DESeq(dds)
-de_table &lt;- as.data.frame(results(dds, alpha = p_cutoff))
-de_table$significance &lt;- "NotSignificant"
-de_table$significance[!is.na(de_table$padj) &amp; de_table$padj &lt; p_cutoff &amp;
-                          de_table$log2FoldChange &gt;= log2fc_cutoff] &lt;- "Up"
-de_table$significance[!is.na(de_table$padj) &amp; de_table$padj &lt; p_cutoff &amp;
-                          de_table$log2FoldChange &lt;= -log2fc_cutoff] &lt;- "Down"
-
-normalized_mat &lt;- assay(vst(dds, blind = FALSE))
-top_index &lt;- head(order(apply(normalized_mat, 1, var), decreasing = TRUE), 100)
-plot_cache &lt;- list(
-    de_table = de_table,
-    top_genes_mat = normalized_mat[top_index, , drop = FALSE],
-    heatmap_annotation = group_info
-)
-
-fwrite(de_table, file.path(result_dir, "01.DEGs.tsv"), sep = "\t")
-
-# 正式缓存使用固定路径；run_id 只写入 manifest，不进入目录名或正式文件名。
-# 临时文件仅用于同目录校验和替换，input_fingerprint / compute_fingerprint 由稳定序列化规则计算。
-dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-artifact_path &lt;- file.path(cache_dir, "calculation.qs2")
-manifest_path &lt;- file.path(cache_dir, "cache_manifest.json")
-artifact_tmp &lt;- file.path(cache_dir, ".calculation.qs2.tmp")
-manifest_tmp &lt;- file.path(cache_dir, ".cache_manifest.json.tmp")
-qs2::qs_save(plot_cache, artifact_tmp)
-
-manifest &lt;- list(
-    schema_version = 1,
-    module = list(name = "DEGs", version = module_version),
-    producer_run_id = run_id,
-    created_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S%z"),
-    input_fingerprint = input_fingerprint,
-    compute_fingerprint = compute_fingerprint,
-    artifacts = list(list(
-        path = "calculation.qs2",
-        sha256 = digest::digest(file = artifact_tmp, algo = "sha256"),
-        size = unname(file.info(artifact_tmp)$size)
-    )),
-    plot_contract = list(figures = c("02_heatmap", "03_volcano")),
-    runtime = list(
-        R = R.version.string,
-        Rscript = normalizePath(file.path(R.home("bin"), "Rscript")),
-        qs2 = as.character(packageVersion("qs2"))
-    )
-)
-
-# 校验临时对象和清单后，替换固定目标；replace_file_same_fs 由模块内部实现同文件系统替换。
-# 若两次替换之间中断，读取端的大小与 sha256 校验必须拒绝不一致组合，再由 calculate 覆盖修复。
-validate_staged_cache(plot_cache, manifest, artifact_tmp)
-jsonlite::write_json(manifest, manifest_tmp, auto_unbox = TRUE, pretty = TRUE)
-replace_file_same_fs(artifact_tmp, artifact_path)
-replace_file_same_fs(manifest_tmp, manifest_path)</pre>
-
-                        <strong style="display:block; margin-top:18px;">🎨 从缓存绘图示例（DEGs_plot.R，关键逻辑）：</strong>
-                        <pre class="code-block"># validate_cache_manifest 必须校验 schema、绘图契约、输入/计算指纹、文件大小、sha256 和必需对象；
-# 任一校验失败即 stop，不得调用计算脚本。
-cache_dir &lt;- normalizePath(cache_dir, mustWork = TRUE)
-manifest &lt;- jsonlite::read_json(file.path(cache_dir, "cache_manifest.json"), simplifyVector = TRUE)
-artifact_rel &lt;- validate_cache_manifest(
-    manifest = manifest,
-    cache_dir = cache_dir,
-    expected_input_fingerprint = input_fingerprint,
-    expected_compute_fingerprint = compute_fingerprint,
-    expected_figures = c("02_heatmap", "03_volcano"),
-    required_objects = c("de_table", "top_genes_mat", "heatmap_annotation")
-)
-plot_cache &lt;- qs2::qs_read(file.path(cache_dir, artifact_rel))
-
-# 下列 resolve/build/save 函数是模块内绘图工具，只消费缓存数据和 [Plot] 配置。
-style &lt;- resolve_plot_style(
-    theme = plot_theme,
-    palette = plot_palette,
-    font_family = plot_font_family,
-    base_size = plot_base_size
-)
-p_volcano &lt;- build_volcano(plot_cache$de_table, style)
-p_heatmap &lt;- build_heatmap(
-    plot_cache$top_genes_mat,
-    plot_cache$heatmap_annotation,
-    style
-)
-
-figures &lt;- list("02_heatmap" = p_heatmap, "03_volcano" = p_volcano)
-for (figure_name in names(figures)) {
-    save_figure_set(
-        figure = figures[[figure_name]],
-        output_base = file.path(result_dir, figure_name),
-        formats = plot_formats,
-        width = plot_width,
-        height = plot_height,
-        size_unit = plot_size_unit,
-        dpi = plot_dpi
-    )
-}
-log_effective_plot_settings(style, plot_formats, plot_width, plot_height, plot_size_unit, plot_dpi)</pre>
-
-                        <strong style="display:block; margin-top:18px;">⚙️ 业务阶段调度示例（仅展示后文完整入口解析参数后的内部调度）：</strong>
-                        <pre class="code-block">#!/usr/bin/env bash
-set -euo pipefail
-
-MODULE_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &amp;&amp; pwd)
-run_business_stage() {
-    local stage=$1
-    shift
-    case "$stage" in
-        calculate) Rscript "$MODULE_DIR/scripts/DEGs_analysis.R" "$@" ;;
-        plot)      Rscript "$MODULE_DIR/scripts/DEGs_plot.R" "$@" ;;
-        full)
-            Rscript "$MODULE_DIR/scripts/DEGs_analysis.R" "$@"
-            Rscript "$MODULE_DIR/scripts/DEGs_plot.R" "$@"
-            ;;
-        *) return 2 ;;  # 阶段白名单由入口骨架先行校验
-    esac
-}</pre>
-
-                        <div class="lead-box">
-                            <strong>💡 为什么推荐 data.table？</strong>
-                            <ul style="margin-top:8px; padding-left:20px;">
-                                <li><strong>高性能</strong>：比 base R 快得多，处理大数据集更高效</li>
-                                <li><strong>内存友好</strong>：内存占用更少，可处理超过内存大小的数据集</li>
-                                <li><strong>语法简洁</strong>：语法一致性好，学习曲线平缓</li>
-                                <li><strong>功能丰富</strong>：类似 SQL 的语法，操作直观</li>
-                                <li><strong>并行处理</strong>：支持多线程并行计算</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div id="dir-logs" class="tab-content">
-                        <h4>📄 log/ - 日志文件夹 <span class="badge badge-required">核心</span></h4>
-                        <ul>
-                            <li>存放各阶段或模块入口的运行日志，推荐使用单数目录 <code>log/</code>，与 <code>chromosome_plot</code> 示例保持一致</li>
-                            <li>每个阶段使用固定日志路径 <code>log/&lt;stage&gt;.log</code>，如 <code>log/plot.log</code>；同阶段再次运行覆盖该固定文件，帮助与 <code>init</code> 不创建运行日志</li>
-                            <li><strong>运行标识</strong>：日志从启动起记录本次 run_id、命令、阶段、输出目录和退出码；仅在该次调用成功完成后原子更新模块结果目录顶层 <code>.run_id</code></li>
-                            <li><strong>缓存追溯</strong>：绘图日志同时记录当前绘图 run_id 和缓存生产 run_id，不得用当前 run_id 覆盖缓存来源</li>
-                            <li><strong>支持中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
-                        </ul>
-                    </div>
-
-                    <div id="dir-result" class="tab-content">
-                        <h4>📊 result/ - 结果文件夹</h4>
-                        <ul>
-                            <li>存放正式用户结果：表格、图和最终报告；可复用对象放 <code>cache/</code>，日志和配置副本放 <code>log/</code></li>
-                            <li>结果文件使用数字前缀排序（01_, 02_, 03_ 或 01., 02., 03.），文件名表达业务含义</li>
-                            <li>模块结果目录顶层 <code>.run_id</code> 只记录最近一次成功调用；失败运行写入当前阶段固定日志，但不得覆盖成功标识</li>
-                            <li><strong>配置文件</strong>：当前调用的输入快照与生效参数分别写入 <code>log/input.config.&lt;ext&gt;</code> 和 <code>log/effective.config.&lt;ext&gt;</code>；扩展名沿用该模块选定的唯一配置格式，路径不随 run_id 改变</li>
-                            <li><strong>图表文件</strong>：默认同时保存 PNG 和 PDF；模块也可按 <code>[Plot].formats</code> 生成经过校验的请求格式</li>
-                            <li>示例：
-                                <ul>
-                                    <li><code>01_gene_positions.tsv</code> - 表格结果（含逗号风险用 TSV；无逗号问题可用 CSV）</li>
-                                    <li><code>02_circos.png</code> + <code>02_circos.pdf</code> - 图表（双格式）</li>
-                                    <li><code>chromosome_plot_report.docx</code> - 正式报告</li>
-                                    <li><code>.run_id</code> - 隐藏运行标识文件，内容是最近一次成功调用的 run_id</li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div id="dir-report" class="tab-content">
-                        <h4>📝 report/ - 可选报告文件夹</h4>
-                        <ul>
-                            <li>正式报告默认可直接放入 <code>result/</code>；只有模块 README 明确声明独立报告目录时才使用本目录</li>
-                            <li>仅在报告阶段实际启用并成功产出报告时按需创建，禁止预建空目录</li>
-                            <li>报告文件名应表达模块或报告含义，如 <code>chromosome_plot_report.docx</code></li>
-                            <li>报告路径和对应 run_id 写入该次运行日志，由 <code>.run_id</code> 定位最近成功调用</li>
-                            <li>便于追溯某次分析的具体结果和参数</li>
-                            <li><strong>默认格式</strong>：报告默认使用 .docx 格式</li>
-                            <li><strong>推荐工具</strong>：推荐使用 <code>Quarto</code> 生成报告</li>
-                            <li>示例：
-                                <ul>
-                                    <li><code>chromosome_plot_report.docx</code> - chromosome_plot 正式报告（默认）</li>
-                                    <li><code>DEGs_report.docx</code> - DEGs 模块正式报告</li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <div class="lead-box">
-                            <strong>💡 为什么推荐 Quarto？</strong>
-                            <ul style="margin-top:8px; padding-left:20px;">
-                                <li><strong>代码与报告一体</strong>：代码和报告在同一个文档中，便于同步更新</li>
-                                <li><strong>多语言支持</strong>：支持 Python、R、Julia 等多种语言</li>
-                                <li><strong>多种输出格式</strong>：可输出 HTML、PDF、Word、PPT；默认输出 .docx</li>
-                                <li><strong>可复现性</strong>：包含完整代码，确保分析可复现</li>
-                                <li><strong>版本控制</strong>：Markdown格式便于 Git 管理</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== 运行阶段、正式缓存与配置生命周期 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-runtime">🚀 运行阶段、正式缓存与配置生命周期</h2>
-
-                <div class="danger-box">
-                    <strong>⚠️ 核心契约：</strong>
-                    新建或升级后的模块统一使用顶层 <code>run.sh</code> 和阶段式入口。正式计算产物写入 <code>cache/</code>，绘图阶段只读取有效缓存并重建全部图形结果，<span class="text-red">不得静默回退为重新计算</span>。帮助、初始化和各运行阶段只创建自身确实需要的文件与目录。
-                </div>
-
-                <h3 style="margin-top:24px; color:#0f172a; font-size:1.15rem;">统一阶段与副作用</h3>
+            <section class="card" id="boundary">
+                <h2>3. 开发前冻结边界</h2>
                 <table class="matrix">
-                    <thead><tr><th>调用</th><th>职责</th><th>允许产生的内容</th><th>禁止行为</th></tr></thead>
+                    <thead><tr><th>边界</th><th>必须回答</th></tr></thead>
                     <tbody>
-                        <tr><td><code>./run.sh</code><br><code>./run.sh --help</code></td><td>显示模块用途、阶段、参数、输入模式、输出和示例；正常返回 <code>0</code></td><td>仅向 stdout 输出帮助</td><td>不得创建 <code>.run_id</code>、日志或任何输出目录</td></tr>
-                        <tr><td><code>./run.sh init --target DIR</code></td><td>从模块模板生成一份可编辑的分析配置</td><td><code>DIR/config/&lt;module&gt;.config.&lt;ext&gt;</code></td><td>不得同时生成多份等价分析配置，不得预建 <code>log/</code>、<code>cache/</code>、<code>result/</code> 或 <code>report/</code></td></tr>
-                        <tr><td><code>./run.sh calculate --config FILE --output DIR</code></td><td>校验输入并执行正式计算</td><td>正式表格、有效计算缓存和本阶段日志</td><td>不得生成图形或空报告目录</td></tr>
-                        <tr><td><code>./run.sh plot --config FILE --output DIR</code></td><td>校验并读取已有正式缓存，重新生成该模块约定的全部图形</td><td>请求格式的图形和本阶段日志</td><td>不得调用计算脚本；缓存无效时不得静默重算</td></tr>
-                        <tr><td><code>./run.sh report ...</code></td><td>仅适用于明确支持独立报告阶段的模块</td><td>正式报告及日志；目录按需创建</td><td>不支持报告的模块不得暴露空阶段或预建空 <code>report/</code></td></tr>
-                        <tr><td><code>./run.sh full ...</code></td><td>按顺序执行计算、绘图，以及模块明确支持且已启用的报告阶段</td><td>各已执行阶段的正式产物和日志</td><td>不得无条件创建未启用阶段的目录</td></tr>
+                        <tr><td>目标</td><td>模块回答哪个业务或科学问题？</td></tr>
+                        <tr><td>输入</td><td>对象、字段、单位、物种、尺度和缺失值规则是什么？</td></tr>
+                        <tr><td>输出</td><td>每个逻辑产物回答什么问题，谁会使用？</td></tr>
+                        <tr><td>非目标</td><td>本轮不支持哪些算法、平台、格式和兼容行为？</td></tr>
+                        <tr><td>成功证据</td><td>哪些测试、不变量、渲染或人工复核证明完成？</td></tr>
+                        <tr><td>停止条件</td><td>哪些产物和验证完成后停止继续加功能？</td></tr>
                     </tbody>
                 </table>
-
-                <strong style="display:block; margin-top:18px;">最小缓存清单示例：</strong>
-                <pre class="code-block">{
-  "schema_version": 1,
-  "module": {"name": "DEGs", "version": "1.4.0"},
-  "producer_run_id": "20260806_120000",
-  "created_at": "2026-08-06T12:00:00+08:00",
-  "input_fingerprint": "sha256:...",
-  "compute_fingerprint": "sha256:...",
-  "artifacts": [
-    {"path": "calculation.qs2", "sha256": "...", "size": 123456}
-  ],
-  "plot_contract": {
-    "figures": ["02_heatmap", "03_volcano"]
-  },
-  "runtime": {
-    "R": "&lt;runtime-detected-version&gt;",
-    "Rscript": "&lt;resolved-executable-path&gt;",
-    "qs2": "&lt;runtime-detected-version&gt;"
-  }
-}</pre>
-                <p class="muted" style="margin-top:8px;">清单中的运行时与包版本由入口在本次执行时探测并写入，不得从模板写死；同一主机的项目 profile 与 PATH fallback 可能使用不同版本。</p>
-
-                <div class="lead-box" style="margin-top:14px;">
-                    <strong>兼容边界：</strong> 新模板只使用上表语法。既有模块如已公开 <code>--init</code>、<code>--plot-only</code>、<code>--stage full</code> 或 <code>--stage all</code>，可以保留为兼容别名，但必须在模块 README 和 <code>--help</code> 中写明映射关系；不得把旧别名继续复制到新模块。
-                </div>
-
-                <h3 style="margin-top:26px; color:#0f172a; font-size:1.15rem;">入口与参数规则</h3>
-                <table class="matrix">
-                    <thead><tr><th>规则</th><th>要求</th><th>说明</th></tr></thead>
-                    <tbody>
-                        <tr><td><strong>稳定长参数</strong></td><td>统一使用 <code>--config</code>、<code>--output</code>、<code>--target</code>、<code>--force</code> 和 <code>--help</code></td><td>短参数仅在不与既有业务参数冲突时作为别名；不得跨模块强制规定 <code>-c</code></td></tr>
-                        <tr><td><strong>直接执行</strong></td><td><code>run.sh</code> 必须带 shebang 和可执行权限，README 示例统一使用 <code>./run.sh</code></td><td>不能只保证 <code>bash run.sh</code> 可用</td></tr>
-                        <tr><td><strong>工作目录无关</strong></td><td>模块内部脚本和模板路径以 <code>run.sh</code> 所在目录为基准</td><td>命令行相对路径以调用者当前目录为基准；配置内相对路径以配置文件所在目录为基准，解析后写入日志</td></tr>
-                        <tr><td><strong>参数错误</strong></td><td>未知阶段、未知参数、缺失参数和互斥组合均输出明确错误并非零退出</td><td>错误信息同时给出 <code>--help</code> 提示，不创建正式产物</td></tr>
-                        <tr><td><strong>按需建目录</strong></td><td>完成参数与路径校验后，仅为当前阶段创建所需目录</td><td><code>init</code>、帮助和失败的前置校验不得留下空运行目录</td></tr>
-                    </tbody>
-                </table>
-
-                <h3 style="margin-top:26px; color:#0f172a; font-size:1.15rem;">正式计算缓存契约</h3>
-                <table class="matrix">
-                    <thead><tr><th>契约项</th><th>强制要求</th><th>目的</th></tr></thead>
-                    <tbody>
-                        <tr><td><strong>内容边界</strong></td><td>缓存必须包含绘制该模块全部图形所需的完整计算对象或标准化绘图数据；正式表格和报告仍属于 <code>result/</code> 或模块声明的报告目录</td><td>“从缓存重绘”不等同于恢复所有表格和报告</td></tr>
-                        <tr><td><strong>来源元数据</strong></td><td>运行时探测并记录缓存 schema/version、模块版本、生产缓存的 run_id、生成时间、实际解释器路径与版本及关键包版本；不得在模板中写死版本号</td><td>判断旧缓存能否被当前绘图代码读取，并区分项目 profile 与 fallback 环境</td></tr>
-                        <tr><td><strong>有效性指纹</strong></td><td>记录输入文件身份和计算参数指纹；纯绘图参数不参与计算缓存失效判断</td><td>改颜色、尺寸、主题或字体时可复用缓存，改输入或计算参数时拒绝旧缓存</td></tr>
-                        <tr><td><strong>完整性校验</strong></td><td>读取前校验清单、必需对象、文件非空和校验和；缺失、损坏或不兼容时明确报错并非零退出</td><td>避免使用半成品或错误版本缓存</td></tr>
-                        <tr><td><strong>固定路径发布</strong></td><td>正式对象固定为 <code>cache/calculation.qs2</code>，清单固定为 <code>cache/cache_manifest.json</code>；先在同目录写入并校验临时文件，再依次替换正式对象和清单，禁止创建按 run_id 命名的缓存子目录</td><td>复用方无需查找缓存代次；替换中断造成的不一致必须由读取端完整性校验明确拒绝</td></tr>
-                        <tr><td><strong>保留策略</strong></td><td><code>cache/</code> 是正式可复用产物，不随 <code>_tmp/</code> 或通用中间文件清理；删除须使用独立、显式且有日志的策略</td><td>保证后续能够重新绘图</td></tr>
-                    </tbody>
-                </table>
-
-                <h3 style="margin-top:26px; color:#0f172a; font-size:1.15rem;">分析配置生命周期</h3>
-                <table class="matrix">
-                    <thead><tr><th>角色</th><th>位置与行为</th><th>写入规则</th></tr></thead>
-                    <tbody>
-                        <tr><td><strong>模块模板</strong></td><td><code>module/config/&lt;module&gt;.config.example.*</code></td><td>随模块交付，只读维护；每个模块选定一种主要格式</td></tr>
-                        <tr><td><strong>分析配置</strong></td><td><code>init</code> 在用户目标目录生成一份可编辑配置</td><td>所有参数使用稳定英文键名，并附中文注释、默认值、类型、单位、允许值及是否必填</td></tr>
-                        <tr><td><strong>输入快照</strong></td><td><code>log/input.config.&lt;ext&gt;</code></td><td>保存当前调用传入文件的只读副本；扩展名沿用模块选定格式，源和目标规范化后相同则直接复用，不复制自身</td></tr>
-                        <tr><td><strong>生效参数</strong></td><td><code>log/effective.config.&lt;ext&gt;</code> 与固定阶段日志</td><td>记录当前调用中默认值、配置值和合法命令行覆盖合并后的最终值，不混入运行统计或输出结果</td></tr>
-                    </tbody>
-                </table>
-                <ul style="margin-top:12px; padding-left:20px;">
-                    <li><strong>优先级：</strong>合法命令行覆盖 &gt; 分析配置 &gt; 模块默认值；每个覆盖项必须写入日志。</li>
-                    <li><strong>未知键：</strong>默认视为配置错误并指出键名，禁止静默忽略拼写错误。</li>
-                    <li><strong>重复初始化：</strong>目标不存在时创建；目标内容一致时成功复用；内容不同时默认拒绝覆盖，只有显式 <code>--force</code> 才可替换，并先保留有界回滚副本。</li>
-                    <li><strong>职责边界：</strong>配置只描述输入和业务/绘图参数；输出目录、运行目录和日志路径由入口参数或运行环境决定。</li>
-                </ul>
-
-                <strong style="display:block; margin-top:20px;">带中文注释的绘图配置示例：</strong>
-                <pre class="code-block">[Plot]
-# 输出图形格式；允许 png、pdf，默认同时输出
-formats=png,pdf
-# 图形宽度，单位由 size_unit 指定
-width=6
-# 图形高度，单位由 size_unit 指定
-height=4
-# 尺寸单位；允许 in、cm、mm
-size_unit=in
-# 位图分辨率；仅作用于 png 等位图格式
-dpi=300
-# 图形主题；允许值由模块 README 和 --help 列出
-theme=classic
-# 配色方案或显式颜色列表；必须满足可读性和色盲友好要求
-palette=npg
-# 字体族；默认 sans，不可用时按模块声明规则报错或回退并写入日志
-font_family=sans
-# 主题基础字号，单位 pt；允许 6-32，默认 11
-base_size=11</pre>
-            </div>
-        </div>
-
-        <!-- ========== 文件命名规范 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-naming">📝 文件命名规范</h2>
-
-                <div class="tabs-container">
-                    <div class="tabs">
-                        <button class="tab active" onclick="showTab('name-timestamp', event)">
-                            <span class="tab-icon">⏰</span> run_id 格式
-                        </button>
-                        <button class="tab" onclick="showTab('name-formats', event)">
-                            <span class="tab-icon">📝</span> 命名格式
-                        </button>
-                        <button class="tab" onclick="showTab('name-config', event)">
-                            <span class="tab-icon">⚙️</span> 配置文件
-                        </button>
-                        <button class="tab" onclick="showTab('name-example', event)">
-                            <span class="tab-icon">📋</span> 示例对比
-                        </button>
-                        <button class="tab" onclick="showTab('name-sorting', event)">
-                            <span class="tab-icon">🔢</span> 文件排序
-                        </button>
-                    </div>
-
-                    <div id="name-timestamp" class="tab-content active">
-                        <h4>⏰ run_id 内容格式</h4>
-                        <table class="matrix">
-                            <thead><tr><th>格式</th><th>示例</th><th>说明</th></tr></thead>
-                            <tbody>
-                                <tr><td><code>YYYYMMDD_HHMMSS</code></td><td><code>20260306_143022</code></td><td>推荐写入 <code>.run_id</code> 的内容，避免同一分钟内多次调用发生冲突</td></tr>
-                                <tr><td><code>YYYYMMDD_HHMM</code></td><td><code>20260306_1430</code></td><td>仅在入口能够以其他方式保证 run_id 唯一时使用</td></tr>
-                            </tbody>
-                        </table>
-                        <div class="lead-box">
-                            <strong>💡 使用 <code>.run_id</code> 作为运行标识的优势：</strong>
-                            <ul style="margin-top:8px; padding-left:20px;">
-                                <li><strong>文件名固定</strong>：隐藏文件始终命名为 <code>.run_id</code>，不要把时间戳写进文件名</li>
-                                <li><strong>内容可读且唯一</strong>：默认写入 <code>YYYYMMDD_HHMMSS</code>；若存在并发调用，还须追加进程号、随机后缀或等价唯一标识</li>
-                                <li><strong>便于追溯</strong>：run_id 写入 <code>.run_id</code>、缓存清单和日志内容，不写入缓存或日志的路径名</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div id="name-formats" class="tab-content">
-                        <h4>📝 各类文件命名格式</h4>
-                        <table class="matrix">
-                            <thead><tr><th>文件类型</th><th>命名格式</th><th>示例</th><th>说明</th></tr></thead>
-                            <tbody>
-                                <tr><td>入口与内部脚本</td><td><code>功能名.扩展名</code></td><td><code>run.sh</code>, <code>scripts/main.R</code>, <code>scripts/plot/plot_from_cache.R</code></td><td>新建/升级模块的顶层入口固定为 <code>run.sh</code>；未升级模块保留已公开入口，内部脚本放在 <code>scripts/</code> 下并清晰表达阶段或功能</td></tr>
-                                <tr><td>日志文件</td><td><code>log/&lt;stage&gt;.log</code></td><td><code>log/plot.log</code></td><td>阶段路径固定并由同阶段后续调用覆盖；日志内容同时记录当前 run_id 与缓存生产 run_id</td></tr>
-                                <tr><td>结果文件</td><td><code>序号_描述.扩展名</code></td><td><code>01_gene_positions.tsv</code>, <code>02_circos.png</code></td><td>数字前缀排序；表格根据字段内容选择 TSV/CSV，含逗号风险用 TSV</td></tr>
-                                <tr><td>配置快照</td><td><code>log/input.config.&lt;ext&gt;</code><br><code>log/effective.config.&lt;ext&gt;</code></td><td><code>log/effective.config.ini</code></td><td>扩展名沿用模块选定格式，固定路径分别保存当前调用的原始输入和最终生效参数</td></tr>
-                                <tr><td>运行标识文件</td><td><code>.run_id</code></td><td><code>.run_id</code> 内容为 <code>20260806_143022</code></td><td>仅在调用成功后原子更新，指向最近一次成功调用</td></tr>
-                                <tr><td>报告文件</td><td><code>描述.docx</code></td><td><code>chromosome_plot_report.docx</code></td><td>正式报告名表达模块和业务含义</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div id="name-config" class="tab-content">
-                        <h4>⚙️ 配置文件格式选择</h4>
-                        <table class="matrix">
-                            <thead><tr><th>格式</th><th>优点</th><th>适用场景</th></tr></thead>
-                            <tbody>
-                                <tr><td><code>.ini</code></td><td>简单直观，Windows原生支持</td><td>简单的键值对配置</td></tr>
-                                <tr><td><code>.yaml</code></td><td>支持层级结构，更易读，支持注释</td><td>复杂的嵌套配置</td></tr>
-                            </tbody>
-                        </table>
-                        <div class="warn-box">
-                            <strong>💡 选择建议：</strong> 根据项目需求在 .ini 与 .yaml 中选择一种主要格式。<code>init</code> 只生成该格式的一份分析配置，不同时生成两份等价配置。
-                        </div>
-                        <div class="lead-box" style="margin-top:12px;">
-                            <strong>📌 设计原则：</strong> 配置模板保持在 <code>config/</code>；当前调用的输入快照和生效参数写入固定的 <code>log/</code>。run_id 记录在快照、日志内容及 <code>.run_id</code> 中，不作为目录名。
-                        </div>
-                    </div>
-
-                    <div id="name-example" class="tab-content">
-                        <h4>📋 run_id 内容示例对比</h4>
-                        <table class="matrix">
-                            <thead><tr><th>场景</th><th>仅日期（不推荐）</th><th>run_id 内容（推荐）</th></tr></thead>
-                            <tbody>
-                                <tr><td>第一次运行</td><td><code>20260306</code> ⚠️ 不够精确</td><td><code>20260306_1430</code> ✅ 14:30运行</td></tr>
-                                <tr><td>第二次运行（下午）</td><td><code>20260306</code> ⚠️ 文件名重复！</td><td><code>20260306_1615</code> ✅ 16:15运行</td></tr>
-                                <tr><td>第三次运行（晚上）</td><td><code>20260306</code> ⚠️ 无法区分</td><td><code>20260306_2138</code> ✅ 21:38运行</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div id="name-sorting" class="tab-content">
-                        <h4>🔢 结果文件排序</h4>
-                        <ul>
-                            <li>使用两位数字前缀：<code>01.</code>, <code>02.</code>, <code>03.</code> 等</li>
-                            <li>按分析流程排序</li>
-                            <li>便于快速定位和查看结果</li>
-                        </ul>
-                        <div class="lead-box">
-                            <strong>📌 排序示例：</strong>
-                            <ul style="margin-top:8px; padding-left:20px;">
-                                <li><code>01.raw_count.csv</code> - 原始计数</li>
-                                <li><code>02.normalized_count.csv</code> - 标准化数据</li>
-                                <li><code>03.differential_expression.csv</code> - 差异分析结果</li>
-                                <li><code>04.volcano_plot.pdf</code> - 火山图</li>
-                                <li><code>05.heatmap.pdf</code> - 热图</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== 日志文件规范 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-log">📄 日志文件规范</h2>
-
-                <div class="danger-box">
-                    <strong>⚠️ 核心原则：</strong>
-                    <span class="text-red">日志文件是追溯分析过程的第一手资料</span>，必须详细记录所有重要的分析参数和运行信息。
-                    <strong class="text-red">无论是否使用配置文件，日志中都必须详细记录所有重要参数！</strong>
-                </div>
-
-                <div class="tabs-container">
-                    <div class="tabs">
-                        <button class="tab active" onclick="showTab('log-requirements', event)">
-                            <span class="tab-icon">📋</span> 内容要求
-                        </button>
-                        <button class="tab" onclick="showTab('log-example', event)">
-                            <span class="tab-icon">📄</span> 日志示例
-                        </button>
-                        <button class="tab" onclick="showTab('log-comparison', event)">
-                            <span class="tab-icon">⚖️</span> 日志vs配置
-                        </button>
-                    </div>
-
-                    <div id="log-requirements" class="tab-content active">
-                        <h4>📋 日志内容要求</h4>
-                        <table class="matrix">
-                            <thead><tr><th>内容类别</th><th>必须包含的信息</th><th>示例</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>运行信息</strong></td><td>当前 run_id、阶段、完整命令、入口与模块版本、运行环境、工作目录和退出码</td><td><code>run_id=20260806_143022 | stage=plot | exit_code=0</code></td></tr>
-                                <tr><td><strong>配置来源</strong></td><td>输入配置规范化路径、快照路径、生效参数以及命令行覆盖项</td><td><code>config_source=... | override=Plot.formats=png</code></td></tr>
-                                <tr><td><strong>输入参数</strong></td><td>所有分析参数（阈值、方法、条件等）</td><td><code>p_value_cutoff=0.05, log2fc_cutoff=1, method=DESeq2</code></td></tr>
-                                <tr><td><strong>输入文件</strong></td><td>数据来源、文件路径、样本信息</td><td><code>Input: ../RawData/01.GSEXXX_count.csv (150 samples)</code></td></tr>
-                                <tr><td><strong>输出文件</strong></td><td>生成的结果文件路径和名称</td><td><code>Output: 01.DEGs.tsv, 02.heatmap.png, 02.heatmap.pdf</code></td></tr>
-                                <tr><td><strong>统计信息</strong></td><td>样本数、基因数、筛选后的数量等</td><td><code>Total genes: 25000 | After filtering: 18500 | DEGs: 1234</code></td></tr>
-                                <tr><td><strong>缓存事件</strong></td><td>写入、命中或拒绝原因；缓存 schema、指纹、完整性和生产 run_id</td><td><code>cache=hit | producer_run_id=20260806_120000</code></td></tr>
-                                <tr><td><strong>运行过程</strong></td><td>关键步骤、跳过阶段、警告、错误与最终退出码</td><td><code>[SKIP] report 未启用 | [ERROR] cache fingerprint mismatch</code></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div id="log-example" class="tab-content">
-                        <h4>📄 日志文件示例（中文版）</h4>
-                        <pre class="code-block">================================================================================
-DEGs 绘图阶段日志
-================================================================================
-时间戳: 2026-08-06 14:30:22+08:00
-当前运行ID: 20260806_143022
-阶段: plot
-完整命令: ./run.sh plot --config /project/config/DEGs.config.ini --output /project/output
-工作目录: /project
-入口与模块版本: run.sh / DEGs v1.4.0
-Rscript: &lt;resolved-executable-path&gt;
-R版本: &lt;runtime-detected-version&gt;
-qs2版本: &lt;runtime-detected-version&gt;
-
-----------------------------------------
-配置
-----------------------------------------
-配置来源: /project/config/DEGs.config.ini
-输入快照: /project/output/log/input.config.ini
-生效快照: /project/output/log/effective.config.ini
-命令行覆盖: 无
-计算参数: p_value_cutoff=0.05, log2fc_cutoff=1.0, method=DESeq2
-绘图参数: formats=png,pdf; width=6; height=4; size_unit=in; dpi=300
-绘图外观: theme=classic; palette=npg; requested_font=sans; effective_font=&lt;resolved-font&gt;
-
-----------------------------------------
-缓存校验
-----------------------------------------
-事件: cache=hit
-schema_version: 1
-缓存生产运行ID: 20260806_120000
-输入指纹: sha256:... [MATCH]
-计算参数指纹: sha256:... [MATCH]
-对象: cache/calculation.qs2 [SIZE OK, SHA256 OK]
-必需对象: de_table, top_genes_mat, heatmap_annotation [OK]
-
-----------------------------------------
-绘图过程与输出
-----------------------------------------
-[14:30:23] 读取并校验缓存... 完成
-[14:30:24] 生成 Top 100 基因热图... 完成
-[14:30:25] 生成火山图... 完成
-输出: result/02.heatmap.png, result/02.heatmap.pdf
-输出: result/03.volcano.png, result/03.volcano.pdf
-日志文件: log/plot.log
-
-退出码: 0
-状态: plot 成功；未调用 calculate；顶层 .run_id 已更新为 20260806_143022
-================================================================================</pre>
-                    </div>
-
-                    <div id="log-comparison" class="tab-content">
-                        <h4>⚖️ 日志 vs 配置文件</h4>
-                        <table class="matrix">
-                            <thead><tr><th>对比项</th><th>日志文件</th><th>配置文件</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>文件名</strong></td><td><code>log/&lt;stage&gt;.log</code></td><td><code>log/input.config.&lt;ext&gt;</code> / <code>log/effective.config.&lt;ext&gt;</code></td></tr>
-                                <tr><td><strong>是否覆盖</strong></td><td>同阶段再次调用覆盖固定日志</td><td>每次调用覆盖固定快照</td></tr>
-                                <tr><td><strong>内容</strong></td><td>参数 + 过程 + 统计 + 缓存事件 + 警告 + 退出码</td><td>原始输入或解析后的最终参数</td></tr>
-                                <tr><td><strong>可读性</strong></td><td>文本格式，易于人工阅读</td><td>结构化格式，便于程序解析</td></tr>
-                                <tr><td><strong>语言支持</strong></td><td>支持中文</td><td>建议使用英文（键名）</td></tr>
-                                <tr><td><strong>优先级</strong></td><td>⭐⭐⭐ 实际运行必须</td><td>⭐⭐⭐ 使用配置的运行必须</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== 结果追踪机制 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-track">🔗 结果追踪机制</h2>
-
-                <div class="lead-box" style="background:#ecfdf5; border-color:#6ee7b7;">
-                    <strong>✨ 核心设计：</strong> 程序开始时在内存中生成当前 run_id，并立即写入该次运行日志；全部校验和目标阶段成功后才原子更新模块结果目录顶层 <code>.run_id</code>。缓存另存生产 run_id，报告用业务含义命名。
-                </div>
-
-                <div class="tabs-container">
-                    <div class="tabs">
-                        <button class="tab active" onclick="showTab('track-flow', event)">
-                            <span class="tab-icon">🔄</span> 生成流程
-                        </button>
-                        <button class="tab" onclick="showTab('track-relations', event)">
-                            <span class="tab-icon">🔗</span> 追溯关系
-                        </button>
-                        <button class="tab" onclick="showTab('track-examples', event)">
-                            <span class="tab-icon">📄</span> 配置示例
-                        </button>
-                    </div>
-
-                    <div id="track-flow" class="tab-content active">
-                        <h4>🔄 run_id 生成和使用流程</h4>
-                        <ol class="steps">
-                            <li><strong>解析阶段</strong>：无参数或 <code>--help</code> 直接显示帮助；其他调用先解析参数、校验阶段、配置、输入和输出边界，不提前创建产物目录</li>
-                            <li><strong>开始运行</strong>：为实际计算、绘图或报告调用生成当前 <code>run_id</code>，创建固定的 <code>log/</code> 并写入当前阶段日志，记录命令、配置来源、运行目录、输出目录和上游引用</li>
-                            <li><strong>阶段编排</strong>：由 <code>run.sh</code> 调度计算、作图、报告或全流程；业务算法保留在内部脚本中，未启用阶段不创建目录</li>
-                            <li><strong>保存结果</strong>：正式用户结果写入 <code>result/</code>；绘图可复用的正式计算对象和清单写入 <code>cache/</code>；一次性临时文件写入 <code>_tmp/</code></li>
-                            <li><strong>保存追溯快照</strong>：写入输入配置快照和生效参数，不覆盖用户分析配置；绘图日志保留缓存生产 run_id</li>
-                            <li><strong>成功发布</strong>：校验目标阶段产物后原子更新 <code>.run_id</code>；失败调用保留日志但不得伪装成最近成功运行</li>
-                        </ol>
-                    </div>
-
-                    <div id="track-relations" class="tab-content">
-                        <h4>🔗 追溯关系</h4>
-                        <ul>
-                            <li><strong>结果 → 日志</strong>：读取模块结果目录顶层 <code>.run_id</code>，并与固定阶段日志中的当前 run_id 对照；日志无需按日期目录查找</li>
-                            <li><strong>结果 → 参数</strong>：通过固定的 <code>log/effective.config.&lt;ext&gt;</code> 和阶段日志查看当前调用的最终生效参数</li>
-                            <li><strong>日志 → 报告</strong>：通过日志中的 run_id 和报告路径找到对应的分析报告</li>
-                            <li><strong>完整链条</strong>：run.sh → 输入配置与生效快照 → 内部脚本 → 日志 → cache 正式计算对象 → result 正式结果 → 可选报告</li>
-                            <li><strong>阶段引用</strong>：后一阶段只能读取前一阶段公开约定的标准产物，不应扫描临时目录或依赖未文档化的内部文件</li>
-                            <li><strong>命名一致</strong>：单阶段运行与 full 全流程运行应生成同名同义的正式结果，避免下游因运行方式不同而改解析规则</li>
-                            <li><strong>查找最近成功运行</strong>：读取 <code>.run_id</code>；日志直接使用 <code>log/&lt;stage&gt;.log</code> 固定路径，并通过日志内容中的 run_id 判断是否对应</li>
-                        </ul>
-                    </div>
-
-                    <div id="track-examples" class="tab-content">
-                        <h4>📄 运行追溯字段示例</h4>
-                        <pre class="code-block">current_run_id=20260806_143022
-stage=plot
-module_version=1.4.0
-config_source=/project/config/DEGs.config.ini
-input_snapshot=log/input.config.ini
-effective_config=log/effective.config.ini
-cache_action=hit
-cache_schema=1
-cache_producer_run_id=20260806_120000
-cache_fingerprint=sha256:...
-result_dir=/project/output/result
-exit_code=0</pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== 路径规范与 normalizePath 要求 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-path">🛣️ 路径规范与 normalizePath 要求</h2>
-
-                <div class="danger-box">
-                    <strong>⚠️ 核心原则：</strong>
-                    <span class="text-red">凡是进入分析流程的文件路径、目录路径、配置路径、日志路径和输出路径，都必须先经过 <code>normalizePath</code> 或等价标准化处理。</span>
-                    目标是避免 Windows/Linux/macOS 下因分隔符、相对路径、冗余层级或软链接差异导致的读取失败、重复输出和日志不可追溯。
-                </div>
-
-                <div class="tabs-container">
-                    <div class="tabs">
-                        <button class="tab active" onclick="showTab('path-rules', event)">
-                            <span class="tab-icon">📏</span> 规则要求
-                        </button>
-                        <button class="tab" onclick="showTab('path-scenarios', event)">
-                            <span class="tab-icon">🧪</span> 适用场景
-                        </button>
-                        <button class="tab" onclick="showTab('path-examples', event)">
-                            <span class="tab-icon">💻</span> 实现示例
-                        </button>
-                    </div>
-
-                    <div id="path-rules" class="tab-content active">
-                        <h4>📏 标准化规则</h4>
-                        <table class="matrix">
-                            <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>统一预处理</strong></td><td>路径在存在性校验、读写、复制、移动、日志记录前必须先标准化</td><td>不得一部分用原始路径、一部分用标准化路径</td></tr>
-                                <tr><td><strong>消除冗余层级</strong></td><td>自动折叠 <code>.</code>、<code>..</code>、重复分隔符等冗余片段</td><td>避免相同文件被当成不同路径</td></tr>
-                                <tr><td><strong>分隔符一致</strong></td><td>内部处理推荐统一为标准化后的系统合法路径；日志展示建议统一为可读性更高的单一风格</td><td>避免同一日志中同时出现 <code>\\</code> 与 <code>/</code> 混用</td></tr>
-                                <tr><td><strong>绝对路径优先</strong></td><td><span class="text-red">进入核心分析步骤前</span>，关键输入输出路径应转换为绝对路径或可唯一定位的规范路径</td><td>便于跨目录调用和问题追踪</td></tr>
-                                <tr><td><strong>软链接与真实路径</strong></td><td>如语言/平台支持，应尽量解析到真实路径并在日志中记录</td><td>避免链接路径与真实路径混淆</td></tr>
-                                <tr><td><strong>日志一致性</strong></td><td>日志、配置、报告中引用的同一文件路径应保持一致</td><td>禁止日志写相对路径、报告写另一套绝对路径</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div id="path-scenarios" class="tab-content">
-                        <h4>🧪 必须使用 normalizePath 的场景</h4>
-                        <ul>
-                            <li><strong>读取输入文件</strong>：如 <code>group.csv</code>、<code>expression.csv</code>、<code>gene.csv</code>、<code>survival.csv</code>、参考注释文件等</li>
-                            <li><strong>写出结果文件</strong>：如 <code>result/</code>、<code>report/</code>、<code>log/</code> 下的所有输出</li>
-                            <li><strong>读取配置参数</strong>：配置文件中的路径字段读取后必须立即标准化，不能原样透传到后续流程</li>
-                            <li><strong>跨语言调用</strong>：<code>run.sh</code> 调用 R/Python/其他脚本时，传递前先做标准化，避免脚本间路径口径不一致</li>
-                            <li><strong>文件关联追溯</strong>：隐藏追踪文件、日志文件、报告文件之间的路径引用必须基于同一套标准化结果</li>
-                            <li><strong>存在性与权限校验</strong>：<span class="text-red">先 normalizePath，后 file.exists/access</span>，避免校验对象与实际读写对象不是同一路径</li>
-                        </ul>
-                        <div class="warn-box">
-                            <strong>补充要求：</strong> 用户输入路径、配置路径、命令行参数路径都视为不可信原始值，必须先标准化再参与拼接、判断和输出。
-                        </div>
-                    </div>
-
-                    <div id="path-examples" class="tab-content">
-                        <h4>💻 推荐实现方式</h4>
-
-                        <strong>R 示例：</strong>
-                        <pre class="code-block">input_file &lt;- normalizePath(input_file, winslash = "/", mustWork = FALSE)
-output_dir &lt;- normalizePath(output_dir, winslash = "/", mustWork = FALSE)
-
-if (!file.exists(input_file)) {
-    stop("输入文件不存在: ", input_file)
-}</pre>
-
-                        <strong style="display:block; margin-top:18px;">Python 示例：</strong>
-                        <pre class="code-block">from pathlib import Path
-
-input_file = Path(input_file).expanduser().resolve()
-output_dir = Path(output_dir).expanduser().resolve()
-
-if not input_file.exists():
-    raise FileNotFoundError(f"输入文件不存在: {input_file}")</pre>
-
-                        <strong style="display:block; margin-top:18px;">Shell 示例：</strong>
-                        <pre class="code-block">INPUT_FILE="$(python -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).expanduser().resolve())' "$INPUT_FILE")"
-OUTPUT_DIR="$(python -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).expanduser().resolve())' "$OUTPUT_DIR")"</pre>
-
-                        <div class="lead-box">
-                            <strong>落地建议：</strong>
-                            每个模块应封装统一的路径标准化函数或公共工具，<span class="text-red">不要在多个脚本中各自手写不同口径的路径处理逻辑</span>。
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== 脚本开发规范 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-script">🛠️ 脚本开发规范</h2>
-
-                <div class="danger-box">
-                    <strong>⚠️ 核心原则：</strong>
-                    <span class="text-red">脚本必须具备清晰的错误处理、一致的命名风格和可维护的编码规范。</span>
-                    不允许"静默失败"——任何异常都应被捕获、记录并以非零退出码终止。
-                </div>
-
-                <div class="tabs-container">
-                    <div class="tabs">
-                        <button class="tab active" onclick="showTab('script-error', event)">
-                            <span class="tab-icon">🚨</span> 错误处理与退出码
-                        </button>
-                        <button class="tab" onclick="showTab('script-shell', event)">
-                            <span class="tab-icon">🐚</span> Shell 脚本规范
-                        </button>
-                        <button class="tab" onclick="showTab('script-naming', event)">
-                            <span class="tab-icon">📛</span> 函数/变量命名
-                        </button>
-                        <button class="tab" onclick="showTab('script-style', event)">
-                            <span class="tab-icon">🎨</span> 编码风格指南
-                        </button>
-                    </div>
-
-                    <div id="script-error" class="tab-content active">
-                        <h4>🚨 错误处理与退出码规范</h4>
-                        <table class="matrix">
-                            <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>退出码约定</strong></td><td><code>0</code> = 成功；<code>1</code> = 一般错误；<code>2</code> = 输入校验失败；<code>3</code> = 依赖/环境异常</td><td>上游调度脚本根据退出码判断是否继续</td></tr>
-                                <tr><td><strong>Shell 错误传播</strong></td><td><span class="text-red"><code>set -euo pipefail</code></span> 必须写在 <code>run.sh</code> 和所有 <code>.sh</code> 脚本头部</td><td>任何命令失败立即终止，未定义变量报错，管道中任一环节失败即失败</td></tr>
-                                <tr><td><strong>R 错误捕获</strong></td><td>关键分析步骤使用 <code>tryCatch</code> 包裹，失败时写日志并 <code>quit(status = 1)</code></td><td>禁止裸 <code>stop()</code> 后不做日志记录</td></tr>
-                                <tr><td><strong>Python 错误捕获</strong></td><td>入口函数使用 <code>try/except</code>，异常写入日志后 <code>sys.exit(1)</code></td><td>禁止 <code>except: pass</code> 或静默吞异常</td></tr>
-                                <tr><td><strong>日志联动</strong></td><td>错误信息必须同时输出到 stderr 和日志文件</td><td>便于交互式调试和离线追溯</td></tr>
-                                <tr><td><strong>清理机制</strong></td><td>Shell 使用 <code>trap cleanup EXIT</code>；R/Python 使用 <code>on.exit</code> / <code>finally</code></td><td>确保异常退出时临时文件被清理、日志被刷盘</td></tr>
-                            </tbody>
-                        </table>
-
-                        <strong style="display:block; margin-top:18px;">R 错误处理示例：</strong>
-                        <pre class="code-block">tryCatch({
-    dds &lt;- DESeq(dds)
-}, error = function(e) {
-    log_error(paste0("DESeq2 分析失败: ", conditionMessage(e)))
-    quit(status = 1)
-})</pre>
-
-                        <strong style="display:block; margin-top:18px;">Python 错误处理示例：</strong>
-                        <pre class="code-block">try:
-    result = run_analysis(config)
-except Exception as e:
-    logger.error(f"分析失败: {e}")
-    sys.exit(1)</pre>
-                    </div>
-
-                    <div id="script-shell" class="tab-content">
-                        <h4>🐚 Shell 脚本硬性规范</h4>
-                        <table class="matrix">
-                            <thead><tr><th>规范项</th><th>要求</th><th>示例</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>Shebang</strong></td><td><span class="text-red">必须使用 <code>#!/usr/bin/env bash</code></span></td><td>确保跨环境可移植</td></tr>
-                                <tr><td><strong>安全模式</strong></td><td><span class="text-red">第二行固定 <code>set -euo pipefail</code></span></td><td>任何错误立即终止</td></tr>
-                                <tr><td><strong>参数解析</strong></td><td>使用 <code>getopts</code> 或 <code>case</code> 循环解析阶段和长参数</td><td><code>init</code>, <code>calculate</code>, <code>plot</code>, <code>full</code>, <code>--config</code>, <code>--output</code></td></tr>
-                                <tr><td><strong>帮助信息</strong></td><td><span class="text-red">无参数、<code>--help</code> 或 <code>-h</code> 均显示帮助并返回 0</span>，且不得创建任何文件</td><td><code>./run.sh</code></td></tr>
-                                <tr><td><strong>直接执行</strong></td><td>入口带 shebang 并设置可执行权限，文档统一使用 <code>./run.sh</code></td><td><code>chmod +x run.sh</code></td></tr>
-                                <tr><td><strong>路径基准</strong></td><td>内部脚本和模板相对 <code>run.sh</code> 所在目录定位，不依赖调用者当前目录</td><td><code>MODULE_DIR=$(cd ... &amp;&amp; pwd)</code></td></tr>
-                                <tr><td><strong>变量引用</strong></td><td>变量必须用双引号包裹：<code>"$VAR"</code></td><td>防止空格/特殊字符引发错误</td></tr>
-                                <tr><td><strong>临时文件</strong></td><td>使用 <code>mktemp</code> 创建，配合 <code>trap</code> 在退出时清理</td><td><code>TMP=$(mktemp); trap "rm -f $TMP" EXIT</code></td></tr>
-                                <tr><td><strong>日志重定向</strong></td><td>stdout/stderr 分别重定向到日志文件</td><td><code>exec &gt; &gt;(tee -a "$LOG") 2&gt;&amp;1</code></td></tr>
-                                <tr><td><strong>入口职责</strong></td><td><code>run.sh</code> 只负责参数解析、安全检查、阶段编排、日志元数据和退出码</td><td>不得在入口脚本中重写统计、绘图、注释查询或报告生成等业务算法</td></tr>
-                                <tr><td><strong>阶段帮助</strong></td><td>多阶段模块的每个阶段都应支持独立帮助或清晰参数说明</td><td>例如初始化、计算、作图、报告、全流程阶段均能说明输入、输出和依赖</td></tr>
-                            </tbody>
-                        </table>
-
-                        <strong style="display:block; margin-top:18px;">run.sh 入口骨架：</strong>
-                        <pre class="code-block">#!/usr/bin/env bash
-set -euo pipefail
-
-MODULE_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &amp;&amp; pwd)
-RAW_COMMAND=$(printf '%q ' "$0" "$@")
-
-usage() {
-    cat &lt;&lt;EOF
-用途: 对表达矩阵和分组信息执行差异分析，并支持从正式缓存独立绘图。
-用法: $(basename "$0") &lt;init|calculate|plot|full&gt; [选项]
-
-阶段:
-  init      在 --target 下生成一份带中文注释的分析配置
-  calculate 校验输入、输出正式表格并发布绘图所需缓存
-  plot      只校验和读取已有缓存，重建全部约定图形
-  full      依次执行 calculate + plot
-
-输入模式:
-  业务输入由 --config 指定；命令行只接受帮助中列出的合法覆盖项。
-  配置内相对路径以配置文件目录为基准，解析后的绝对路径写入日志。
-
-选项:
-  --target DIR   init 的目标目录
-  --config FILE  calculate / plot / full 的分析配置
-  --output DIR   calculate / plot / full 的独立结果目录
-  --force        仅 init 使用；覆盖前保留有界回滚副本
-  -h, --help     显示本帮助
-
-输出与边界:
-  result/ 保存正式表格和图形；cache/ 保存可校验的正式计算缓存；
-  log/ 以固定路径保存阶段日志和配置快照。plot 不重新计算，本模块不提供独立 report 阶段。
-
-示例:
-  $(basename "$0") init --target ./project
-  $(basename "$0") full --config ./project/config/DEGs.config.ini --output ./output
-EOF
-}
-
-require_value() {
-    local option=$1 value=${2:-}
-    if [[ -z "$value" || "$value" == -* ]]; then
-        die_usage "参数缺少值: $option"
-    fi
-}
-
-die_usage() {
-    echo "错误: $*" &gt;&amp;2
-    echo "运行 $(basename "$0") --help 查看帮助" &gt;&amp;2
-    exit 2
-}
-
-if [[ $# -eq 0 || "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-    usage
-    exit 0
-fi
-
-STAGE=$1
-shift
-case "$STAGE" in
-    init|calculate|plot|full) ;;
-    *) die_usage "未知阶段: $STAGE" ;;
-esac
-
-CONFIG=""
-OUTPUT_DIR=""
-TARGET_DIR=""
-FORCE=false
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --config) require_value "$@"; CONFIG=$2; shift 2 ;;
-        --output) require_value "$@"; OUTPUT_DIR=$2; shift 2 ;;
-        --target) require_value "$@"; TARGET_DIR=$2; shift 2 ;;
-        --force) FORCE=true; shift ;;
-        -h|--help) usage; exit 0 ;;
-        *) die_usage "未知参数: $1" ;;
-    esac
-done
-
-# 先做阶段互斥校验；帮助与 init 不创建运行目录。
-if [[ "$STAGE" == "init" ]]; then
-    [[ -n "$TARGET_DIR" ]] || die_usage "init 必须提供 --target"
-    [[ -z "$CONFIG" &amp;&amp; -z "$OUTPUT_DIR" ]] || die_usage "init 不接受 --config 或 --output"
-    INIT_ARGS=(--target "$TARGET_DIR")
-    [[ "$FORCE" == true ]] &amp;&amp; INIT_ARGS+=(--force)
-    "$MODULE_DIR/scripts/init_config.sh" "${INIT_ARGS[@]}"
-    exit 0
-fi
-
-[[ -n "$CONFIG" &amp;&amp; -n "$OUTPUT_DIR" ]] || die_usage "$STAGE 必须提供 --config 和 --output"
-[[ -z "$TARGET_DIR" &amp;&amp; "$FORCE" == false ]] || die_usage "$STAGE 不接受 --target 或 --force"
-
-# 这里只校验参数、输出写入边界和日志目录边界，不读取正式缓存。
-"$MODULE_DIR/scripts/validate_arguments.sh" "$STAGE" "$CONFIG" "$OUTPUT_DIR"
-RUN_ID="$(date +%Y%m%d_%H%M%S)_$$"
-LOG_DIR="$OUTPUT_DIR/log"
-LOG_FILE="$LOG_DIR/$STAGE.log"
-mkdir -p "$LOG_DIR"
-exec &gt; &gt;(tee "$LOG_FILE") 2&gt;&amp;1
-printf 'run_id=%s stage=%s command=%s cwd=%q\n' "$RUN_ID" "$STAGE" "$RAW_COMMAND" "$PWD"
-
-# 输入、配置和缓存校验发生在日志初始化之后，拒绝原因因此可以追溯。
-"$MODULE_DIR/scripts/validate_runtime.sh" "$STAGE" "$CONFIG" "$OUTPUT_DIR" || {
-    status=$?; printf 'exit_code=%s status=validation_failed\n' "$status"; exit "$status";
-}
-"$MODULE_DIR/scripts/run_stage.sh" "$STAGE" "$CONFIG" "$OUTPUT_DIR" "$RUN_ID" || {
-    status=$?; printf 'exit_code=%s status=stage_failed\n' "$status"; exit "$status";
-}
-
-# 全部阶段与产物校验成功后，才更新最近成功运行标识。
-RUN_ID_TMP="$OUTPUT_DIR/.run_id.tmp"
-printf "%s\n" "$RUN_ID" &gt; "$RUN_ID_TMP"
-mv -f "$RUN_ID_TMP" "$OUTPUT_DIR/.run_id"
-printf 'exit_code=0 status=success\n'</pre>
-                        <p class="muted" style="margin-top:8px;">上例选择了“不提供独立报告阶段”的模块。确实支持 <code>report</code> 的模块才可把它同时加入帮助、阶段白名单、调度和验收；不能只加一个空分支。</p>
-                        <p><strong>业务保真要求：</strong> 包装脚本可以做路径标准化、参数桥接、日志和输出收集，但不能用 demo、mock、stub、placeholder、synthetic 或 fallback 逻辑替代真实业务流程。修改前必须先确认原始入口、核心脚本、配置、主要输出、绘图逻辑、报告逻辑和报告模板。</p>
-                    </div>
-
-                    <div id="script-naming" class="tab-content">
-                        <h4>📛 函数 / 变量 / 常量命名规范</h4>
-                        <table class="matrix">
-                            <thead><tr><th>语言</th><th>对象</th><th>风格</th><th>示例</th></tr></thead>
-                            <tbody>
-                                <tr><td rowspan="3"><strong>R</strong></td><td>函数名</td><td>snake_case</td><td><code>run_deseq2()</code>, <code>plot_volcano()</code></td></tr>
-                                <tr><td>变量名</td><td>snake_case</td><td><code>count_matrix</code>, <code>p_cutoff</code></td></tr>
-                                <tr><td>常量</td><td>UPPER_SNAKE_CASE</td><td><code>DEFAULT_P_CUTOFF</code>, <code>MAX_THREADS</code></td></tr>
-                                <tr><td rowspan="4"><strong>Python</strong></td><td>函数名</td><td>snake_case</td><td><code>run_analysis()</code>, <code>load_config()</code></td></tr>
-                                <tr><td>变量名</td><td>snake_case</td><td><code>sample_count</code>, <code>output_dir</code></td></tr>
-                                <tr><td>类名</td><td>PascalCase</td><td><code>AnalysisConfig</code>, <code>GeneFilter</code></td></tr>
-                                <tr><td>常量</td><td>UPPER_SNAKE_CASE</td><td><code>DEFAULT_SEED</code>, <code>MIN_SAMPLES</code></td></tr>
-                                <tr><td rowspan="2"><strong>Shell</strong></td><td>变量名</td><td>UPPER_SNAKE_CASE</td><td><code>CONFIG_FILE</code>, <code>TIMESTAMP</code></td></tr>
-                                <tr><td>函数名</td><td>snake_case</td><td><code>log_info()</code>, <code>cleanup()</code></td></tr>
-                            </tbody>
-                        </table>
-
-                        <div class="warn-box">
-                            <strong>⚠️ 禁止做法：</strong>
-                            <ul style="margin-top:8px; padding-left:20px;">
-                                <li>使用单字母变量名（循环索引 <code>i</code>, <code>j</code> 除外）</li>
-                                <li>R 中混用 <code>camelCase</code> 和 <code>snake_case</code>（统一用 snake_case）</li>
-                                <li>使用拼音缩写或无意义缩写（如 <code>sjcl</code>、<code>tmp2</code>）</li>
-                                <li>变量名与 R/Python 内置函数同名（如 <code>data</code>、<code>list</code>、<code>df</code>）</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div id="script-style" class="tab-content">
-                        <h4>🎨 编码风格指南</h4>
-                        <table class="matrix">
-                            <thead><tr><th>语言</th><th>推荐 Style Guide</th><th>Linter / Formatter</th><th>关键要求</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>R</strong></td><td><a href="https://style.tidyverse.org/" target="_blank">Tidyverse Style Guide</a></td><td><code>lintr</code> + <code>styler</code></td><td>缩进 2 空格；行宽 ≤ 120 字符；赋值用 <code>&lt;-</code> 不用 <code>=</code></td></tr>
-                                <tr><td><strong>Python</strong></td><td><a href="https://peps.python.org/pep-0008/" target="_blank">PEP 8</a></td><td><code>ruff</code> 或 <code>flake8</code> + <code>black</code></td><td>缩进 4 空格；行宽 ≤ 120 字符；type hints 推荐</td></tr>
-                                <tr><td><strong>Shell</strong></td><td><a href="https://google.github.io/styleguide/shellguide.html" target="_blank">Google Shell Style Guide</a></td><td><code>shellcheck</code></td><td>缩进 2 空格；函数用 <code>snake_case</code>；所有脚本过 shellcheck</td></tr>
-                            </tbody>
-                        </table>
-
-                        <div class="lead-box">
-                            <strong>💡 落地建议：</strong>
-                            <ul style="margin-top:8px; padding-left:20px;">
-                                <li>在项目根目录保存 <code>.lintr</code>（R）、<code>pyproject.toml</code>（Python）、<code>.shellcheckrc</code>（Shell）配置文件</li>
-                                <li>CI/CD 中加入 lint 检查步骤，不通过则阻止合并</li>
-                                <li>新脚本提交前必须通过对应 linter 无 error</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== 最佳实践 ========== -->
-        <div class="grid">
-            <div class="card two-col">
-                <h2 class="section-title" id="sec-best">✅ 推荐做法</h2>
+                <p class="callout primary">先写最小真实合同，再写代码。演示输入可验证流程，但不能代替真实业务验证；不得用桩、模拟结果、占位文件或静默降级冒充实现。</p>
+            </section>
+
+            <section class="card half" id="source">
+                <h2>4. 源码结构</h2>
+                <pre class="code-block">module/
+├── run.sh
+├── README.md
+├── module_contract.yaml
+├── tests/
+├── [config/]             # 有配置或图件
+├── [scripts/]            # 有入口外实现
+├── [report_templates/]   # 生成报告
+├── [demo/data/]          # 有受控演示输入
+├── [schemas/]            # 有稳定数据结构
+└── [docs/]               # 仅长期设计说明</pre>
+                <p>方括号目录按真实能力创建。禁止空目录、<code>.gitkeep</code> 占位、模块内虚拟环境、历史输出、平行的 <code>new/final/v2</code> 实现和“以后可能用”的框架。</p>
+                <p>一次性 audit/review/fix/verification/summary、Agent 交接和验收结论进入 Issue/PR、测试系统或中央治理文档，不在模块 <code>docs/</code> 长期堆积。</p>
+            </section>
+
+            <section class="card half" id="commands">
+                <h2>5. 入口与命令</h2>
                 <ul class="rule-list">
-                    <li><strong>区分运行来源</strong>：程序开始时生成当前 run_id 并写入日志，成功后才更新 <code>.run_id</code>；复用缓存时另行保留缓存生产 run_id</li>
-                    <li><strong>日志优先</strong>：<span class="text-red">无论是否有配置文件，日志中必须详细记录所有参数</span></li>
-                    <li><strong>配置文件简洁</strong>：模块选择 INI 或 YAML 中的一种主要格式；<code>init</code> 生成一份分析配置，运行只保存快照而不覆盖用户配置</li>
-                    <li><strong>日志使用中文</strong>：日志内容可以使用中文，便于理解和阅读</li>
-                    <li><strong>计算与作图分离</strong>：同一分析点的计算脚本和作图脚本拆成独立文件，改图时无需重跑计算</li>
-                    <li><strong>图形格式可配置</strong>：默认同时保存 PNG 和 PDF，也可按配置生成模块支持的格式；验收以请求格式清单为准</li>
-                    <li><strong>统一路径标准化</strong>：所有路径在校验、读写、记录前先做 <code>normalizePath</code> 或等价处理，并在日志中保持一致口径</li>
-                    <li><strong>图表字体可追溯</strong>：默认使用 sans-serif；可配置已安装且模块支持的字体，缺失时应报错或按声明回退并写入日志</li>
-                    <li><strong>色板标准</strong>：推荐使用 <code>ggsci::npg</code>、<code>RColorBrewer</code> 等学术配色方案；<span class="text-red">图表必须对色盲友好</span>，避免仅靠红/绿区分数据</li>
-                    <li><strong>使用 .qs2</strong>：<span class="text-red">R数据使用 .qs2 格式保存</span>（<code>qs2</code> R 包，替代 .rds/.RData）</li>
-                    <li><strong>使用 data.table</strong>：读取文件推荐使用 data.table 包</li>
-                    <li><strong>使用 Quarto</strong>：生成报告推荐使用 Quarto，默认输出 .docx 格式</li>
-                    <li><strong>错误即终止</strong>：Shell 脚本固定 <code>set -euo pipefail</code>；R/Python 必须 <code>tryCatch</code>/<code>try-except</code> 并以非零退出码终止</li>
-                    <li><strong>输出自检</strong>：脚本结束前自动校验输出文件存在性、非空、关键列完整</li>
-                    <li><strong>README.md 完备</strong>：每个模块必须包含标准 README（用途、依赖、输入输出、运行示例）</li>
-                    <li><strong>CHANGELOG.md</strong>：语义化版本号 + 每次变更记录</li>
-                    <li><strong>demo 验证</strong>：如提供 demo，只在 <code>demo/data/</code> 放输入数据和必要配置；输出由本次运行现场生成</li>
-                    <li>按模块声明的保留策略清理过期日志和一次性临时结果；正式计算缓存不得作为临时文件自动删除</li>
-                    <li>使用版本控制系统（Git）管理scripts文件夹中的脚本</li>
-                    <li>为重要分析结果创建README.md说明文件内容</li>
-                    <li>定期备份result和report文件夹到云端或外部存储</li>
-                    <li>日志文件使用结构化格式，便于后续检索和分析</li>
-                    <li>在日志开头添加摘要部分，包含关键统计信息</li>
+                    <li><code>run.sh</code> 是稳定公开入口，只负责解析、校验、调度、日志和发布。</li>
+                    <li>无参数或 <code>--help</code> 返回 0，且不创建任何文件。</li>
+                    <li>有配置时提供幂等 <code>init</code>；没有配置时不造空初始化命令。</li>
+                    <li><code>calculate</code>、<code>plot</code>、<code>report</code> 只是常用名称，不是固定套餐。</li>
+                    <li><code>full</code> 只用于两个及以上真实写阶段，等价于已声明子命令的组合。</li>
+                    <li>同一逻辑产物经不同命令生成时，路径、标题、字段语义、来源和配置必须一致。</li>
                 </ul>
-            </div>
-            <div class="card two-col">
-                <h2 class="section-title" id="sec-avoid">❌ 避免做法</h2>
-                <ul class="check-list">
-                    <li>使用无意义的文件名（如 result1.tsv, final.pdf）</li>
-                    <li><code>.run_id</code> 内容只精确到日期，导致同一天多次运行无法区分</li>
-                    <li>日志只记录运行成功/失败，不记录具体参数</li>
-                    <li>依赖配置文件而忽略日志的参数记录功能</li>
-                    <li>不保留日志文件，导致无法追溯分析过程</li>
-                    <li>结果文件与日志中的 run_id 无法对应</li>
-                    <li>用当前绘图 run_id 覆盖缓存生产 run_id，导致无法识别复用来源</li>
-                    <li><span class="text-red"><strong>跳过路径标准化</strong></span>：直接用命令行输入、配置值或字符串拼接后的路径做存在性校验和文件读写</li>
-                    <li>把 run_id 或时间戳写进配置文件名，导致文件夹碎片化</li>
-                    <li><span class="text-red"><strong>计算与作图混写</strong></span>：把数据计算和可视化代码写在同一个脚本中，导致改图必须重跑全部计算</li>
-                    <li><span class="text-red"><strong>忽略格式配置</strong></span>：未生成用户请求的受支持格式，或仍按固定双格式验收</li>
-                    <li><strong>字体行为不透明</strong>：配置字体不可用时静默替换，且日志不记录实际使用字体</li>
-                    <li><span class="text-red"><strong>使用 .rds/.RData</strong></span>：推荐使用更现代的 .qs2 格式（<code>qs2</code> R 包）</li>
-                    <li><strong>使用 base R</strong>：推荐使用更高效的 data.table</li>
-                    <li><span class="text-red"><strong>静默吞异常</strong></span>：<code>except: pass</code> 或裸 <code>tryCatch</code> 不记录错误信息</li>
-                    <li><span class="text-red"><strong>缺少 shebang/安全模式</strong></span>：Shell 脚本不写 <code>#!/usr/bin/env bash</code> 和 <code>set -euo pipefail</code></li>
-                    <li><strong>模块间内存传递</strong>：通过全局变量或共享内存传递数据，不走文件接口</li>
-                    <li><strong>输出不校验</strong>：脚本执行完不检查输出文件是否完整和正确</li>
-                    <li><strong>无 README / 无版本号</strong>：模块缺少文档或依赖说明，新人无法独立运行</li>
-                    <li><strong>敏感数据入库</strong>：将含患者真实 ID 的临床表提交到 Git 仓库</li>
+                <div class="callout accent">只有一个不可再拆的业务流程时，使用一个原子写命令即可；没有图或报告的模块必须明确拒绝相应命令，而不是生成占位文件。</div>
+            </section>
+
+            <section class="card" id="config">
+                <h2>6. 配置合同：唯一、中文、真实生效</h2>
+                <ul class="rule-list">
+                    <li>每个模块只选 INI 或 YAML 一种主要格式，只保留一份规范配置模板，由 <code>init</code> 唯一读取。</li>
+                    <li>演示配置是演示输入的实例，不是第二套模板；不得维护两份默认值或两套参数语义。</li>
+                    <li>每个公开键都必须被生产路径读取、校验并影响声明行为；禁止 no-op、只回显、只写日志或永远被入口覆盖的参数。</li>
+                    <li>未知 section、未知键、非法行、越界值和不支持枚举必须立即失败。</li>
+                    <li>优先级固定为：命令行显式覆盖 ＞ 用户配置 ＞ 模块默认值。</li>
+                    <li>配置中的相对路径相对配置文件本身解析；运行时不得改写用户配置。</li>
                 </ul>
-            </div>
-        </div>
-
-        <!-- ========== 模块协作与版本管理 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-collab">🔄 模块协作与版本管理</h2>
-
-                <div class="lead-box" style="background:#ecfdf5; border-color:#6ee7b7;">
-                    <strong>✨ 核心设计：</strong> 多模块组成流水线时，必须有清晰的数据传递契约、依赖声明和版本管理策略，确保任意模块可独立更新而不破坏上下游。
-                </div>
-
-                <div class="tabs-container">
-                    <div class="tabs">
-                        <button class="tab active" onclick="showTab('collab-data', event)">
-                            <span class="tab-icon">📤</span> 模块间数据传递
-                        </button>
-                        <button class="tab" onclick="showTab('collab-deps', event)">
-                            <span class="tab-icon">🔗</span> 跨模块依赖声明
-                        </button>
-                        <button class="tab" onclick="showTab('collab-version', event)">
-                            <span class="tab-icon">🏷️</span> 版本管理细则
-                        </button>
-                    </div>
-
-                    <div id="collab-data" class="tab-content active">
-                        <h4>📤 模块间数据传递约定</h4>
-                        <table class="matrix">
-                            <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>传递介质</strong></td><td>模块间一律通过 <span class="text-red">文件</span>（TSV / CSV / .qs2）传递数据，禁止依赖内存/全局变量</td><td>确保任意模块可独立运行和调试</td></tr>
-                                <tr><td><strong>输出路径约定</strong></td><td>上游模块将结果写入自己的 <code>result/分析点/</code>；下游模块通过相对路径 <code>../上游模块/result/分析点/</code> 读取</td><td>路径在读取前必须经过 normalizePath</td></tr>
-                                <tr><td><strong>完成标志</strong></td><td>模块成功结束时在模块结果目录顶层写入隐藏运行标识文件 <code>.run_id</code>，文件内容为本次 run_id/时间戳</td><td>下游可检查该文件判断上游是否已完成</td></tr>
-                                <tr><td><strong>接口文件规范</strong></td><td>模块对外暴露的输出文件名、列名、数据类型在 <code>README.md</code> 中明确列出</td><td>视为模块的公开 API，变更需通知下游</td></tr>
-                                <tr><td><strong>向后兼容</strong></td><td>输出文件新增列允许，<span class="text-red">删除或重命名已有列视为破坏性变更</span></td><td>破坏性变更需升主版本号</td></tr>
-                                <tr><td><strong>空结果处理</strong></td><td>如分析结果为空（如 0 个差异基因），仍应输出带表头的空 TSV/CSV + 日志记录</td><td>下游不因文件缺失而崩溃</td></tr>
-                            </tbody>
-                        </table>
-
-                        <strong style="display:block; margin-top:18px;">流水线数据流示例：</strong>
-                        <pre class="code-block"># 多模块流水线目录布局
-project/
-├── RawData/          # 模块 1：数据预处理
-│   ├── run.sh
-│   └── result/RawData/01.GSEXXX_count.csv
-├── DEGs/             # 模块 2：差异分析（依赖模块 1）
-│   ├── run.sh
-│   └── result/DEGs/01.DEGs.tsv
-└── Enrichment/       # 模块 3：富集分析（依赖模块 2）
-    ├── run.sh
-    └── result/GSEA/01.gsea_result.csv
-
-# DEGs/run.sh 中读取上游数据：
-INPUT="../RawData/result/RawData/01.GSEXXX_count.csv"</pre>
-                    </div>
-
-                    <div id="collab-deps" class="tab-content">
-                        <h4>🔗 跨模块依赖声明</h4>
-                        <table class="matrix">
-                            <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>声明位置</strong></td><td>在模块 <code>README.md</code> 的「依赖」章节中列出</td><td>必须标注上游模块名和所需文件</td></tr>
-                                <tr><td><strong>声明格式</strong></td><td>表格形式：上游模块 / 所需文件 / 最低版本</td><td>示例见下方</td></tr>
-                                <tr><td><strong>运行时校验</strong></td><td><code>run.sh</code> 启动时检查上游输出文件和追踪文件是否存在</td><td>不存在则报错退出（exit 2），不继续执行</td></tr>
-                                <tr><td><strong>环境依赖</strong></td><td>R/Python 版本、关键包版本在 <code>README.md</code> 和锁定文件中声明</td><td><code>renv.lock</code> / <code>requirements.txt</code></td></tr>
-                            </tbody>
-                        </table>
-
-                        <strong style="display:block; margin-top:18px;">依赖声明示例（README.md 片段）：</strong>
-                        <pre class="code-block">## 依赖
-
-### 上游模块依赖
-
-| 上游模块   | 所需文件                           | 最低版本 |
-|-----------|-----------------------------------|---------|
-| RawData   | result/RawData/01.GSEXXX_count.csv | v1.0    |
-| RawData   | module_output/.run_id（文件内容为本次 run_id）   | -       |
-
-### 环境依赖
-
-- R &gt;= 4.2
-- DESeq2 &gt;= 1.38
-- data.table &gt;= 1.14
-- 完整依赖见 renv.lock</pre>
-                    </div>
-
-                    <div id="collab-version" class="tab-content">
-                        <h4>🏷️ 版本管理细则</h4>
-                        <table class="matrix">
-                            <thead><tr><th>规范项</th><th>要求</th><th>说明</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>版本号方案</strong></td><td>采用语义化版本 <code>vMAJOR.MINOR.PATCH</code></td><td><code>v1.2.0</code>：MAJOR=不兼容变更，MINOR=新增功能，PATCH=修复</td></tr>
-                                <tr><td><strong>版本号位置</strong></td><td>写在 <code>run.sh</code> 头部注释和 <code>README.md</code> 中</td><td>日志中也应记录当前版本号</td></tr>
-                                <tr><td><strong>CHANGELOG</strong></td><td><span class="text-red">每个模块根目录必须维护 <code>CHANGELOG.md</code></span></td><td>记录每次变更的版本号、日期、变更内容</td></tr>
-                                <tr><td><strong>Git 标签</strong></td><td>发布版本打 tag：<code>模块名/v1.2.0</code></td><td>示例：<code>DEGs/v1.2.0</code></td></tr>
-                                <tr><td><strong>分支策略</strong></td><td><code>main</code> 保持稳定可运行；开发使用 <code>dev</code> 或 <code>feature/*</code> 分支</td><td>合并前需通过 lint + 冒烟测试</td></tr>
-                                <tr><td><strong>提交信息</strong></td><td>遵循 Conventional Commits：<code>feat:</code> / <code>fix:</code> / <code>docs:</code> / <code>refactor:</code></td><td>便于自动生成 CHANGELOG</td></tr>
-                            </tbody>
-                        </table>
-
-                        <strong style="display:block; margin-top:18px;">CHANGELOG.md 示例：</strong>
-                        <pre class="code-block"># CHANGELOG
-
-## [v1.2.0] - 2026-03-26
-
-### 新增
-- 计算与作图分离：DEGs_analysis.R / DEGs_plot.R
-- 新增 plot 阶段，可从有效缓存重建全部约定图形
-
-### 修复
-- 修复 normalizePath 在 Windows 上的分隔符问题
-
-## [v1.1.0] - 2026-03-20
-
-### 新增
-- 新增路径标准化处理</pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== 质量保证规范 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-qa">🧪 质量保证规范</h2>
-
-                <div class="danger-box">
-                    <strong>⚠️ 核心原则：</strong>
-                    <span class="text-red">每个模块必须具备输出自检能力和基本测试覆盖</span>，确保结果在传递给下游或交付前经过验证。
-                </div>
-
-                <div class="tabs-container">
-                    <div class="tabs">
-                        <button class="tab active" onclick="showTab('qa-output', event)">
-                            <span class="tab-icon">✅</span> 输出校验规范
-                        </button>
-                        <button class="tab" onclick="showTab('qa-test', event)">
-                            <span class="tab-icon">🧪</span> 测试要求
-                        </button>
-                    </div>
-
-                    <div id="qa-output" class="tab-content active">
-                        <h4>✅ 输出校验规范</h4>
-                        <table class="matrix">
-                            <thead><tr><th>校验项</th><th>要求</th><th>说明</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>文件存在性</strong></td><td>脚本结束前检查所有应生成的关键输出文件是否已生成</td><td>缺少任何关键文件应报错退出</td></tr>
-                                <tr><td><strong>文件非空</strong></td><td>输出 TSV/CSV 至少包含表头行；.png/.pdf 文件大小 &gt; 0</td><td>空文件视为异常</td></tr>
-                                <tr><td><strong>行数/列数检查</strong></td><td>结果 TSV/CSV 的行数和列数写入日志，并与预期范围做对比</td><td>如差异基因数为 0，日志中标注 <code>[WARN]</code></td></tr>
-                                <tr><td><strong>关键列存在性</strong></td><td>输出 TSV/CSV 必须包含文档约定的关键列（如 <code>SYMBOL</code>、<code>log2FoldChange</code>、<code>pvalue</code>）</td><td>列名缺失直接报错</td></tr>
-                                <tr><td><strong>数据类型检查</strong></td><td>数值列不含非数值字符串；分类列取值在允许范围内</td><td>如 <code>riskgroup</code> 只允许 <code>High</code>/<code>Low</code></td></tr>
-                                <tr><td><strong>NA/空值检查</strong></td><td><span class="text-red">输出文件中不允许出现 NA</span>（与输入规范一致）</td><td>若分析结果含 NA 需在日志中说明并过滤</td></tr>
-                                <tr><td><strong>图形格式验证</strong></td><td>配置请求的每种受支持格式均存在、非空且可读取；默认配置通常检查 PNG + PDF</td><td>不得用固定双格式规则覆盖 <code>[Plot].formats</code></td></tr>
-                            </tbody>
-                        </table>
-
-                        <strong style="display:block; margin-top:18px;">运行契约最小验收矩阵：</strong>
-                        <table class="matrix">
-                            <thead><tr><th>场景</th><th>成功证据</th><th>禁止出现</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>无参数 / --help</strong></td><td>stdout 含用途、阶段、输入模式、参数、输出与示例；退出码 0</td><td>任何输出目录、日志或 <code>.run_id</code></td></tr>
-                                <tr><td><strong>首次 init</strong></td><td>目标目录只新增一份带完整中文注释的分析配置</td><td>两种等价配置、运行产物目录</td></tr>
-                                <tr><td><strong>重复 init</strong></td><td>内容相同则成功且不改文件；内容不同则默认非零退出并说明 <code>--force</code></td><td>无提示覆盖或重复配置报错栈</td></tr>
-                                <tr><td><strong>calculate</strong></td><td>正式表格、可校验缓存清单和计算对象、独立日志均非空</td><td>图形、空 <code>report/</code>、部分写入冒充有效缓存</td></tr>
-                                <tr><td><strong>plot 缓存命中</strong></td><td>不调用计算代码；生成约定的全部图形及请求格式；日志记录两个 run_id</td><td>计算产物时间戳变化或静默重算</td></tr>
-                                <tr><td><strong>plot 缓存失效</strong></td><td>非零退出，错误明确指出 schema、指纹、完整性或缺失项</td><td>自动回退计算、覆盖已有有效缓存</td></tr>
-                                <tr><td><strong>full</strong></td><td>结果等价于 calculate + plot，加上已声明且启用的可选报告</td><td>未启用阶段的空目录</td></tr>
-                                <tr><td><strong>未知参数 / 配置键</strong></td><td>非零退出并给出具体字段及帮助入口</td><td>忽略后继续运行</td></tr>
-                                <tr><td><strong>任意目录直接执行</strong></td><td>从模块目录外执行 <code>/path/to/module/run.sh --help</code> 与正式阶段均可定位内部资源</td><td>依赖调用者先 <code>cd</code> 到模块目录</td></tr>
-                            </tbody>
-                        </table>
-
-                        <strong style="display:block; margin-top:18px;">R 输出校验示例：</strong>
-                        <pre class="code-block"># 输出校验函数
-validate_output &lt;- function(file_path, required_cols = NULL) {
-    if (!file.exists(file_path)) stop("输出文件缺失: ", file_path)
-    if (file.size(file_path) == 0) stop("输出文件为空: ", file_path)
-
-    if (grepl("\\.(tsv|csv)$", file_path)) {
-        df &lt;- data.table::fread(file_path, nrows = 5)
-        if (!is.null(required_cols)) {
-            missing &lt;- setdiff(required_cols, names(df))
-            if (length(missing) &gt; 0) stop("缺少关键列: ", paste(missing, collapse = ", "))
-        }
-    }
-    log_info(paste0("校验通过: ", file_path))
-}
-
-# 使用
-validate_output("result/DEGs/01.DEGs.tsv", c("SYMBOL", "log2FoldChange", "pvalue", "padj"))</pre>
-                    </div>
-
-                    <div id="qa-test" class="tab-content">
-                        <h4>🧪 验证与 demo 要求</h4>
-                        <table class="matrix">
-                            <thead><tr><th>验证项</th><th>要求</th><th>说明</th></tr></thead>
-                            <tbody>
-                                <tr><td><strong>demo 输入数据</strong></td><td><span class="text-red">每个模块可提供可运行的小规模 demo 输入数据</span></td><td>放在 <code>demo/data/</code> 下；demo 目录只放输入数据和必要配置，不放输出结果、历史结果、缓存或报告</td></tr>
-                                <tr><td><strong>demo 验证</strong></td><td>用 demo 输入运行 <code>run.sh</code>，确认流程可端到端启动并生成关键输出</td><td>只能标注为 demo 验证；不能报告成真实业务验证或结果回归测试</td></tr>
-                                <tr><td><strong>烟测验证</strong></td><td>如提供自动脚本，只检查入口、阶段编排、关键文件存在和退出码</td><td>退出码 0 = 烟测通过；不代表业务结果正确</td></tr>
-                                <tr><td><strong>单元测试（推荐）</strong></td><td>R 使用 <code>testthat</code>，Python 使用 <code>pytest</code></td><td>覆盖纯函数、输入解析和输出校验函数；不要把 demo 输入当作回归基准</td></tr>
-                                <tr><td><strong>CI 集成</strong></td><td>烟测验证可纳入 CI/CD 流程，每次提交自动运行</td><td>未通过则阻止合并；通过也只证明入口和契约未明显破坏</td></tr>
-                                <tr><td><strong>验证类型标注</strong></td><td>交付说明必须区分真实业务验证、契约/接口验证、烟测验证和 demo 验证</td><td>不能把 wrapper 生成文件或 demo 输入跑通报告成真实业务验证</td></tr>
-                                <tr><td><strong>业务保真复核</strong></td><td>涉及迁移、包装、统一入口或重构时，必须证明原始核心脚本、绘图逻辑、报告逻辑仍被调用</td><td>若有行为差异，需在交付说明中列出并经确认</td></tr>
-                            </tbody>
-                        </table>
-
-                        <strong style="display:block; margin-top:18px;">demo 验证示例（以 chromosome_plot 为例）：</strong>
-                        <pre class="code-block">#!/usr/bin/env bash
-set -euo pipefail
-
-echo "=== demo 验证开始 ==="
-
-# demo 目录只提供输入数据和配置；输出由本次运行现场生成
-DEMO_OUTPUT=${1:-demo_output}
-[[ ! -e "$DEMO_OUTPUT" ]] || {
-    echo "[FAIL] 输出已存在，请指定新的 demo 输出目录: $DEMO_OUTPUT" &gt;&amp;2
-    exit 2
-}
-./run.sh full --config demo/data/chromosome_plot_config.ini --output "$DEMO_OUTPUT"
-
-RUN_ID=$(tr -d '\r\n' &lt; "$DEMO_OUTPUT/.run_id")
-[[ -n "$RUN_ID" ]] || { echo "[FAIL] .run_id 为空"; exit 1; }
-LOG_FILE="$DEMO_OUTPUT/log/full.log"
-
-# 只检查关键产物是否由本次运行生成，不与预先保存的输出文件做 diff
-for f in "$DEMO_OUTPUT/.run_id" "$LOG_FILE" "$DEMO_OUTPUT/cache/cache_manifest.json" "$DEMO_OUTPUT/result/01_gene_positions.tsv" "$DEMO_OUTPUT/result/02_circos.png" "$DEMO_OUTPUT/result/02_circos.pdf"; do
-    if [ ! -s "$f" ]; then
-        echo "[FAIL] 文件缺失或为空: $f"
-        exit 1
-    fi
-done
-
-# 同时验证 manifest 指向的固定缓存对象非空、未越界且校验和一致
-Rscript --vanilla - "$DEMO_OUTPUT/cache" &lt;&lt;'RS'
-args &lt;- commandArgs(trailingOnly = TRUE)
-cache_dir &lt;- normalizePath(args[[1]], mustWork = TRUE)
-manifest &lt;- jsonlite::read_json(file.path(cache_dir, "cache_manifest.json"), simplifyVector = FALSE)
-if (length(manifest$artifacts) &lt; 1L) stop("manifest 未声明缓存对象")
-if (length(manifest$plot_contract$figures) &lt; 1L) stop("manifest 未声明绘图契约")
-artifact &lt;- manifest$artifacts[[1L]]
-artifact_path &lt;- normalizePath(file.path(cache_dir, artifact$path), mustWork = TRUE)
-cache_prefix &lt;- paste0(cache_dir, .Platform$file.sep)
-if (!startsWith(artifact_path, cache_prefix)) stop("manifest 缓存路径越界")
-if (file.info(artifact_path)$size != as.numeric(artifact$size)) stop("缓存大小不匹配")
-actual_sha256 &lt;- digest::digest(file = artifact_path, algo = "sha256")
-if (!identical(tolower(actual_sha256), tolower(artifact$sha256))) stop("缓存校验和不匹配")
-RS
-
-echo "=== demo 验证完成：仅代表 demo 输入跑通 ==="</pre>
-
-                        <div class="lead-box">
-                            <strong>💡 demo 目录结构：</strong>
-                            <pre style="margin-top:8px; font-family: Consolas, monospace; font-size: 0.9em;">demo/
-└── data/                # 只放小规模输入数据和必要配置
-    ├── genes.tsv
-    └── chromosome_plot_config.ini</pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ========== README.md 必备内容 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-readme">📖 README.md 必备内容</h2>
-
-                <div class="lead-box">
-                    <strong>📌 设计原则：</strong> 每个模块根目录必须包含 <code>README.md</code>，内容足够让新开发者<span class="text-red">仅凭此文件即可理解模块用途、运行方式和数据接口</span>。
-                </div>
-
-                <table class="matrix">
-                    <thead><tr><th>必备章节</th><th>内容要求</th><th>说明</th></tr></thead>
-                    <tbody>
-                        <tr><td><strong>模块名称与简介</strong></td><td>一句话说明模块功能</td><td>示例：<code># DEGs — 差异基因分析模块</code></td></tr>
-                        <tr><td><strong>版本与更新日期</strong></td><td>当前版本号 + 最后更新日期</td><td>与 CHANGELOG.md 保持一致</td></tr>
-                        <tr><td><strong>环境依赖</strong></td><td>R/Python 最低版本、关键包列表、锁定文件位置</td><td>示例：<code>R &gt;= 4.2 | 依赖见 renv.lock</code></td></tr>
-                        <tr><td><strong>上游模块依赖</strong></td><td>表格列出所需上游模块和文件（见模块协作章节）</td><td>无上游依赖时标注"无"</td></tr>
-                        <tr><td><strong>快速开始</strong></td><td>从查看帮助、初始化到分阶段运行的完整命令序列</td><td>包含 <code>./run.sh</code>、<code>init</code>、<code>full</code>、<code>plot</code> 与输出目录说明</td></tr>
-                        <tr><td><strong>阶段说明</strong></td><td>列出可独立运行的阶段、每阶段输入、标准产物和不能做的事</td><td>多阶段模块需说明后续阶段如何引用前一阶段产物</td></tr>
-                        <tr><td><strong>输入模式与边界</strong></td><td>说明支持的文件、目录、配置或上游结果输入模式，以及互斥关系和优先级</td><td>明确模块会做什么、不会做什么，不依赖使用者猜测</td></tr>
-                        <tr><td><strong>输入文件说明</strong></td><td>列出所有输入文件名、格式、关键列和约束</td><td>与输入校验规范对齐</td></tr>
-                        <tr><td><strong>输出文件说明</strong></td><td>列出所有输出文件名、所在目录、关键列，并区分 <code>result/</code>、<code>cache/</code>、<code>log/</code> 与 <code>report/</code></td><td>正式结果和可复用缓存的边界属于模块公开 API</td></tr>
-                        <tr><td><strong>参数说明</strong></td><td>所有可配置业务与绘图参数、默认值、取值范围和中文注释</td><td>说明命令行覆盖 &gt; 配置 &gt; 默认值；输出位置由入口显式传入</td></tr>
-                        <tr><td><strong>缓存契约</strong></td><td>列出缓存文件、清单字段、失效条件、<code>plot</code> 行为和显式清理方式</td><td>明确缓存承载绘图所需计算对象，不把它描述为完整报告归档</td></tr>
-                        <tr><td><strong>日志与排错</strong></td><td>说明 <code>log/&lt;stage&gt;.log</code> 固定路径、常见退出码、缓存拒绝原因和 run_id 记录方式</td><td>帮助、init 和实际运行的副作用边界必须写清楚</td></tr>
-                        <tr><td><strong>目录结构</strong></td><td>展示模块内部目录树（可简化）</td><td>帮助快速定位文件，并说明源码目录与运行产物目录边界</td></tr>
-                        <tr><td><strong>验证方式</strong></td><td>说明最小验证命令、应生成的关键输出和验证类型</td><td>需标注是真实业务验证、契约/接口验证、烟测验证还是 demo 验证</td></tr>
-                    </tbody>
-                </table>
-
-                <strong style="display:block; margin-top:18px;">README.md 模板：</strong>
-                <pre class="code-block"># DEGs — 差异基因分析模块
-
-> 版本: v1.2.0 | 更新: 2026-03-26
-
-## 简介
-
-基于 DESeq2 进行差异基因分析，输出差异基因列表、热图和火山图。
-
-## 环境依赖
-
-- R &gt;= 4.2
-- 关键包：DESeq2, data.table, ggplot2, qs2, pheatmap
-- 完整依赖：`renv.lock`
-
-## 上游模块依赖
-
-| 上游模块 | 所需文件                           | 最低版本 |
-|---------|-----------------------------------|---------|
-| RawData | result/RawData/01.GSEXXX_count.csv | v1.0    |
-
-## 快速开始
-
-```bash
-# 查看帮助（无参数同样只显示帮助）
-./run.sh
-
-# 生成一份带中文注释的分析配置
-./run.sh init --target ./project
-
-# 完整运行（计算 + 作图）
-./run.sh full --config ./project/config/DEGs.config.ini --output ./output
-
-# 仅从有效正式缓存重新作图
-./run.sh plot --config ./project/config/DEGs.config.ini --output ./output
-```
-
-## 输入文件
-
-| 文件              | 格式  | 关键列            | 说明           |
-|------------------|------|------------------|---------------|
-| expression.csv   | CSV  | SYMBOL + 样本列   | 表达矩阵        |
-| group.csv        | CSV  | sample, group    | 分组信息        |
-
-## 输出文件
-
-| 文件                    | 目录           | 说明           |
-|------------------------|---------------|---------------|
-| 01.DEGs.tsv            | result/DEGs/  | 差异基因列表（含逗号风险用 TSV；无逗号问题可用 CSV） |
-| 02.heatmap.png/.pdf    | result/DEGs/  | Top 基因热图    |
-| 03.volcano.png/.pdf    | result/DEGs/  | 火山图          |
-| calculation.qs2        | cache/        | 固定路径的绘图所需正式计算对象 |
-| cache_manifest.json    | cache/        | 缓存版本、指纹、完整性与生产 run_id |
-
-## 参数说明
-
-| 参数            | 默认值  | 说明               |
-|----------------|--------|--------------------|
-| p_value_cutoff | 0.05   | 显著性阈值           |
-| log2fc_cutoff  | 1.0    | log2 倍数变化阈值     |
-| method         | DESeq2 | 差异分析方法          |
-| formats        | png,pdf | 图形输出格式          |
-| width / height | 6 / 4  | 图形尺寸，默认单位 in  |
-| theme / palette / font_family | classic / npg / sans | 主题、配色和字体 |
-
-## 阶段与功能边界
-
-| 阶段 | 输入 | 产物 | 不会执行 |
-|------|------|------|----------|
-| init | 模块模板 | 一份分析配置 | 不创建运行目录 |
-| calculate | 配置与业务输入 | 表格、正式缓存、日志 | 不作图、不生成报告 |
-| plot | 配置与有效缓存 | 全部约定图形、日志 | 不重新计算 |
-| full | 配置与业务输入 | calculate + plot 产物 | 本模块不提供报告阶段 |
-
-## 输入模式与优先级
-
-- 支持的输入：表达矩阵文件 + 分组文件，二者必须在同一份分析配置中明确指定。
-- 不支持：直接读取未声明的目录、自动猜测最新文件、同时传入多组互斥业务输入。
-- 参数优先级：帮助中声明的命令行覆盖 &gt; 分析配置 &gt; 默认值；未知配置键直接报错。
-
-## 输出目录
-
-```text
-output/
+                <h3>每个配置项的紧邻中文注释</h3>
+                <p>注释至少写明用途及修改影响、类型、默认值、是否必填；枚举列出全部允许值，数值写范围、边界和单位，布尔值分别说明 true/false，路径写允许格式和相对基准，条件参数写依赖与互斥。</p>
+                <pre class="code-block">[plot.volcano]
+# 火山图宽度；浮点数；单位 inch；范围 4–20（含边界）；默认 8；必填。
+width = 8
+# 输出格式；可多选：png=栅格图，pdf=矢量图；默认 png；必填。
+formats = png
+# 是否显示基因标签；true=显示配置数量的标签，false=不显示；默认 true；必填。
+show_labels = true</pre>
+            </section>
+
+            <section class="card" id="output">
+                <h2>7. 输出结构与结果准入</h2>
+                <pre class="code-block">output/
 ├── .run_id
-├── cache/
-│   ├── calculation.qs2
-│   └── cache_manifest.json
-├── log/
-│   ├── input.config.ini
-│   ├── effective.config.ini
-│   └── &lt;stage&gt;.log
-└── result/              # 正式表格和图形
-```
-
-## 缓存契约
-
-- 缓存包含 `de_table`、`top_genes_mat` 和 `heatmap_annotation`，足以重建本模块全部约定图形。
-- `cache_manifest.json` 记录 schema、生产 run_id、输入/计算指纹、对象校验和及实际运行时版本。
-- 输入或计算参数变化、清单不兼容、对象缺失或校验和不符时，`plot` 非零退出且不静默重算。
-- 正式缓存不随临时文件清理；显式清理或重建方式见 `./run.sh --help`。
-
-## 日志与排错
-
-- 读取 `.run_id` 获取最近成功调用标识；阶段日志固定为 `log/&lt;stage&gt;.log`，run_id 写在日志内容中。
-- 失败调用不会覆盖 `.run_id`；其 stderr 会给出对应日志路径和退出码。
-- 日志同时记录当前 run_id 与缓存生产 run_id、配置来源/覆盖项、缓存命中或拒绝原因。
-
-## 最小验证
-
-```bash
-./run.sh                         # 返回 0，且不创建文件
-./run.sh init --target ./check   # 只生成一份分析配置
-./run.sh full --config ./check/config/DEGs.config.ini --output ./check-output
-./run.sh plot --config ./check/config/DEGs.config.ini --output ./check-output
-```
-
-上述命令默认属于契约/接口或 demo 验证；只有使用代表性真实输入并复核业务结果时，才标记为真实业务验证。</pre>
-            </div>
-        </div>
-
-        <!-- ========== 生信开发补充规范 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-bioinfo">🧬 生信开发补充规范</h2>
+├── result/                 # 正式表、图、模型或数据交付
+├── [report/]               # 确有独立解释用途时
+├── [cache/]                # 确有下游复用时
+└── log/
+    ├── run_record.json     # 唯一运行事实与产物记录
+    ├── [input.config.*]    # 有配置时
+    ├── [effective.config.*]
+    └── [command.log]       # 确有独立诊断价值时，每命令最多一份固定日志</pre>
+                <h3>结果文件准入测试</h3>
                 <table class="matrix">
-                    <thead><tr><th>规范项</th><th>建议要求</th><th>说明</th></tr></thead>
+                    <thead><tr><th>问题</th><th>通过条件</th></tr></thead>
                     <tbody>
-                        <tr><td><strong>物种与注释版本</strong></td><td>日志必须记录物种、参考基因组版本、注释版本</td><td>示例：<code>human | GRCh38 | GENCODE v46</code></td></tr>
-                        <tr><td><strong>基因ID体系</strong></td><td>明确使用 Ensembl ID 或 Gene Symbol，<span class="text-red">不混用</span></td><td>跨步骤转换时记录映射方法和丢失数量</td></tr>
-                        <tr><td><strong>样本信息一致性</strong></td><td><span class="text-red">样本表与计数矩阵样本名必须 1:1 对齐</span></td><td>运行前进行一致性校验并写入日志</td></tr>
-                        <tr><td><strong>随机性控制</strong></td><td><span class="text-red">所有含随机过程的步骤固定随机种子</span></td><td>示例：<code>seed=20260306</code></td></tr>
-                        <tr><td><strong>差异分析阈值</strong></td><td><span class="text-red">统一记录 <code>p/FDR</code> 与 <code>|log2FC|</code> 阈值</span></td><td>避免仅写“默认参数”导致不可复现</td></tr>
-                        <tr><td><strong>图表视觉标准</strong></td><td>默认使用 sans-serif；主题、颜色、字体和字号可配置并记录实际生效值</td><td>建议轴标题 &gt;= 10 pt，刻度 &gt;= 8 pt；字体缺失时不得静默替换</td></tr>
-                        <tr><td><strong>软件环境记录</strong></td><td>记录 Python/R 版本和关键包版本</td><td>建议输出 <code>sessionInfo()</code> 或 <code>pip freeze</code> 摘要</td></tr>
-                        <tr><td><strong>依赖锁定文件</strong></td><td><span class="text-red">每个模块必须包含可复现的依赖锁定文件</span></td><td>R 项目：<code>renv.lock</code>；Python 项目：<code>requirements.txt</code> 或 <code>environment.yml</code></td></tr>
-                        <tr><td><strong>最低版本约束</strong></td><td>在 <code>README.md</code> 或 <code>config/</code> 中标注经模块实测的最低 R/Python 兼容版本；运行日志仍记录本次实际版本</td><td>示例：<code>Requires: R >= &lt;模块实测最低版本&gt;, Python >= &lt;模块实测最低版本&gt;</code></td></tr>
-                        <tr><td><strong>并行与多线程</strong></td><td>涉及并行计算时必须在配置和日志中记录线程数，<span class="text-red">默认线程数不超过可用核心的 80%</span></td><td>R 使用 <code>data.table::setDTthreads()</code>、<code>BiocParallel</code>；Python 使用 <code>multiprocessing</code> 并记录 <code>n_jobs</code></td></tr>
-                        <tr><td><strong>临时文件与资源清理</strong></td><td>日志和一次性临时文件按模块声明的策略清理；<span class="text-red">正式缓存不纳入临时清理</span></td><td>临时文件统一放 <code>_tmp/</code> 并在退出时清理；删除正式缓存必须显式执行且写入日志</td></tr>
-                        <tr><td><strong>数据安全与隐私</strong></td><td>涉及临床/患者数据时，<span class="text-red">样本 ID 必须脱敏</span>；原始临床表不纳入 Git</td><td>脱敏规则记录在日志中；敏感文件加入 <code>.gitignore</code>；传输使用加密通道</td></tr>
+                        <tr><td>它回答什么分析问题？</td><td>用途能直接描述消费者从文件得到的业务或科学结果。</td></tr>
+                        <tr><td>删掉会失去什么？</td><td>会失去独立分析能力、必要交付格式或真实阶段衔接能力。</td></tr>
+                        <tr><td>是否只是另一结果的裁剪或换格式？</td><td>不是；否则保留唯一权威结果。</td></tr>
+                        <tr><td>是否仅用于审核、判断或证明？</td><td>不是；这类事实进入日志或外部验收系统。</td></tr>
+                        <tr><td>数量是否有界？</td><td>展开维度、最大文件数和字节数在合同中可计算；<code>0=无限</code> 不通过。</td></tr>
                     </tbody>
                 </table>
-            </div>
-        </div>
+                <h3>DEGs 的紧凑输出示例</h3>
+                <pre class="code-block">result/
+├── differential_expression.tsv    # 完整差异结果
+├── volcano/&lt;contrast&gt;.png         # 对应比较的火山图
+└── heatmap/&lt;contrast&gt;.png         # 对应比较的热图</pre>
+                <p>不要再输出 filtered/top/gene-list 副本、阈值回显、过滤计数、检查清单或验证证明。复杂模块可以有更多表、图、模型或数据包，但每项都必须通过同一个准入测试。</p>
+            </section>
 
-        <!-- ========== 文件格式建议 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-format">📊 文件格式建议</h2>
+            <section class="card" id="figures">
+                <h2>8. 每幅图必须单独可调</h2>
+                <p>每个逻辑图拥有唯一命名空间 <code>plot.&lt;figure_slug&gt;</code>。即使模块只有一张图，也不得使用全局 <code>[Plot]</code>；没有图的模块不创建空绘图配置。</p>
+                <table class="matrix">
+                    <thead><tr><th>配置组</th><th>最低要求</th></tr></thead>
+                    <tbody>
+                        <tr><td>尺寸与格式</td><td><code>width</code>、<code>height</code>、<code>formats</code>；栅格格式含 <code>dpi</code>。</td></tr>
+                        <tr><td>文字</td><td><code>font_family</code>、<code>base_font_size</code>、<code>title</code>。</td></tr>
+                        <tr><td>视觉编码</td><td><code>palette</code> 及该图真实需要的轴、图例、排序、分面、标签或显示范围。</td></tr>
+                        <tr><td>展开图覆盖</td><td>按完整方法/比较/队列组合进行稀疏 override，只影响目标图。</td></tr>
+                    </tbody>
+                </table>
+                <ul class="rule-list">
+                    <li>只暴露消费者合理需要、实现确实支持的参数，不把所有绘图库内部常量塞进配置。</li>
+                    <li><code>formats</code> 使用多值列表；禁止 <code>both</code> 哨兵，也不默认强制 PNG+PDF。</li>
+                    <li>每个配置参数必须通过测试证明真实影响对应图，且不会改变源科学数据。</li>
+                    <li>同源数据、字段映射、过滤、排序、图型和有效配置相同的图是同一逻辑图，不能靠换文件名重复发布。</li>
+                    <li>报告需要的兼容图片在临时渲染目录生成并清理，不得长期落入 <code>result/report_images</code>。</li>
+                </ul>
+            </section>
 
-                <div class="tabs-container">
-                    <div class="tabs">
-                        <button class="tab active" onclick="showTab('format-data', event)">
-                            <span class="tab-icon">📊</span> 数据文件
-                        </button>
-                        <button class="tab" onclick="showTab('format-chart', event)">
-                            <span class="tab-icon">📈</span> 图表文件
-                        </button>
-                        <button class="tab" onclick="showTab('format-report', event)">
-                            <span class="tab-icon">📝</span> 报告文件
-                        </button>
-                    </div>
+            <section class="card" id="reports">
+                <h2>9. 报告合同：按读者决策写</h2>
+                <p>没有独立受众或解释用途时不生成报告。默认最多一份逻辑报告，位于 <code>report/</code>；DOCX、PDF、HTML 可以是同一报告的必要交付格式，但不得在 <code>result/</code> 留正文或副本。</p>
+                <table class="matrix">
+                    <thead><tr><th>报告用途</th><th>必须回答</th><th>不得越界</th></tr></thead>
+                    <tbody>
+                        <tr><td>科学解释</td><td>设计、方法、关键定量事实、解释与边界</td><td>因果或临床承诺</td></tr>
+                        <tr><td>模型评估</td><td>数据划分、指标、泛化风险与限制</td><td>用训练集表现代替泛化证据</td></tr>
+                        <tr><td>图形阅读</td><td>数据源、视觉编码、可观察事实与阅读边界</td><td>把视觉趋势写成统计证明</td></tr>
+                        <tr><td>基准比较</td><td>对象、数据集、指标、公平性与取舍边界</td><td>隐藏不可比条件</td></tr>
+                    </tbody>
+                </table>
+                <ul class="rule-list">
+                    <li>按读者决策路径组织，不固定章节名称、数量和顺序，不生成空章节。</li>
+                    <li>结论先给量化事实和证据位置，再解释；“明显、较好、显著”不能代替数值和方向。</li>
+                    <li>每张图注说明对象、比较方向、单位或视觉编码及阅读边界。</li>
+                    <li>报告只读已声明结果，不重新读原始输入、重算统计或临时重画未声明图片。</li>
+                    <li>渲染前按声明的来源产物与 Schema 失败关闭校验；缺少必需列、事实或图件时不得用 <code>NA</code>、错误文字或占位图继续发布。</li>
+                    <li>摘要截断、排序和选图必须由报告用途与正式结果字段驱动，禁止仅按文件名字典序取前 N 项。</li>
+                    <li>运行通过/失败、warning、文件清单、绝对路径、字节数、哈希和审核结果不进入报告。</li>
+                    <li>渲染 QMD、参考 DOCX、转换图、解压目录和其他 sidecar 只进临时工作区，发布前清理。</li>
+                    <li>任何 fallback 仍须满足同一内容与格式合同；缺图、缺表的“文本兜底版”必须失败。</li>
+                </ul>
+            </section>
 
-                    <div id="format-data" class="tab-content active">
-                        <h4>📊 数据文件格式</h4>
-                        <ul>
-                            <li><strong>表格输出</strong>：根据字段内容选择 <code>.tsv</code> 或 <code>.csv</code>；含化合物名、药物名、通路名、描述等可能出现逗号的字段时使用 <span class="text-red">.tsv</span>，避免列解析被逗号破坏；确认无逗号解析风险且下游兼容时可使用 <code>.csv</code></li>
-                            <li><strong>R数据</strong>：使用 <span class="text-red">.qs2 保存</span>（<code>qs2</code> R 包，替代 .rds/.RData）</li>
-                        </ul>
-                        <div class="lead-box">
-                            <strong>💡 为什么使用 .qs2 而不是 .rds/.RData？</strong>
-                            <ul style="margin-top:8px; padding-left:20px;">
-                                <li>.qs2（<code>qs2</code> R 包）是更现代的二进制格式，性能更好</li>
-                                <li>跨平台使用方便，但仍需在缓存清单中记录 R、qs2 和关键包版本并校验兼容性</li>
-                                <li>压缩比更高，文件更小</li>
-                                <li>读写速度更快</li>
-                            </ul>
-                        </div>
-                    </div>
+            <section class="card half" id="runtime">
+                <h2>10. 日志与缓存</h2>
+                <h3>日志</h3>
+                <p><code>log/run_record.json</code> 是运行事实唯一权威源，记录执行 ID、命令、状态、输入与配置指纹、合同哈希、软件版本、随机种子、产物路径/大小/哈希/来源以及逐图请求值和实际渲染值。</p>
+                <p>默认不拆分日志；确有独立诊断价值时，每个公开写命令最多保留一份固定日志，不按时间戳无限追加。</p>
+                <h3>缓存</h3>
+                <p><code>cache/</code> 只保存后续计算、绘图或报告重建真实消费的有版本对象。结构版本、来源与参数指纹、run ID 和校验和写入缓存对象自身，不另生成 <code>cache_manifest.json</code>。</p>
+                <p>纯 <code>plot.*</code> 参数不应使科学计算缓存失效；缓存缺失或无效时后续阶段明确失败，不得静默重算。</p>
+            </section>
 
-                    <div id="format-chart" class="tab-content">
-                        <h4>📈 图表文件格式</h4>
-                        <ul>
-                            <li><strong>输出格式</strong>：默认保存 PNG + PDF；<code>[Plot].formats</code> 可选择模块声明支持的一个或多个格式</li>
-                            <li><strong>字体要求</strong>：默认 sans-serif；允许配置已安装且模块支持的字体族，必须记录请求字体、实际字体及回退行为</li>
-                            <li><strong>PNG</strong>：默认 300 dpi，可通过 <code>[Plot].dpi</code> 调整；R 推荐 <code>png(type = "cairo")</code> 以兼容无头服务器</li>
-                            <li><strong>PDF</strong>：矢量格式；R 推荐 <code>cairo_pdf()</code> 或 <code>ggsave(device = cairo_pdf)</code>，并校验字体嵌入和中文显示</li>
-                            <li><strong>尺寸与外观</strong>：默认单面板图 6×4 in；尺寸、单位、主题、色板、字体和基础字号均由 <code>[Plot]</code> 控制</li>
-                            <li><strong>特殊情况</strong>：交互图表使用 .html（Plotly等）</li>
-                        </ul>
-                        <div class="warn-box">
-                            <strong>⚠️ 以配置和模块能力共同确定验收清单</strong>
-                            <p style="margin-top:8px;">默认配置生成 PNG 与 PDF；若用户显式选择其他受支持格式，运行日志必须记录请求值和实际产物。</p>
-                            <p style="margin-top:6px;">不支持的格式、主题或字体应在绘图前报错，不得静默忽略。</p>
-                        </div>
-                    </div>
+            <section class="card half" id="code">
+                <h2>11. 代码精简、可读、可维护</h2>
+                <ul class="rule-list">
+                    <li>主流程按“解析 → 校验 → 执行 → 验证 → 原子发布”阅读。</li>
+                    <li>一个业务规则只有一个实现；优先删除和复用，再增加抽象。</li>
+                    <li>函数职责清晰、输入输出显式；避免万能大文件、一函数一文件和无意义转发层。</li>
+                    <li>删除死代码、注释掉的旧实现、无调用 helper 和无调用方兼容层。</li>
+                    <li><code>run.sh</code> 不承载大段算法、绘图或报告逻辑。</li>
+                    <li>核心算法、统计口径、比较方向、单位转换、状态判定、兼容分支和关键不变量附近写简洁中文注释，说明“为什么、边界和改动风险”。</li>
+                    <li>不要逐行翻译代码或用注释凑覆盖率；直观搬运和薄包装不要求中文注释。</li>
+                </ul>
+            </section>
 
-                    <div id="format-report" class="tab-content">
-                        <h4>📝 报告文件格式</h4>
-                        <ul>
-                            <li><strong>默认格式</strong>：使用 .docx（Word）</li>
-                            <li><strong>其他格式</strong>：
-                                <ul>
-                                    <li>.pdf（最终版本，不可编辑）</li>
-                                    <li>.pptx（演示文稿）</li>
-                                    <li>.html（网页版本）</li>
-                                </ul>
-                            </li>
-                            <li><strong>推荐工具</strong>：使用 Quarto 生成报告</li>
-                        </ul>
-                        <div class="lead-box">
-                            <strong>💡 Quarto 补充说明（避免重复）</strong>
-                            <ul style="margin-top:8px; padding-left:20px;">
-                                <li>核心优势见上文 <strong>report/ - 为什么推荐 Quarto</strong></li>
-                                <li><strong>补充</strong>：支持跨平台（Windows、Mac、Linux）与团队协作流程</li>
-                            </ul>
-                        </div>
-
-                        <div class="warn-box" style="margin-top:14px;">
-                            <strong>📝 报告标准章节结构</strong>
-                            <p style="margin-top:8px;">无论使用 Quarto 还是其他工具，分析报告应包含以下标准章节：</p>
-                            <ol style="margin-top:8px; padding-left:20px;">
-                                <li><strong>分析概述</strong> — 一句话说明本次分析的目的和方法</li>
-                                <li><strong>数据来源</strong> — 数据集名称、样本量、来源平台（如 GEO、TCGA）</li>
-                                <li><strong>分析参数</strong> — 所有关键参数（阈值、方法、随机种子等）</li>
-                                <li><strong>结果摘要</strong> — 关键统计数字（差异基因数、富集通路数等）</li>
-                                <li><strong>图表展示</strong> — 每个图表配简要解读文字</li>
-                                <li><strong>结论与讨论</strong> — 结果解读、局限性说明</li>
-                                <li><strong>软件与版本</strong> — R/Python 版本、关键包版本（可附 sessionInfo 输出）</li>
-                                <li><strong>附录</strong>（可选） — 补充表格、完整参数列表、辅助图表</li>
-                            </ol>
-                        </div>
-                    </div>
+            <section class="card" id="acceptance">
+                <h2>12. 验收与存量迁移</h2>
+                <div class="check-grid">
+                    <div class="check-item"><strong>合同</strong><br>路径、引用、数量、大小、条件和输出树通过共享校验。</div>
+                    <div class="check-item"><strong>配置</strong><br>唯一模板、中文注释、Schema 一致，所有公开键真实接线。</div>
+                    <div class="check-item"><strong>结果</strong><br>每个文件通过删除测试，无未声明文件、空目录和证据副产物。</div>
+                    <div class="check-item"><strong>图件</strong><br>逐图参数集合一致、展开隔离、代表性参数真实生效。</div>
+                    <div class="check-item"><strong>报告</strong><br>事实可追溯、内容不越界、sidecar 清理，并完成真实格式渲染。</div>
+                    <div class="check-item"><strong>代码</strong><br>语法、算法不变量、原子发布、路径安全、精简性和中文注释通过复核。</div>
                 </div>
-            </div>
+                <div class="callout warn"><strong>迁移规则：</strong>旧模块先记录现状、消费者和兼容风险，再批准具体升级范围；不要为了统一一次性重写所有旧模块。旧 HTML、SOP 或 README 不能作为保留 <code>result/</code> 报告、全局 <code>[Plot]</code>、固定缓存/manifest、分阶段日志或重复结果的豁免依据。</div>
+                <p>完成不是再生成一份验收清单：边界已冻结、适用测试与真实验证通过、README/Wiki/CodeGraph 按仓库规则同步，并已核对停止条件，即停止继续加文件和功能。</p>
+            </section>
         </div>
 
-        <!-- ========== 输入文件与结构化校验规范 ========== -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="section-title" id="sec-input">🔍 输入文件与结构化校验规范</h2>
-
-                <div class="tabs-container">
-                    <div class="tabs">
-                        <button class="tab active" onclick="showTab('ml-files', event)">
-                            <span class="tab-icon">📁</span> 输入文件清单
-                        </button>
-                        <button class="tab" onclick="showTab('ml-rules', event)">
-                            <span class="tab-icon">✅</span> 字段与取值规则
-                        </button>
-                    </div>
-
-                    <div id="ml-files" class="tab-content active">
-                        <h4>📁 输入文件清单（CSV）</h4>
-                        <table class="matrix">
-                            <thead><tr><th>文件名（推荐）</th><th>关键要求</th><th>说明</th></tr></thead>
-                            <tbody>
-                                <tr><td><code>group.csv</code></td><td>两列：<code>sample</code>、<code>group</code></td><td><code>group</code> 内容可变，但字段名固定；<span class="text-red">每组建议至少 3 个样本</span></td></tr>
-                                <tr><td><code>expression.csv</code></td><td>行为基因，列为样本，首列必须为 <code>SYMBOL</code></td><td><span class="text-red"><code>SYMBOL</code> 必须大写</span>；<span class="text-red">列名（除 SYMBOL 外）必须与 <code>group.csv</code> 的 <code>sample</code> 列完全一致</span>；需在日志中注明数据类型（如原始计数 counts / TPM / FPKM）</td></tr>
-                                <tr><td><code>gene.csv</code></td><td>列名必须为 <code>SYMBOL</code></td><td>基因列表输入</td></tr>
-                                <tr><td><code>riskscore.csv</code></td><td>需包含样本与风险评分字段</td><td>风险分值必须为数值型</td></tr>
-                                <tr><td><code>survival.csv</code></td><td>必须包含 <code>OS</code> 与 <code>OS.time</code></td><td><span class="text-red"><code>OS</code> 仅允许 0/1</span>；<span class="text-red"><code>OS.time</code> 必须 &gt; 0</span>；如有其他终点，字段命名统一为 <code>&lt;终点&gt;</code> + <code>&lt;终点&gt;.time</code>（如 <code>PFS</code>/<code>PFS.time</code>、<code>DFS</code>/<code>DFS.time</code>）</td></tr>
-                            </tbody>
-                        </table>
-                        <div class="lead-box">
-                            <strong>命名补充：</strong>
-                            允许扩展命名（如 <code>gene_v1_human.csv</code>），但推荐优先使用标准文件名以减少解析歧义。
-                        </div>
-                    </div>
-
-                    <div id="ml-rules" class="tab-content">
-                        <h4>✅ 字段类型与取值约束</h4>
-                        <table class="matrix">
-                            <thead><tr><th>字段</th><th>类型要求</th><th>取值/约束</th></tr></thead>
-                            <tbody>
-                                <tr><td><code>sample</code></td><td>字符型（chr）</td><td>不能为空，建议全局唯一</td></tr>
-                                <tr><td><code>group</code></td><td>字符型（chr）</td><td>允许业务自定义分组标签</td></tr>
-                                <tr><td><code>OS</code></td><td>整数型（int）</td><td>仅允许 <code>0</code> 或 <code>1</code></td></tr>
-                                <tr><td><code>OS.time</code></td><td>数值或整数型（num/int）</td><td>必须 <code>&gt; 0</code></td></tr>
-                                <tr><td><code>RS</code> / 风险评分列</td><td>数值型（num）</td><td>允许负值，不允许 NA</td></tr>
-                                <tr><td><code>riskgroup</code></td><td>字符型（chr）</td><td>仅允许 <code>High</code> 或 <code>Low</code>（注意首字母均大写）</td></tr>
-                                <tr><td><code>SYMBOL</code></td><td>字符型（chr）</td><td>列名必须大写 <code>SYMBOL</code></td></tr>
-                            </tbody>
-                        </table>
-
-                        <div class="danger-box">
-                            <strong>硬性规则：</strong>
-                            <span class="text-red">输入文件可按模块约定使用 <code>.tsv</code> 或 <code>.csv</code>；含药物名、描述、复合标签等可能含逗号的字段时使用 <code>.tsv</code>，确认无逗号解析风险时可使用 <code>.csv</code></span>；<span class="text-red">文件编码必须为 UTF-8（推荐无 BOM）</span>；<span class="text-red">行尾符建议统一为 LF（<code>\n</code>）</span>；<span class="text-red">数据中不允许出现 NA</span>；<span class="text-red">数值字段必须可解析为 <code>num/int</code></span>。
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.5 | <strong>更新日期:</strong> 2026-08-06</p>
-
-    </div>
+        <p class="footer-note"><strong>版本：</strong>v2.0 · <strong>更新日期：</strong>2026-08-11 · 人类可读版；开发权威源为 secure_dev 的 <code>module-development-requirements.md</code></p>
+    </main>
 
     <script>
-        function showTab(tabName, event) {
-            var currentContainer = event.currentTarget.closest('.tabs-container');
-            var tabContents = currentContainer.querySelectorAll('.tab-content');
-            tabContents.forEach(function(content) {
-                content.classList.remove('active');
+        (function () {
+            var sidebar = document.querySelector('.sidebar');
+            var toggle = document.querySelector('.sidebar-toggle');
+            var links = Array.prototype.slice.call(document.querySelectorAll('.sidebar a[href^="#"]'));
+            toggle.addEventListener('click', function () { sidebar.classList.toggle('open'); });
+            links.forEach(function (link) {
+                link.addEventListener('click', function () { sidebar.classList.remove('open'); });
             });
-            var tabs = currentContainer.querySelectorAll('.tab');
-            tabs.forEach(function(tab) {
-                tab.classList.remove('active');
-            });
-            document.getElementById(tabName).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-    </script>
-<script>
-    (function() {
-        var links = document.querySelectorAll('.sidebar a[href^="#"]');
-        var ids = [];
-        for (var i = 0; i < links.length; i++) ids.push(links[i].getAttribute('href').slice(1));
-        function update() {
-            var current = ids[0];
-            for (var j = 0; j < ids.length; j++) {
-                var el = document.getElementById(ids[j]);
-                if (el && el.getBoundingClientRect().top <= 120) current = ids[j];
+            function updateActiveLink() {
+                var current = links.length ? links[0].getAttribute('href').slice(1) : '';
+                links.forEach(function (link) {
+                    var id = link.getAttribute('href').slice(1);
+                    var section = document.getElementById(id);
+                    if (section && section.getBoundingClientRect().top <= 120) current = id;
+                });
+                links.forEach(function (link) {
+                    link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+                });
             }
-            for (var k = 0; k < links.length; k++) {
-                if (links[k].getAttribute('href') === '#' + current) {
-                    links[k].classList.add('active');
-                } else {
-                    links[k].classList.remove('active');
-                }
-            }
-        }
-        window.addEventListener('scroll', update, { passive: true });
-        update();
-    })();
+            window.addEventListener('scroll', updateActiveLink, { passive: true });
+            updateActiveLink();
+        })();
+
+        (function () {
+            if (window.self === window.top) return;
+            var sidebar = document.querySelector('.sidebar');
+            window.addEventListener('message', function (event) {
+                if (!event.data || event.data.type !== 'parentScroll') return;
+                sidebar.style.top = Math.max(28, event.data.scrollY - event.data.frameDocumentTop + 28) + 'px';
+            }, { passive: true });
+        })();
     </script>
-<script>
-(function () {
-    var sectionColors = ['#ffffff','#f0f7ff','#f0fdf8','#f8f5ff','#fffaf2'];
-    var grids = document.querySelectorAll('.container > .grid');
-    for (var i = 0; i < grids.length; i++) {
-        var cards = grids[i].querySelectorAll('.card');
-        for (var j = 0; j < cards.length; j++) {
-            cards[j].style.background = sectionColors[i % sectionColors.length];
-        }
-    }
-})();
-(function () {
-    // 综合页 iframe 嵌入模式：监听外层滚动，让 sidebar 跟随外层视口
-    if (window.self === window.top) return;
-    var sidebar = document.querySelector('.sidebar');
-    if (!sidebar) return;
-    window.addEventListener('message', function (e) {
-        if (!e.data || e.data.type !== 'parentScroll') return;
-        var effectiveScrollY = Math.max(0, e.data.scrollY - e.data.frameDocumentTop);
-        sidebar.style.top = (effectiveScrollY + 32) + 'px';
-        var links = document.querySelectorAll('.sidebar a[href^="#"]');
-        var current = links.length ? links[0].getAttribute('href').slice(1) : '';
-        for (var i = 0; i < links.length; i++) {
-            var el = document.getElementById(links[i].getAttribute('href').slice(1));
-            if (el && el.getBoundingClientRect().top <= effectiveScrollY + 120)
-                current = links[i].getAttribute('href').slice(1);
-        }
-        for (var j = 0; j < links.length; j++)
-            links[j].classList.toggle('active', links[j].getAttribute('href') === '#' + current);
-    }, { passive: true });
-})();
-</script>
 </body>
 </html>
