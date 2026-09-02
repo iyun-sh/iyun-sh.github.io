@@ -266,8 +266,8 @@
                 <pre class="code-block">[plot.volcano]
 # 火山图宽度；浮点数；单位 inch；范围 4–20（含边界）；默认 8；必填。
 width = 8
-# 输出格式；可多选：png=栅格图，pdf=矢量图；默认 png；必填。
-formats = png
+# 输出格式；可多选：png=栅格图，pdf=矢量图；默认 png, pdf；必填。
+formats = png, pdf
 # 是否显示基因标签；true=显示配置数量的标签，false=不显示；默认 true；必填。
 show_labels = true</pre>
             </section>
@@ -317,7 +317,7 @@ show_labels = true</pre>
                 </table>
                 <ul class="rule-list">
                     <li>只暴露消费者合理需要、实现确实支持的参数，不把所有绘图库内部常量塞进配置。</li>
-                    <li><code>formats</code> 要哪种格式就明确写出来，多种用逗号分隔（如 <code>png, pdf</code>）；不提供 <code>both</code> 这种一个词代指多种格式的缩写；默认只输出一种格式，不强制 PNG 和 PDF 同时输出。</li>
+                    <li><code>formats</code> 要哪种格式就明确写出来，多种用逗号分隔（如 <code>png, pdf</code>）；不提供 <code>both</code> 这种一个词代指多种格式的缩写；默认输出 <code>png, pdf</code> 两种。</li>
                     <li>每个配置参数必须通过测试证明真实影响对应图，且不会改变源科学数据。</li>
                     <li>同源数据、字段映射、过滤、排序、图型和有效配置相同的图是同一逻辑图，不能靠换文件名重复发布。</li>
                     <li>报告需要的兼容图片在临时渲染目录生成并清理，不得长期落入 <code>result/report_images</code>。</li>
