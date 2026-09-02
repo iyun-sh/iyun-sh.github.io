@@ -280,10 +280,10 @@ show_labels = true</pre>
 ├── [report/]               # 确有独立解释用途时
 ├── [cache/]                # 确有下游复用时
 └── log/
-    ├── run_record.json     # 唯一运行事实与产物记录
-    ├── [input.config.*]    # 有配置时
-    ├── [effective.config.*]
-    └── [command.log]       # 确有独立诊断价值时，每命令最多一份固定日志</pre>
+    ├── run_record.json       # 唯一运行事实与产物记录
+    ├── [full.config.*]       # full 模式且有配置时
+    ├── [calculate.config.*]  # calculate 模式且有配置时
+    └── [command.log]         # 确有独立诊断价值时，每命令最多一份固定日志</pre>
                 <h3>结果文件准入测试</h3>
                 <table class="matrix">
                     <thead><tr><th>问题</th><th>通过条件</th></tr></thead>
