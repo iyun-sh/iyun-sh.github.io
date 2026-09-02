@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>代码生成与验证流程图</title>
+    <title>代码生成与验证流程图 v2.2</title>
     <style>
         :root {
             --bg: #f5f3ff;
@@ -404,10 +404,10 @@
         <!-- Hero -->
         <section class="hero">
             <h1>📋 代码生成与验证流程图</h1>
-            <p>统一协作角色、决策节点与回环机制，保障代码交付可验证、可追溯。</p>
+            <p>v2.2 将源码科学审定、分析 coder、报告 coder、调度和人工决策接成一条可验证、可追溯的开发链。</p>
             <div class="pill-row">
-                <span class="pill primary">准备定范围 → 开发主测试 → 新数据验证与终审 → 版本锁定</span>
-                <span class="pill warn">失败<span class="text-red">统一回到 Step 4</span></span>
+                <span class="pill primary">源码审定 → 分析 coder → 报告 coder → 新数据验证 → 版本锁定</span>
+                <span class="pill warn">科学冲突<span class="text-red">先停在 DECISION_REQUIRED</span></span>
             </div>
         </section>
 
@@ -416,8 +416,8 @@
             <div class="card">
                 <div class="lead-box" style="margin-top:0;">
                     <strong>💡 使用说明：</strong>
-                    本流程按"准备定范围 → 开发主测试 → 新数据验证与终审 → 版本锁定"四阶段执行。
-                    任意检查点失败，<span class="text-red">统一回到 Step 4 修正后再验证</span>，避免流程分叉失控。
+                    本流程按“源码审定 → 分析实现 → 报告实现 → 验证与终审 → 版本锁定”执行。
+                    代码、图件或报告的科学事实冲突先停止并进入人工审定；机械修复只回到对应验证节点，不跨阶段猜改。
                 </div>
             </div>
         </div>
@@ -427,10 +427,10 @@
             <div class="card">
                 <h2 class="section-title" id="sec-roles">&#x1F465; 角色图例</h2>
                 <div class="legend">
-                    <span class="legend-item"><span class="dot ai"></span>AI + 执行者</span>
-                    <span class="legend-item"><span class="dot jinjie"></span>金杰</span>
-                    <span class="legend-item"><span class="dot linyu"></span>林煜林</span>
-                    <span class="legend-item"><span class="dot decision"></span>决策点</span>
+                    <span class="legend-item"><span class="dot ai"></span>调度/执行者</span>
+                    <span class="legend-item"><span class="dot jinjie"></span>分析 coder</span>
+                    <span class="legend-item"><span class="dot linyu"></span>报告 coder</span>
+                    <span class="legend-item"><span class="dot decision"></span>人工科学决策</span>
                 </div>
             </div>
         </div>
@@ -441,16 +441,16 @@
                 <h2 class="section-title" id="sec-loop">&#x1F504; 循环规则速览</h2>
                 <div class="summary-grid">
                     <div class="summary-card">
-                        <h3>循环 1: 功能测试未通过</h3>
-                        <p>触发点: 检查 1 失败。处理: 修改代码并回到 Step 4 复测。</p>
+                        <h3>循环 1：实现验证未通过</h3>
+                        <p>定位具体诊断项，修复对应 coder 的代码后回到同一验证节点。</p>
                     </div>
                     <div class="summary-card">
-                        <h3>循环 2: 新数据测试需改码</h3>
-                        <p>触发点: 检查 2 失败。处理: 回到 Step 4 调整后再跑新数据。</p>
+                        <h3>循环 2：新数据暴露问题</h3>
+                        <p>需要改分析代码时回到主实现验证，再重新执行新数据测试；不需要改码时记录真实限制。</p>
                     </div>
                     <div class="summary-card">
-                        <h3>循环 3: 最终审核不通过</h3>
-                        <p>触发点: 检查 3 失败。处理: 回到 Step 4 修正并重新提交审核。</p>
+                        <h3>循环 3：终审未通过</h3>
+                        <p>按审定意见回到对应实现或报告节点，不把审核意见直接改成新的科学结论。</p>
                     </div>
                 </div>
             </div>
@@ -473,23 +473,23 @@
                                 </li>
                                 <li class="step jinjie">
                                     <div class="node">
-                                        <h4>Step 0 - 汇总资料</h4>
-                                        <p>整理样例输入、期望输出与代码模板，作为开发基线；若是迁移、包装或改造既有模块，还必须列出原始入口、核心脚本、配置模板、主要输出、绘图逻辑、报告逻辑和报告模板。</p>
-                                        <span class="meta">执行人: 金杰</span>
+                                        <h4>Step 0 - 源码与官方资料审定</h4>
+                                        <p>先读取用户提供的源码，列出入口、阶段、输入、输出、算法、参数和现有绘图/报告逻辑；再收集对应的官方软件文档、方法论文和版本资料，写入模块 <code>doc/source-review.md</code>，完成“官方定义 ↔ 源码实现 ↔ 实际执行证据”交叉表。迁移时另列原始入口、核心脚本、配置、主要输出、绘图逻辑和报告逻辑。</p>
+                                        <span class="meta">执行人: 分析 coder；冲突转人工科学决策</span>
                                     </div>
                                 </li>
                                 <li class="step ai">
                                     <div class="node">
-                                        <h4>Step 1 - AI 汇总分析</h4>
-                                        <p>提炼业务规则和边界条件，输出可执行实现思路；明确哪些是业务逻辑、哪些只是入口包装、日志、路径和输出收集，避免把 wrapper 契约当成业务实现。</p>
-                                        <span class="meta">执行人: AI + 执行者</span>
+                                        <h4>Step 1 - 冻结业务与技术边界</h4>
+                                        <p>根据源码审定结果提炼业务规则、输入输出和非目标；区分科学核心、入口包装、日志、路径和报告 coder 逻辑，形成可执行的本轮范围。</p>
+                                        <span class="meta">执行人: 调度/执行者</span>
                                     </div>
                                 </li>
                                 <li class="step linyu">
                                     <div class="node">
-                                        <h4>Step 2 - 功能决策</h4>
-                                        <p>确定保留/新增/剔除项，<span class="text-red">冻结本轮开发范围</span>。</p>
-                                        <span class="meta">执行人: 林煜林</span>
+                                        <h4>Step 2 - 科学范围决策</h4>
+                                        <p>确定保留、修改、新增和暂不支持项，<span class="text-red">冻结本轮开发范围</span>；官网与源码冲突必须在此得到明确决定。</p>
+                                        <span class="meta">执行人: 指定人工决策人</span>
                                     </div>
                                 </li>
                             </ol>
@@ -502,9 +502,9 @@
                             <ol class="timeline">
                                 <li class="step ai">
                                     <div class="node">
-                                        <h4>Step 3 - 生成代码</h4>
-                                        <p>按决策范围实现代码，确保可运行且结构清晰。代码须遵循《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》的全部要求：能力驱动的 <code>run.sh</code>、唯一规范配置模板、逐项中文配置注释、逐图独立配置、结果准入、按需缓存、报告与运行记录分流，以及精简可读的生产代码。迁移或包装既有模块时，不得用 demo、mock、stub、placeholder、synthetic 或降级 fallback 替代原始业务算法。</p>
-                                        <span class="meta">执行人: AI + 执行者</span>
+                                        <h4>Step 3 - 两个 coder 实现</h4>
+                                        <p><strong>分析 coder</strong>实现计算、统计和绘图代码，生成真实结果表/图件；<strong>报告 coder</strong>读取已批准结果，编写报告模板、固定正文、动态结果描述、图题图注和 R/Python 生成器。报告生成器在运行时机械渲染，不能重算或另画结果。两个 coder 都遵循《<a href="生信开发模块文件与输出规范.html">生信开发模块文件与输出规范</a>》。</p>
+                                        <span class="meta">执行人: 分析 coder + 报告 coder</span>
                                     </div>
                                 </li>
                                 <li class="step ai">
@@ -522,16 +522,16 @@
                                             <li>输出树：<code>result/</code> 只包含分析结果，运行判断、审核证据、文件状态和验证结论不作为独立运行产物。</li>
                                             <li>从模块目录外直接执行入口仍能定位内部资源；路径边界、失败发布和原子替换按合同验证。</li>
                                         </ul>
-                                        <span class="meta">执行人: AI + 执行者</span>
+                                        <span class="meta">执行人: 调度/执行者</span>
                                     </div>
                                 </li>
                                 <li class="step decision">
                                     <div class="node">
-                                        <h4>检查 1 - 验证是否通过?</h4>
+                                        <h4>检查 1 - 主实现验证</h4>
                                         <div class="branches">
                                             <div class="branch fail">
                                                 <span class="label">不通过</span>
-                                                <p>定位问题并修正代码，<span class="text-red">返回 Step 4</span>。</p>
+                                                <p>定位具体问题并修正对应 coder，返回主实现验证。</p>
                                                 <span class="badge-loop">循环 1</span>
                                             </div>
                                             <div class="branch pass">
@@ -543,9 +543,9 @@
                                 </li>
                                 <li class="step ai">
                                     <div class="node">
-                                        <h4>Step 5 - 生成验证记录</h4>
+                                        <h4>Step 5 - 记录验证结果</h4>
                                         <p>记录验证类型、输入、输出、异常与结论，形成可追溯记录。开发与发布验收证据进入 Issue/PR、CI 或受控测试系统，不作为模块运行结果或源码侧一次性文档。单次运行事实统一写入 <code>log/run_record.json</code>；正式业务报告仅按合同生成并固定进入 <code>report/</code>。</p>
-                                        <span class="meta">执行人: AI + 执行者</span>
+                                        <span class="meta">执行人: 调度/执行者</span>
                                     </div>
                                 </li>
                             </ol>
@@ -560,16 +560,16 @@
                                     <div class="node">
                                         <h4>Step 6 - 新数据测试</h4>
                                         <p>使用未参与开发的新样例，验证泛化能力。至少使用 1 组与开发数据不同来源/不同组别的测试样例。</p>
-                                        <span class="meta">执行人: 金杰</span>
+                                        <span class="meta">执行人: 独立测试者</span>
                                     </div>
                                 </li>
                                 <li class="step decision">
                                     <div class="node">
-                                        <h4>检查 2 - 新数据测试是否通过?</h4>
+                                        <h4>检查 2 - 新数据验证</h4>
                                         <div class="branches">
                                             <div class="branch fail">
                                                 <span class="label">需改代码</span>
-                                                <p><span class="text-red">回到 Step 4</span> 调整后再测新数据。</p>
+                                                <p>如需改分析代码，回到主实现验证后再测新数据。</p>
                                                 <span class="badge-loop">循环 2</span>
                                             </div>
                                             <div class="branch pass">
@@ -581,18 +581,18 @@
                                 </li>
                                 <li class="step linyu">
                                     <div class="node">
-                                        <h4>Step 7 - 最终审核</h4>
-                                        <p>审核代码质量、可维护性和交付完整性。审核须依据《<a href="代码保护指南.html">代码保护指南</a>》交付前检查清单，并核对《<a href="生信开发模块文件与输出规范.html">规范</a>》中的合同、配置、产物、图件、报告、验证和源码卫生要求。</p>
-                                        <span class="meta">执行人: 林煜林</span>
+                                        <h4>Step 7 - 最终科学与交付审核</h4>
+                                        <p>独立复核源码审定、分析 coder 结果、报告 coder 模板/生成器、图件完整性、报告事实和交付结构。依据《<a href="代码保护指南.html">代码保护指南</a>》与《<a href="生信开发模块文件与输出规范.html">规范</a>》逐项判定。</p>
+                                        <span class="meta">执行人: 独立复核/指定科学决策人</span>
                                     </div>
                                 </li>
                                 <li class="step decision">
                                     <div class="node">
-                                        <h4>检查 3 - 审核是否通过?</h4>
+                                        <h4>检查 3 - 终审结果</h4>
                                         <div class="branches">
                                             <div class="branch fail">
                                                 <span class="label">不通过</span>
-                                                <p><span class="text-red">返回 Step 4</span> 修正并重新走测试链路。</p>
+                                                <p>按诊断项返回对应实现或报告节点，重新验证。</p>
                                                 <span class="badge-loop">循环 3</span>
                                             </div>
                                             <div class="branch pass">
@@ -606,13 +606,13 @@
                                     <div class="node">
                                         <h4>Step 8 - 版本标记与环境锁定</h4>
                                         <p>更新模块版本与合同；已有变更记录或依赖锁文件时保持同步，并按仓库发布流程完成版本标记。不得为了满足模板新增空 CHANGELOG 或无实际依赖的锁文件。</p>
-                                        <span class="meta">执行人: AI + 执行者</span>
+                                        <span class="meta">执行人: 调度/执行者</span>
                                     </div>
                                 </li>
                                 <li class="step end">
                                     <div class="node">
                                         <h4>完成</h4>
-                                        <p>输出最终代码与外部验收记录；业务报告仅按模块已声明能力生成并发布到 <code>report/</code>，流程闭环。</p>
+                                        <p>输出最终分析代码、报告 coder 资产和外部验收记录；业务报告由模块生成器发布到 <code>report/</code>，流程闭环。</p>
                                     </div>
                                 </li>
                             </ol>
@@ -629,15 +629,15 @@
                 <div class="rule-grid">
                     <div class="rule-card ai">
                         <h4>默认执行模式</h4>
-                        <p>未单独标注角色的步骤，由 AI + 执行者负责。</p>
+                        <p>调度器按固定顺序加载分析 coder 和报告 coder；同一个 AI 可分阶段扮演两个角色，但不得混写。</p>
                     </div>
                     <div class="rule-card jinjie">
-                        <h4>金杰职责边界</h4>
-                        <p>负责 Step 0 与 Step 6。Step 6 发现需改码时<span class="text-red">必须回到 Step 4</span>。</p>
+                        <h4>分析 coder 职责边界</h4>
+                        <p>负责源码科学核对、计算、统计和绘图；图件只能来自实际代码和数据。</p>
                     </div>
                     <div class="rule-card linyu">
-                        <h4>林煜林审核规则</h4>
-                        <p>负责范围决策与终审；<span class="text-red">终审不通过时必须回到 Step 4 重新验证</span>。</p>
+                        <h4>报告 coder 职责边界</h4>
+                        <p>负责报告模板、固定/动态文字、图题图注和生成器；不得重算、改图或越过人工科学决策。</p>
                     </div>
                 </div>
             </div>
@@ -650,24 +650,24 @@
                 <div class="criteria-grid">
                     <div class="criteria-card jinjie">
                         <h4>阶段 1 退出标准</h4>
-                        <p>Step 0-2 完成后，<span class="text-red">需求范围必须明确且无歧义</span>。</p>
-                        <span class="inline-note">必须产出: 输入输出样例 + 决策范围清单</span>
+                        <p>Step 0-2 完成后，源码与官方资料已交叉核对，冲突已有审定决定，<span class="text-red">需求范围无歧义</span>。</p>
+                        <span class="inline-note">必须产出: source-review + 决策范围清单</span>
                     </div>
                     <div class="criteria-card ai">
                         <h4>阶段 2 退出标准</h4>
-                        <p>Step 3-5 完成后，所选验证类型通过，运行事实可由 <code>run_record.json</code> 追溯，验收证据已进入受控外部系统。</p>
-                        <span class="inline-note">必须产出: 可运行代码 + 外部验收记录</span>
+                        <p>Step 3-5 完成后，分析 coder 与报告 coder 的实现验证通过，运行事实可由 <code>run_record.json</code> 追溯。</p>
+                        <span class="inline-note">必须产出: 可运行代码 + 报告生成器 + 验证记录</span>
                     </div>
                     <div class="criteria-card linyu">
                         <h4>阶段 3 退出标准</h4>
-                        <p>Step 6-7 完成后，<span class="text-red">新数据验证通过且终审通过，才可交付</span>。</p>
+                        <p>Step 6-7 完成后，<span class="text-red">新数据验证和独立终审都通过，才可交付</span>。</p>
                         <span class="inline-note">必须产出: 审核结论 + 交付版本标识</span>
                     </div>
                     <div class="criteria-card check">
                         <h4>统一回环原则</h4>
-                        <p>任一检查点失败，<span class="text-red">统一回到 Step 4 修正并重新验证</span>，避免分叉流程失控。</p>
-                        <span class="inline-note"><span class="text-red">回环入口唯一: Step 4</span></span>
-                        <span class="inline-note">迭代上限：单个检查点累计回环不得超过 <strong>3 次</strong>；超过后必须升级至林煜林重新定范围</span>
+                        <p>机械检查失败回到对应验证节点；官网/源码科学冲突进入人工审定；报告缺证据不以文本兜底。</p>
+                        <span class="inline-note"><span class="text-red">科学冲突入口: DECISION_REQUIRED</span></span>
+                        <span class="inline-note">机械修复最多 2 轮；单检查点收敛最多 3 次，超过后升级；完整回归直到通过或明确阻断。</span>
                     </div>
                 </div>
             </div>
@@ -699,7 +699,7 @@
         </div>
 
         <!-- Footer -->
-        <p class="footer-note"><strong>版本:</strong> v1.4 | <strong>更新日期:</strong> 2026-08-11 | 与《生信开发模块文件与输出规范 v2.1》配套</p>
+        <p class="footer-note"><strong>版本:</strong> v2.2 | <strong>更新日期:</strong> 2026-09-02 | 与《生信开发模块文件与输出规范 v2.2》配套</p>
 
     </div>
 <script>

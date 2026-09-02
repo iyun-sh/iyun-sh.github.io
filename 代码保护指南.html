@@ -399,6 +399,8 @@
 ├── run.sh
 ├── README.md
 ├── module_contract.yaml
+├── [doc/source-review.md] # 开发前官方资料与源码核对
+├── [doc/source-review/]   # 官方资料短记录，供后续 coder 复用
 ├── [scripts/]          # 有入口之外的真实实现
 ├── [config/]           # 一份规范配置模板；有配置或图件时
 ├── [report_templates/] # 确实生成报告时
@@ -412,12 +414,12 @@ module_output/          # 独立的模块结果目录
 ├── [cache/]            # 有真实下游复用时
 └── log/                # run_record 与配置快照</pre>
                 <div class="lead-box">
-                    <strong>推荐做法：</strong> 对外文档只讲清楚模块已公开 Shell 入口的用法、输入、输出和错误定位方式；新建/升级模块使用 <code>run.sh</code>。方括号目录按真实能力创建，不保留空目录或占位文件；<code>log/</code> / <code>cache/</code> / <code>result/</code> / <code>report/</code> 落在独立结果目录，不混入脚本模块根目录。
+                    <strong>推荐做法：</strong> 对外文档只讲清楚模块已公开 Shell 入口的用法、输入、输出和错误定位方式；新建/升级模块使用 <code>run.sh</code>。方括号目录按真实能力创建，不保留空目录或占位文件；开发前的官方资料与源码交叉核对记录在 <code>doc/source-review.md</code>；<code>log/</code> / <code>cache/</code> / <code>result/</code> / <code>report/</code> 落在独立结果目录，不混入脚本模块根目录。
                 </div>
             </section>
 
             <section class="card">
-                <h2 class="section-title" id="sec-scope">&#x1F50D; 哪些内容可以公开，哪些应受保护</h2>
+                <h2 class="section-title" id="sec-scope">&#x1F50D; 公开内容与受保护内容边界</h2>
                 <table class="matrix">
                     <thead>
                         <tr>
@@ -880,7 +882,7 @@ output/                     # 运行后生成的模块结果目录
                 <p class="footer-note">这样拆分后，三个页面分别负责“怎么组织”“怎么保护”“怎么执行流程”，职责清晰，后续维护成本最低。</p>
             </section>
         </div>
-        <p class="footer-note"><strong>版本:</strong> v1.5 | <strong>更新日期:</strong> 2026-08-11 | 与《生信开发模块文件与输出规范 v2.1》配套</p>    </div>
+        <p class="footer-note"><strong>版本:</strong> v2.2 | <strong>更新日期:</strong> 2026-09-02 | 与《生信开发模块文件与输出规范 v2.2》配套</p>    </div>
 <script>
     (function() {
         var links = document.querySelectorAll('.sidebar a[href^="#"]');

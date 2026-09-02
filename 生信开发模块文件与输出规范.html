@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>生信开发模块文件与输出规范 v2.1</title>
+    <title>生信开发模块文件与输出规范 v2.2</title>
     <style>
         :root {
             --bg: #eff6ff;
@@ -159,8 +159,9 @@
 <body>
     <button class="sidebar-toggle" type="button" aria-label="打开目录">☰</button>
     <nav class="sidebar" aria-label="章节目录">
-        <div class="sidebar-title">模块规范 v2.1</div>
+        <div class="sidebar-title">模块规范 v2.2</div>
         <a href="#authority">权威源与适用范围</a>
+        <a href="#source-review">源码审定与两个 coder</a>
         <a href="#principles">精简原则</a>
         <a href="#boundary">开发前冻结边界</a>
         <a href="#source">源码结构</a>
@@ -178,67 +179,87 @@
         <header class="hero">
             <p class="eyebrow">SECURE_DEV · HUMAN-READABLE STANDARD</p>
             <h1>生信开发模块文件与输出规范</h1>
-            <p>新模块不追求阶段多、文件多或报告长，而要以最小公开接口稳定交付真实分析结果。复杂分析可以产生多个结果，但每个结果都必须回答独立问题、服务明确消费者，并受合同预算约束。</p>
+            <p>v2.2 将 v1.3 的可复现与报告质量要求，和 v2.1 的能力驱动原则合并为一套规则。模块以最小公开接口交付真实分析结果；复杂分析可以产生多个结果，但每个结果都必须回答独立问题、服务明确消费者，并受合同预算约束。</p>
             <div class="pill-row">
                 <span class="pill primary">能力驱动，不凑阶段</span>
-                <span class="pill accent">结果回答分析问题</span>
-                <span class="pill primary">每幅图单独可调</span>
-                <span class="pill warn">证据与审核只进日志系统</span>
+                <span class="pill accent">先审源码，再写代码</span>
+                <span class="pill primary">分析 coder + 报告 coder</span>
+                <span class="pill warn">结果、图件、报告同源</span>
             </div>
         </header>
 
         <div class="grid">
             <section class="card" id="authority">
                 <h2>1. 权威源与适用范围</h2>
-                <p>本页是便于阅读和协作的网页说明。开发与验收的规范权威源是 <code>/media/desk16/share/secure_dev/docs/agents/module-development-requirements.md</code>；单个模块公开行为与产物的机器权威源是该模块的 <code>module_contract.yaml</code>。README、代码、示例、SOP 和 Wiki 不得静默偏离二者。</p>
-                <div class="callout warn"><strong>存量模块不是模板。</strong>《标准化分析流程 SOP》记录已部署模块的真实入口和历史输出；它可以帮助定位兼容边界，但不能证明旧格式符合本规范。DEGs 只提供紧凑输出组织参考，报告质量和阶段设计仍按本规范重新判断。</div>
+                <p>本页是统一 v2.2 的人类可读规范。三个通用 skill（<a href="https://sher-l.github.io/ai-skills/">分析 coder、报告 coder、调度器</a>）各自携带可执行合同，脱离本页和具体仓库也能使用；在 secure_dev 中，模块的 <code>module_contract.yaml</code> 是该模块公开行为与产物的机器事实。用户/SPEC 决定目标，官方文档和方法论文定义科学语义，实际执行代码与数据定义本次实际结果；发生冲突时必须进入人工审定。</p>
+                <div class="callout warn"><strong>存量模块不是模板。</strong>《标准化分析流程 SOP》记录已部署模块的真实入口和历史输出；它可以帮助定位兼容边界，但不能替代 v2.2 合同。DEGs 的报告链可作为“机械报告 coder”参考实现，不能把 DEGs 的科学字段硬套到其他模块。</div>
+            </section>
+
+            <section class="card" id="source-review">
+                <h2>2. 源码审定与两个 coder</h2>
+                <p>所有新建、迁移、算法/统计/绘图实质变更，在写新代码前先完成源码审定。报告-only 或纯格式小修可复用已有审定记录，但不得凭空补科学事实。</p>
+                <ol>
+                    <li><strong>分析 coder：</strong>读取原始源码，收集对应的官方软件文档、方法论文和版本资料，写入模块 <code>doc/source-review.md</code> 及 <code>doc/source-review/</code> 短记录，逐项核对数据含义、算法、统计、参数、方向和现有绘图逻辑；审定后负责计算与作图代码。</li>
+                    <li><strong>报告 coder：</strong>读取已审定的源码结论和真实结果，编写模块报告模板、固定正文、动态结果描述、表格/图片插入、图题图注和 R/Python 报告生成器；运行时由该生成器机械出具报告。</li>
+                </ol>
+                <table class="matrix">
+                    <thead><tr><th>比较项</th><th>必须记录</th></tr></thead>
+                    <tbody>
+                        <tr><td>官方定义</td><td>来源名称、版本、URL/DOI、访问日期、关键规则和必要摘录。</td></tr>
+                        <tr><td>源码实现</td><td>入口、函数/脚本位置、实际参数、输入输出和绘图调用。</td></tr>
+                        <tr><td>执行证据</td><td>实际运行命令、结果表、图件、样本/对象统计和版本记录。</td></tr>
+                        <tr><td>结论</td><td><code>PASS</code>、<code>PROVISIONAL</code>、<code>DECISION_REQUIRED</code> 或 <code>BLOCKED</code>。</td></tr>
+                    </tbody>
+                </table>
+                <div class="callout danger"><strong>冲突动作：</strong>官网定义与源码实现不一致时立即停止当前开发、作图和报告；生成一张决策卡，由指定人员选择保留实现、修改实现或暂不支持。决定前不得静默修正，也不得按官网图片替代实际结果。</div>
             </section>
 
             <section class="card" id="principles">
-                <h2>2. 精简原则</h2>
+                <h2>3. 精简原则</h2>
                 <div class="check-grid">
                     <div class="check-item"><strong>一个事实一个位置</strong><br>科学结果进表或图，解释进报告，运行事实进 <code>run_record.json</code>。</div>
                     <div class="check-item"><strong>没有消费者就没有产物</strong><br>“便于检查、以后可能用、证明已通过”不是正式消费者。</div>
                     <div class="check-item"><strong>预算是上限</strong><br>合同允许多个文件，不代表需要写满；删除不损失能力的文件必须删除。</div>
                     <div class="check-item"><strong>要求不反向制造实现</strong><br>没有报告、图、缓存或独立阶段的模块，不创建空能力和占位目录。</div>
                 </div>
-                <div class="callout danger"><strong>禁止：</strong>独立的审核表、证据表、validation summary、阶段状态表、参数回显表、产物 manifest、checksum 表和为了判定而生成的专用文件。需要追溯时写入固定的 <code>log/run_record.json</code>。</div>
+                <div class="callout danger"><strong>禁止：</strong>把审核表、证据包、阶段状态、参数回显、产物 manifest 或 checksum 作为公开业务结果。三个独立 skill 的合同和交接文件只用于开发/验证控制面；运行事实统一写入固定的 <code>log/run_record.json</code>，<code>result/</code> 和正式报告只保留用户需要的业务产物。</div>
             </section>
 
             <section class="card" id="boundary">
-                <h2>3. 开发前冻结边界</h2>
+                <h2>4. 开发前冻结边界</h2>
                 <table class="matrix">
                     <thead><tr><th>边界</th><th>必须回答</th></tr></thead>
                     <tbody>
-                        <tr><td>目标</td><td>模块回答哪个业务或科学问题？</td></tr>
-                        <tr><td>输入</td><td>对象、字段、单位、物种、尺度和缺失值规则是什么？</td></tr>
-                        <tr><td>输出</td><td>每个逻辑产物回答什么问题，谁会使用？</td></tr>
-                        <tr><td>非目标</td><td>本轮不支持哪些算法、平台、格式和兼容行为？</td></tr>
-                        <tr><td>成功证据</td><td>哪些测试、不变量、渲染或人工复核证明完成？</td></tr>
-                        <tr><td>停止条件</td><td>哪些产物和验证完成后停止继续加功能？</td></tr>
+                        <tr><td>目标</td><td>明确模块回答的业务或科学问题。</td></tr>
+                        <tr><td>输入</td><td>明确对象、字段、单位、物种、尺度和缺失值规则。</td></tr>
+                        <tr><td>输出</td><td>明确每个逻辑产物的用途、消费者和交付形式。</td></tr>
+                        <tr><td>非目标</td><td>明确本轮不支持的算法、平台、格式和兼容行为。</td></tr>
+                        <tr><td>成功证据</td><td>明确测试、不变量、渲染和人工复核的完成证据。</td></tr>
+                        <tr><td>停止条件</td><td>明确达到哪些产物和验证条件后停止增加功能。</td></tr>
                     </tbody>
                 </table>
                 <p class="callout primary">先写最小真实合同，再写代码。演示输入可验证流程，但不能代替真实业务验证；不得用桩、模拟结果、占位文件或静默降级冒充实现。</p>
             </section>
 
             <section class="card half" id="source">
-                <h2>4. 源码结构</h2>
+                <h2>5. 源码结构</h2>
                 <pre class="code-block">module/
 ├── run.sh
 ├── README.md
 ├── module_contract.yaml
+├── [doc/source-review.md] # 官方资料与源码交叉核对
 ├── [config/]             # 有配置或图件
 ├── [scripts/]            # 有入口外实现
 ├── [report_templates/]   # 生成报告
 ├── [demo/data/]          # 有受控演示输入
 ├── [schemas/]            # 有稳定数据结构
 └── [docs/]               # 仅长期设计说明</pre>
-                <p>方括号目录按真实能力创建。禁止空目录、<code>.gitkeep</code> 占位、模块内虚拟环境、历史输出、平行的 <code>new/final/v2</code> 实现和“以后可能用”的框架。</p>
-                <p>一次性 audit/review/fix/verification/summary、Agent 交接和验收结论进入 Issue/PR、测试系统或中央治理文档，不在模块 <code>docs/</code> 长期堆积。</p>
+                <p>方括号目录按真实能力创建。禁止空目录、<code>.gitkeep</code> 占位、模块内虚拟环境、历史输出、平行的 <code>new/final/v2</code> 实现和“以后可能用”的框架。<code>doc/source-review.md</code> 与 <code>doc/source-review/</code> 是科学资料缓存和决策依据，不是运行日志或结果副本。</p>
+                <p>一次性运行审计、测试收敛和治理状态进入外部受控记录或 <code>log/run_record.json</code>；报告 coder 的模板和生成器是模块正式源码，不是临时审计文件。</p>
             </section>
 
             <section class="card half" id="commands">
-                <h2>5. 入口与命令</h2>
+                <h2>6. 入口与命令</h2>
                 <ul class="rule-list">
                     <li><code>run.sh</code> 是稳定公开入口，只负责解析、校验、调度、日志和发布。</li>
                     <li>无参数或 <code>--help</code> 返回 0，且不创建任何文件；已公开的 <code>-h</code> 或 <code>help</code> 必须显示同一份帮助。</li>
@@ -252,7 +273,7 @@
             </section>
 
             <section class="card" id="config">
-                <h2>6. 配置合同：唯一、中文、真实生效</h2>
+                <h2>7. 配置合同：唯一、中文、真实生效</h2>
                 <ul class="rule-list">
                     <li>每个模块只选 INI 或 YAML 一种主要格式，只保留一份规范配置模板，由 <code>init</code> 唯一读取。</li>
                     <li>演示配置是演示输入的实例，不是第二套模板；不得维护两份默认值或两套参数语义。</li>
@@ -273,7 +294,7 @@ show_labels = true</pre>
             </section>
 
             <section class="card" id="output">
-                <h2>7. 输出结构与结果准入</h2>
+                <h2>8. 输出结构与结果准入</h2>
                 <pre class="code-block">output/
 ├── .run_id
 ├── result/                 # 正式表、图、模型或数据交付
@@ -286,26 +307,29 @@ show_labels = true</pre>
     └── [command.log]         # 确有独立诊断价值时，每命令最多一份固定日志</pre>
                 <h3>结果文件准入测试</h3>
                 <table class="matrix">
-                    <thead><tr><th>问题</th><th>通过条件</th></tr></thead>
+                    <thead><tr><th>准入项</th><th>通过条件</th></tr></thead>
                     <tbody>
-                        <tr><td>它回答什么分析问题？</td><td>用途能直接描述消费者从文件得到的业务或科学结果。</td></tr>
-                        <tr><td>删掉会失去什么？</td><td>会失去独立分析能力、必要交付格式或真实阶段衔接能力。</td></tr>
-                        <tr><td>是否只是另一结果的裁剪或换格式？</td><td>不是；否则保留唯一权威结果。</td></tr>
-                        <tr><td>是否仅用于审核、判断或证明？</td><td>不是；这类事实进入日志或外部验收系统。</td></tr>
-                        <tr><td>数量是否有界？</td><td>展开维度、最大文件数和字节数在合同中可计算；<code>0=无限</code> 不通过。</td></tr>
+                        <tr><td>业务用途</td><td>用途能直接描述消费者从文件得到的业务或科学结果。</td></tr>
+                        <tr><td>删除影响</td><td>删除后不能失去独立分析能力、必要交付格式或真实阶段衔接能力。</td></tr>
+                        <tr><td>唯一权威性</td><td>不得只是另一结果的裁剪或换格式；同一事实保留唯一权威结果。</td></tr>
+                        <tr><td>交付性质</td><td>不得仅用于审核、判断或证明；这类事实进入日志或外部验收系统。</td></tr>
+                        <tr><td>数量预算</td><td>展开维度、最大文件数和字节数在合同中可计算；<code>0=无限</code> 不通过。</td></tr>
                     </tbody>
                 </table>
                 <h3>DEGs 的紧凑输出示例</h3>
                 <pre class="code-block">result/
-├── 01.differential_expression.tsv       # 完整差异结果
-├── 02.volcano/&lt;contrast&gt;.{png,pdf}      # 对应比较的火山图
-└── 03.heatmap/&lt;contrast&gt;.{png,pdf}      # 对应比较的热图</pre>
-                <p>不要再输出 filtered/top/gene-list 副本、阈值回显、过滤计数、检查清单或验证证明。复杂模块可以有更多表、图、模型或数据包，但每项都必须通过同一个准入测试。</p>
+├── 01.DEG_all.csv                 # 全部差异结果
+├── 01.DEG_sig.csv                 # 合同声明的显著结果
+├── 02.volcano.png                 # 火山图
+├── 02.volcano.pdf
+├── 03.heatmap.png                 # 有显著结果时
+└── 03.heatmap.pdf</pre>
+                <p>公开结果默认直接平铺在 <code>result/</code> 根目录。<code>01.DEG_sig.csv</code> 这类筛选表只要在合同中声明了独立消费者和用途，就是正式结果；禁止的是没有消费者的重复裁剪、改名副本、阈值回显和仅供审核的文件。合法无发现时，已声明且下游需要 schema 连续性的表保留表头空表；不适用图件整项省略，不生成占位图。复杂模块可以有更多表、图、模型或数据包，但每项都必须通过同一个准入测试。</p>
             </section>
 
             <section class="card" id="figures">
-                <h2>8. 每幅图必须单独可调</h2>
-                <p>每个逻辑图拥有唯一命名空间 <code>plot.&lt;figure_slug&gt;</code>。即使模块只有一张图，也不得使用全局 <code>[Plot]</code>；没有图的模块不创建空绘图配置。</p>
+                <h2>9. 每幅图必须单独可调</h2>
+                <p>每个逻辑图拥有唯一命名空间 <code>plot.&lt;figure_slug&gt;</code>。即使模块只有一张图，也不得使用全局 <code>[Plot]</code>；没有图的模块不创建空绘图配置。图件必须由实际执行代码和数据生成，不能从官网图片重新绘制或替代。</p>
                 <table class="matrix">
                     <thead><tr><th>配置组</th><th>最低要求</th></tr></thead>
                     <tbody>
@@ -321,12 +345,15 @@ show_labels = true</pre>
                     <li>每个配置参数必须通过测试证明真实影响对应图，且不会改变源科学数据。</li>
                     <li>同源数据、字段映射、过滤、排序、图型和有效配置相同的图是同一逻辑图，不能靠换文件名重复发布。</li>
                     <li>报告需要的兼容图片在临时渲染目录生成并清理，不得长期落入 <code>result/report_images</code>。</li>
+                    <li>官方资料规定的绘图方式与源码不一致时先进入 <code>DECISION_REQUIRED</code>；源码缺少官方方法确实需要的图，可在审定后作为新增分析实现，但必须用真实数据重新执行并声明新产物。</li>
+                    <li>报告嵌入完整源图；禁止裁剪、切片、拉伸或把一个 composite figure 拆成跨页续图。</li>
                 </ul>
             </section>
 
             <section class="card" id="reports">
-                <h2>9. 报告合同：按读者决策写</h2>
-                <p>没有独立受众或解释用途时不生成报告。默认最多一份逻辑报告，位于 <code>report/</code>；DOCX、PDF、HTML 可以是同一报告的必要交付格式，但不得在 <code>result/</code> 留正文或副本。</p>
+                <h2>10. 报告 coder 与机械报告</h2>
+                <p><code>bio-report-writing</code> 是报告 coder：它可以在独立调用时根据给定材料一次性写报告，也可以在模块开发时写出可复用的模板和 R/Python 生成器；两种场景遵守完全相同的内容、证据、图件和渲染规范。模块运行时由已提交的生成器机械出具报告，不临场调用 AI 写作。</p>
+                <p>默认最多一份逻辑报告，位于 <code>report/</code>；DOCX、PDF、HTML 可以是同一报告的必要交付格式，但不得在 <code>result/</code> 留正文或副本。</p>
                 <table class="matrix">
                     <thead><tr><th>报告用途</th><th>必须回答</th><th>不得越界</th></tr></thead>
                     <tbody>
@@ -337,20 +364,20 @@ show_labels = true</pre>
                     </tbody>
                 </table>
                 <ul class="rule-list">
-                    <li>按读者决策路径组织，不固定章节名称、数量和顺序，不生成空章节。</li>
+                    <li>报告模板固定覆盖标题/摘要、范围、方法参数、QC（适用时）、结果与解释、综合结论、限制/待验证、公开输出、参考文献和版本等语义槽位；模块可合并相邻槽位，但不得丢失语义或生成空章节。</li>
                     <li>结论先给量化事实和证据位置，再解释；“明显、较好、显著”不能代替数值和方向。</li>
                     <li>每张图注说明对象、比较方向、单位或视觉编码及阅读边界。</li>
-                    <li>报告只读已声明结果，不重新读原始输入、重算统计或临时重画未声明图片。</li>
+                    <li>报告生成器只读已声明结果，不重新读原始输入、重算统计或临时重画未声明图片。</li>
                     <li>渲染前按声明的来源产物与 Schema 失败关闭校验；缺少必需列、事实或图件时不得用 <code>NA</code>、错误文字或占位图继续发布。</li>
                     <li>摘要截断、排序和选图必须由报告用途与正式结果字段驱动，禁止仅按文件名字典序取前 N 项。</li>
                     <li>运行通过/失败、warning、文件清单、绝对路径、字节数、哈希和审核结果不进入报告。</li>
-                    <li>渲染 QMD、参考 DOCX、转换图、解压目录和其他 sidecar 只进临时工作区，发布前清理。</li>
+                    <li>模块的 QMD、参考 DOCX 和生成器是正式源码；渲染中间文件、转换图、解压目录和其他 sidecar 只进临时工作区，发布前清理。</li>
                     <li>任何 fallback 仍须满足同一内容与格式合同；缺图、缺表的“文本兜底版”必须失败。</li>
                 </ul>
             </section>
 
             <section class="card half" id="runtime">
-                <h2>10. 日志与缓存</h2>
+                <h2>11. 日志与缓存</h2>
                 <h3>日志</h3>
                 <p><code>log/run_record.json</code> 是运行事实唯一权威源，记录执行 ID、命令、状态、输入与配置指纹、合同哈希、软件版本、随机种子、产物路径/大小/哈希/来源以及逐图请求值和实际渲染值。</p>
                 <p>默认不拆分日志；确有独立诊断价值时，每个公开写命令最多保留一份固定日志，不按时间戳无限追加。</p>
@@ -360,7 +387,7 @@ show_labels = true</pre>
             </section>
 
             <section class="card half" id="code">
-                <h2>11. 代码精简、可读、可维护</h2>
+                <h2>12. 代码精简、可读、可维护</h2>
                 <ul class="rule-list">
                     <li>主流程按“解析 → 校验 → 执行 → 验证 → 原子发布”阅读。</li>
                     <li>一个业务规则只有一个实现；优先删除和复用，再增加抽象。</li>
@@ -373,21 +400,22 @@ show_labels = true</pre>
             </section>
 
             <section class="card" id="acceptance">
-                <h2>12. 验收与存量迁移</h2>
+                <h2>13. 验收与存量迁移</h2>
                 <div class="check-grid">
                     <div class="check-item"><strong>合同</strong><br>路径、引用、数量、大小、条件和输出树通过共享校验。</div>
                     <div class="check-item"><strong>配置</strong><br>唯一模板、中文注释、Schema 一致，所有公开键真实接线。</div>
                     <div class="check-item"><strong>结果</strong><br>每个文件通过删除测试，无未声明文件、空目录和证据副产物。</div>
                     <div class="check-item"><strong>图件</strong><br>逐图参数集合一致、展开隔离、代表性参数真实生效。</div>
-                    <div class="check-item"><strong>报告</strong><br>事实可追溯、内容不越界、sidecar 清理，并完成真实格式渲染。</div>
+                    <div class="check-item"><strong>源码审定</strong><br><code>doc/source-review.md</code> 已完成官方定义、源码实现和执行证据交叉核对；冲突已审定。</div>
+                    <div class="check-item"><strong>报告</strong><br>报告 coder 的模板/生成器可运行，事实可追溯、内容不越界、sidecar 清理，并完成真实格式渲染。</div>
                     <div class="check-item"><strong>代码</strong><br>语法、算法不变量、原子发布、路径安全、精简性和中文注释通过复核。</div>
                 </div>
-                <div class="callout warn"><strong>迁移规则：</strong>旧模块先记录现状、消费者和兼容风险，再批准具体升级范围；不要为了统一一次性重写所有旧模块。旧 HTML、SOP 或 README 不能作为保留 <code>result/</code> 报告、全局 <code>[Plot]</code>、固定缓存/manifest、分阶段日志或重复结果的豁免依据。</div>
+                <div class="callout warn"><strong>迁移规则：</strong>旧模块先记录原始入口、核心脚本、配置、主要输出、绘图逻辑和报告逻辑，再完成源码审定并批准具体升级范围；不要为了统一一次性重写所有旧模块。旧 HTML、SOP 或 README 不能作为科学逻辑、图件或报告保真的豁免依据。</div>
                 <p>完成不是再生成一份验收清单：边界已冻结、适用测试与真实验证通过、README/Wiki/CodeGraph 按仓库规则同步，并已核对停止条件，即停止继续加文件和功能。</p>
             </section>
         </div>
 
-        <p class="footer-note"><strong>版本：</strong>v2.1 · <strong>更新日期：</strong>2026-08-11</p>
+        <p class="footer-note"><strong>版本：</strong>v2.2 · <strong>更新日期：</strong>2026-09-02</p>
     </main>
 
     <script>
