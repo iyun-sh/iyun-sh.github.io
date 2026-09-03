@@ -232,6 +232,8 @@
 │   ├── init.R | init.py            # 独立配置初始化入口
 │   ├── calculate/                 # 计算阶段，可含多个脚本
 │   │   ├── main.R | main.py
+│   │   ├── methods/                # 多方法计算后端（有多方法时）
+│   │   │   └── ...
 │   │   └── ...                     # 按分析点、方法或步骤继续拆分
 │   ├── plot/                      # 作图阶段，可含多个脚本
 │   │   ├── main.R | main.py
@@ -240,9 +242,8 @@
 │   │   ├── generate_report.R | generate_report.py
 │   │   └── ...
 │   ├── shared/                    # 多阶段共用的输入、合同和工具
-│   ├── methods/                   # 多方法后端（有多方法时）
-│   ├── runtime/                   # 运行记录、缓存和发布辅助
-│   └── resources/                 # 模块随附且可公开的资源
+│   └── runtime/                   # 运行记录、缓存和发布辅助
+├── resources/                     # 模块随附且可公开的资源
 ├── report_templates/
 │   └── report_template.docx       # 正式报告模板
 ├── doc/
@@ -322,8 +323,18 @@ p_value_cutoff = 0.05
 # 图幅；数值；单位 inch；范围 4–20。
 width = 8
 height = 6
-# 静态图格式；逐项列出，不使用 both 哨兵。
+# 输出格式；逗号分隔；同一逻辑图的文件在 result/ 下并列。
 formats = png,pdf
+# 图内字体；必须是运行环境中可解析的字体名称。
+font_family = Arial
+# 图中文字大小；单位 pt；必须保证目标阅读器可读。
+font_size = 10
+# 上调、下调和不显著点的颜色；十六进制颜色值；绘图代码必须实际读取。
+up_color = #D55E00
+down_color = #0072B2
+nonsignificant_color = #BDBDBD
+# 阈值线颜色；十六进制颜色值；绘图代码必须实际读取。
+threshold_color = #4D4D4D
 
 [report]
 # 正式模板；相对模块源码根目录。
@@ -427,7 +438,7 @@ output/report/
                 <div class="callout accent"><strong>报告变更边界：</strong>只改正文、图题、图注、表述或 DOCX 版式，使用已发布结果执行 <code>report</code>；只改不影响科学结果的作图实现，先执行 <code>plot</code>，需要更新嵌图时再执行 <code>report</code>；只有计算、科学逻辑、配置、合同或输出结构变化才执行 <code>full</code>。</div>
             </section>
 
-            <section class="card half" id="trace">
+            <section class="card" id="trace">
                 <h2>8. 路径、日志与缓存</h2>
                 <h3>路径</h3>
                 <ul class="rule-list">
@@ -447,7 +458,7 @@ output/report/
                 <p>计算结果需要被作图或报告复用时，优先保存为可读取的 <code>.qs2</code>、<code>.tsv</code> 或 <code>.csv</code>；作图脚本直接读取该文件，不复制计算代码。</p>
             </section>
 
-            <section class="card half" id="quality">
+            <section class="card" id="quality">
                 <h2>9. 代码要求</h2>
                 <h3>错误处理与命名</h3>
                 <table class="matrix">
