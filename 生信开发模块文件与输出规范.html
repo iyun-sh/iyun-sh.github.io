@@ -177,13 +177,13 @@
 
     <main class="container">
         <header class="hero">
-            <p class="eyebrow">SECURE_DEV · HUMAN-READABLE STANDARD</p>
+            <p class="eyebrow">BIOINFORMATICS · HUMAN-READABLE STANDARD</p>
             <h1>生信开发模块文件与输出规范</h1>
             <p>v2.2 将 v1.3 的可复现与报告质量要求，和 v2.1 的能力驱动原则合并为一套规则。模块以最小公开接口交付真实分析结果；复杂分析可以产生多个结果，但每个结果都必须回答独立问题、服务明确消费者，并受合同预算约束。</p>
             <div class="pill-row">
                 <span class="pill primary">能力驱动，不凑阶段</span>
                 <span class="pill accent">先审源码，再写代码</span>
-                <span class="pill primary">分析 coder + 报告 coder</span>
+                <span class="pill primary">计算开发 + 报告开发</span>
                 <span class="pill warn">结果、图件、报告同源</span>
             </div>
         </header>
@@ -191,16 +191,16 @@
         <div class="grid">
             <section class="card" id="authority">
                 <h2>1. 权威源与适用范围</h2>
-                <p>本页是统一 v2.2 的人类可读规范。三个通用 skill（<a href="https://sher-l.github.io/ai-skills/">分析 coder、报告 coder、调度器</a>）各自携带可执行合同，脱离本页和具体仓库也能使用；在 secure_dev 中，模块的 <code>module_contract.yaml</code> 是该模块公开行为与产物的机器事实。用户/SPEC 决定目标，官方文档和方法论文定义应实现的科学语义，实际执行代码与数据定义本次实际结果；发生冲突时必须进入人工审定。规范中的 URL/DOI 只用于来源追溯，不会被自动写入报告正文。</p>
+                <p>本页是统一 v2.2 的人类可读开发规范。项目需求确定目标，官方文档和方法论文定义应实现的科学语义，实际执行代码与数据定义本次实际结果，模块合同文件记录公开行为与产物；发生冲突时必须进入人工审定。规范中的 URL/DOI 只用于来源追溯，不会被自动写入报告正文。</p>
                 <div class="callout warn"><strong>存量模块不是模板。</strong>《标准化分析流程 SOP》记录已部署模块的真实入口和历史输出；它可以帮助定位兼容边界，但不能替代 v2.2 合同。DEGs 的报告链可作为“机械报告 coder”参考实现，不能把 DEGs 的科学字段硬套到其他模块。</div>
             </section>
 
             <section class="card" id="source-review">
-                <h2>2. 源码审定与两个 coder</h2>
+                <h2>2. 源码审定与开发分工</h2>
                 <p>所有新建、迁移、算法/统计/绘图实质变更，在写新代码前先完成源码审定。只改报告内容或版式使用 <code>report-only</code>；只改不改变科学结果的作图实现使用 <code>plot</code>；只有计算、科学逻辑、配置、合同或输出结构变化使用 <code>full</code>。前两种场景可复用已发布结果，但不得凭空补科学事实。</p>
                 <ol>
-                    <li><strong>分析 coder：</strong>读取原始源码，收集对应的官方软件文档、方法论文和版本资料，写入模块 <code>doc/source-review.md</code> 及 <code>doc/source-review/</code> 短记录，逐项核对数据含义、算法、统计、参数、方向和现有绘图逻辑；审定后负责计算与作图代码。</li>
-                    <li><strong>报告 coder：</strong>读取已审定的源码结论和真实结果，编写模块报告模板、固定正文、动态结果描述、表格/图片插入、图题图注和 R/Python 报告生成器；运行时由该生成器机械出具报告。</li>
+                    <li><strong>计算开发：</strong>读取原始源码，收集对应的官方软件文档、方法论文和版本资料，写入模块 <code>doc/source-review.md</code> 及 <code>doc/source-review/</code> 短记录，逐项核对数据含义、算法、统计、参数、方向和现有绘图逻辑；审定后负责计算与作图代码。</li>
+                    <li><strong>报告开发：</strong>读取已审定的源码结论和真实结果，编写模块报告模板、固定正文、动态结果描述、表格/图片插入、图题图注和 R/Python 报告生成器；运行时由该生成器机械出具报告。</li>
                 </ol>
                 <table class="matrix">
                     <thead><tr><th>比较项</th><th>必须记录</th></tr></thead>
@@ -222,7 +222,7 @@
                     <div class="check-item"><strong>预算是上限</strong><br>合同允许多个文件，不代表需要写满；删除不损失能力的文件必须删除。</div>
                     <div class="check-item"><strong>要求不反向制造实现</strong><br>没有报告、图、缓存或独立阶段的模块，不创建空能力和占位目录。</div>
                 </div>
-                <div class="callout danger"><strong>禁止：</strong>把审核表、证据包、阶段状态、参数回显、产物 manifest 或 checksum 作为公开业务结果。三个独立 skill 的合同和交接文件只用于开发/验证控制面；运行事实统一写入固定的 <code>log/run_record.json</code>，<code>result/</code> 和正式报告只保留用户需要的业务产物。</div>
+                <div class="callout danger"><strong>禁止：</strong>把审核表、证据包、阶段状态、参数回显、产物 manifest 或 checksum 作为公开业务结果。这些记录只用于开发与验证控制面；运行事实统一写入固定的 <code>log/run_record.json</code>，<code>result/</code> 和正式报告只保留用户需要的业务产物。</div>
             </section>
 
             <section class="card" id="boundary">
@@ -398,6 +398,7 @@ show_labels = true</pre>
                     <li>删除死代码、注释掉的旧实现、无调用 helper 和无调用方兼容层。</li>
                     <li><code>run.sh</code> 不承载大段算法、绘图或报告逻辑。</li>
                     <li>核心算法、统计口径、比较方向、单位转换、状态判定、兼容分支和关键不变量附近写简洁中文注释，说明“为什么、边界和改动风险”。</li>
+                    <li>新增或修改的 R/Python/Shell 业务代码注释统一使用简体中文；函数名、变量名、包名、公式和标准技术术语保留英文原文。</li>
                     <li>不要逐行翻译代码或用注释凑覆盖率；直观搬运和薄包装不要求中文注释。</li>
                 </ul>
             </section>
