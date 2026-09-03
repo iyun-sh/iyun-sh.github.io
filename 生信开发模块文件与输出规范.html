@@ -459,7 +459,7 @@ output/report/
                         <tr><td><code>DECISION_REQUIRED</code></td><td>错误类型、冲突双方、影响范围和待人工决定的选项；决定前停止后续阶段。</td><td><code>2</code></td></tr>
                     </tbody>
                 </table>
-                <p>退出码只供上游程序判断，不能代替人类可读错误。每次失败都要先输出“错误类型 + 具体内容”，再输出退出码；机器记录同时保存 <code>error_type</code>、<code>message</code>、<code>stage</code>、<code>evidence</code> 和可执行修复建议。</p>
+                <p>进程退出码固定为：<code>0</code> 成功；<code>1</code> 一般运行错误；<code>2</code> 输入或配置校验失败；<code>3</code> 依赖或环境异常。退出码只供上游程序判断，不能代替人类可读错误。每次失败都要先输出“错误类型 + 具体内容 + 修复建议”，再输出退出码；机器记录同时保存 <code>error_type</code>、<code>message</code>、<code>stage</code>、<code>evidence</code> 和可执行修复建议。</p>
                 <pre class="code-block">错误类型: INPUT_ERROR
 错误内容: [calculate] 找不到输入文件；字段=input.expression；路径=data/expression.tsv
 修复建议: 检查路径是否相对 module.config.ini，确认文件存在且为 UTF-8
