@@ -251,6 +251,7 @@
             <section class="card" id="stages">
                 <h2>4. 五阶段与代码分工</h2>
                 <p>每个分析模块都公开同一组阶段名称。阶段可以单独运行，也可以由 <code>full</code> 串联；不适用的阶段必须明确报错并退出，不得用空文件或占位结果假装完成。</p>
+                <p><strong>计算开发</strong>维护 <code>init</code>、<code>calculate</code> 和 <code>plot</code>；<strong>报告开发</strong>维护 <code>report</code> 及报告模板。双方只通过已声明的表、对象和图件交接，<code>full</code> 不增加第三套业务逻辑。</p>
                 <table class="matrix">
                     <thead><tr><th>阶段</th><th>读取</th><th>负责写出</th><th>禁止做的事</th></tr></thead>
                     <tbody>
