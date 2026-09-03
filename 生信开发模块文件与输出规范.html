@@ -250,7 +250,7 @@
 ├── schemas/                       # 有稳定数据结构时保留
 └── demo/data/                     # 只放受控演示输入</pre>
                 <ul class="rule-list">
-                    <li><code>init</code> 不需要独立业务脚本目录：它把源码模板直接生成到 <code>-c</code> 指定的配置文件。<code>full</code> 是入口编排，不另写一份重复的算法实现，只依次调用 <code>calculate</code>、<code>plot</code>、<code>report</code>。</li>
+                    <li><code>init</code> 不需要独立的业务目录，使用 <code>scripts/init.R|py</code> 把配置模板直接生成到 <code>-c</code> 指定的单个文件。<code>full</code> 是入口编排，不另写一份重复的算法实现，只依次调用 <code>calculate</code>、<code>plot</code>、<code>report</code>。</li>
                     <li>源码根目录不放 <code>log/</code>、<code>cache/</code>、<code>result/</code>、<code>report/</code>、历史输出或运行时配置副本。</li>
                     <li>禁止 <code>.gitkeep</code> 空目录、虚拟环境、<code>new/final/v2</code> 平行实现、注释掉的旧算法和未被调用的兼容层。</li>
                     <li>模板、生成器、配置模板和源码审定记录是正式源码；临时渲染文件、解压目录和一次性审计记录不放在源码目录。</li>
