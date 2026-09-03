@@ -191,13 +191,13 @@
         <div class="grid">
             <section class="card" id="authority">
                 <h2>1. 权威源与适用范围</h2>
-                <p>本页是统一 v2.2 的人类可读规范。三个通用 skill（<a href="https://sher-l.github.io/ai-skills/">分析 coder、报告 coder、调度器</a>）各自携带可执行合同，脱离本页和具体仓库也能使用；在 secure_dev 中，模块的 <code>module_contract.yaml</code> 是该模块公开行为与产物的机器事实。用户/SPEC 决定目标，官方文档和方法论文定义科学语义，实际执行代码与数据定义本次实际结果；发生冲突时必须进入人工审定。</p>
+                <p>本页是统一 v2.2 的人类可读规范。三个通用 skill（<a href="https://sher-l.github.io/ai-skills/">分析 coder、报告 coder、调度器</a>）各自携带可执行合同，脱离本页和具体仓库也能使用；在 secure_dev 中，模块的 <code>module_contract.yaml</code> 是该模块公开行为与产物的机器事实。用户/SPEC 决定目标，官方文档和方法论文定义应实现的科学语义，实际执行代码与数据定义本次实际结果；发生冲突时必须进入人工审定。规范中的 URL/DOI 只用于来源追溯，不会被自动写入报告正文。</p>
                 <div class="callout warn"><strong>存量模块不是模板。</strong>《标准化分析流程 SOP》记录已部署模块的真实入口和历史输出；它可以帮助定位兼容边界，但不能替代 v2.2 合同。DEGs 的报告链可作为“机械报告 coder”参考实现，不能把 DEGs 的科学字段硬套到其他模块。</div>
             </section>
 
             <section class="card" id="source-review">
                 <h2>2. 源码审定与两个 coder</h2>
-                <p>所有新建、迁移、算法/统计/绘图实质变更，在写新代码前先完成源码审定。报告-only 或纯格式小修可复用已有审定记录，但不得凭空补科学事实。</p>
+                <p>所有新建、迁移、算法/统计/绘图实质变更，在写新代码前先完成源码审定。只改报告内容或版式使用 <code>report-only</code>；只改不改变科学结果的作图实现使用 <code>plot</code>；只有计算、科学逻辑、配置、合同或输出结构变化使用 <code>full</code>。前两种场景可复用已发布结果，但不得凭空补科学事实。</p>
                 <ol>
                     <li><strong>分析 coder：</strong>读取原始源码，收集对应的官方软件文档、方法论文和版本资料，写入模块 <code>doc/source-review.md</code> 及 <code>doc/source-review/</code> 短记录，逐项核对数据含义、算法、统计、参数、方向和现有绘图逻辑；审定后负责计算与作图代码。</li>
                     <li><strong>报告 coder：</strong>读取已审定的源码结论和真实结果，编写模块报告模板、固定正文、动态结果描述、表格/图片插入、图题图注和 R/Python 报告生成器；运行时由该生成器机械出具报告。</li>
@@ -352,7 +352,7 @@ show_labels = true</pre>
 
             <section class="card" id="reports">
                 <h2>10. 报告 coder 与机械报告</h2>
-                <p><code>bio-report-writing</code> 是报告 coder：它可以在独立调用时根据给定材料一次性写报告，也可以在模块开发时写出可复用的模板和 R/Python 生成器；两种场景遵守完全相同的内容、证据、图件和渲染规范。模块运行时由已提交的生成器机械出具报告，不临场调用 AI 写作。</p>
+                <p><code>bio-report-writing</code> 是报告 coder：它可以在独立调用时根据给定材料一次性写报告，也可以在模块开发时写出可复用的 DOCX 模板和 R/Python 生成器；两种场景遵守完全相同的内容、证据、图件和渲染规范。开发时由 AI/开发者编写并冻结模板，模块运行时由已提交的生成器机械填充出报告，不临场调用 AI 写作。</p>
                 <p>默认最多一份逻辑报告，位于 <code>report/</code>；DOCX、PDF、HTML 可以是同一报告的必要交付格式，但不得在 <code>result/</code> 留正文或副本。</p>
                 <table class="matrix">
                     <thead><tr><th>报告用途</th><th>必须回答</th><th>不得越界</th></tr></thead>
@@ -371,7 +371,10 @@ show_labels = true</pre>
                     <li>渲染前按声明的来源产物与 Schema 失败关闭校验；缺少必需列、事实或图件时不得用 <code>NA</code>、错误文字或占位图继续发布。</li>
                     <li>摘要截断、排序和选图必须由报告用途与正式结果字段驱动，禁止仅按文件名字典序取前 N 项。</li>
                     <li>运行通过/失败、warning、文件清单、绝对路径、字节数、哈希和审核结果不进入报告。</li>
-                    <li>模块的 QMD、参考 DOCX 和生成器是正式源码；渲染中间文件、转换图、解压目录和其他 sidecar 只进临时工作区，发布前清理。</li>
+                    <li>新模块默认以 <code>report_templates/report_template.docx</code> 为唯一正式正文模板，由 <code>scripts/report/generate_report.R|py</code> 按稳定 bookmark/marker 填充；存量 QMD/Rmd 只在迁移完成前由原 renderer 接线，必须遵守同一 v2.2 合同，不得并行维护第二套正文。</li>
+                    <li>模板固定结果表、公开输出表、软件/资源版本表、完整图件和条件 Note 的位置；Note 默认使用边框 <code>#5B9BD5</code>、填充 <code>#DDEBF7</code>、标签 <code>#2F75B5</code>，只由实际方向、单位或解释边界触发。</li>
+                    <li>按变更面运行：只改报告正文、图题、图注、表述或 DOCX 版式用已发布结果执行 <code>report-only</code>；只改不影响科学结果的作图实现执行 <code>plot</code>，随后用新图执行 <code>report-only</code>；只有计算/科学逻辑、配置、合同或输出结构变化才执行 <code>full</code>。报告层或纯绘图层变更不得被误判为科学结果变更。</li>
+                    <li>模块的模板、生成器和固定正文是正式源码；渲染中间文件、转换图、解压目录和其他 sidecar 只进临时工作区，发布前清理。</li>
                     <li>任何 fallback 仍须满足同一内容与格式合同；缺图、缺表的“文本兜底版”必须失败。</li>
                 </ul>
             </section>
@@ -415,7 +418,7 @@ show_labels = true</pre>
             </section>
         </div>
 
-        <p class="footer-note"><strong>版本：</strong>v2.2 · <strong>更新日期：</strong>2026-09-02</p>
+        <p class="footer-note"><strong>版本：</strong>v2.2 · <strong>更新日期：</strong>2026-09-03</p>
     </main>
 
     <script>
