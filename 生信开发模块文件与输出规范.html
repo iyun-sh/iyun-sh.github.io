@@ -227,9 +227,9 @@
 ├── README.md                      # 用途、输入、输出、阶段和运行示例
 ├── CHANGELOG.md                   # 版本变更
 ├── module_contract.yaml           # 公开命令和产物合同
-├── config/
-│   └── module.config.example.ini  # 源码内唯一配置模板
+├── module.config.ini              # 根目录唯一用户配置模板
 ├── scripts/
+│   ├── init.R | init.py            # 独立配置初始化入口
 │   ├── calculate/                 # 计算阶段，可含多个脚本
 │   │   ├── main.R | main.py
 │   │   └── ...                     # 按分析点、方法或步骤继续拆分
@@ -272,10 +272,10 @@
                     </tbody>
                 </table>
                 <pre class="code-block">bash run.sh init      -c module.config.ini
-bash run.sh calculate -c module.config.ini
-bash run.sh plot      -c module.config.ini
-bash run.sh report    -c module.config.ini
-bash run.sh full      -c module.config.ini</pre>
+bash run.sh calculate -c module.config.ini -o OUTPUT
+bash run.sh plot      -c module.config.ini -o OUTPUT
+bash run.sh report    -c module.config.ini -o OUTPUT
+bash run.sh full      -c module.config.ini -o OUTPUT</pre>
                 <h3>按变更范围选择执行方式</h3>
                 <table class="matrix">
                     <thead><tr><th>变更内容</th><th>需要执行</th></tr></thead>
@@ -315,8 +315,8 @@ groups = data/group.tsv
 method = DESeq2
 # 显著性阈值；数值；范围 (0, 1)。
 p_value_cutoff = 0.05
-# 随机种子；无随机步骤时删除该键。
-seed = 20260903
+# 随机种子；只有存在随机步骤且已批准时填写固定整数。
+# seed = 20260903
 
 [plot.volcano]
 # 图幅；数值；单位 inch；范围 4–20。
@@ -331,7 +331,9 @@ template = report_templates/report_template.docx
 
 [output]
 # 运行输出根目录；命令行可显式覆盖。
-root = output</pre>
+root = output
+# 新模块结果直接平铺在 output/result/ 根目录。
+result_layout = flat</pre>
                 <p>每个配置项的注释必须紧邻该项，写清用途、类型、默认值、单位、边界、依赖和修改影响；键名、函数名、变量名和包名保留标准英文标识，说明文字用简体中文。若确需 YAML，仍使用完全相同的分区，不同时维护两份模板。</p>
             </section>
 
@@ -416,7 +418,8 @@ output/report/
                     <li>每个分析点按“观察结论 → 数字证据 → 图表/文件 → 有边界的解释 → 限制或下一步”生成；不能只写“结果见文件夹”。</li>
                     <li>图题用陈述句；正文、图题、图注不得出现“哪些、如何、是否、请判断”等问句或任务句。内部问题只能留在开发记录，不能进入成稿。</li>
                     <li>每幅图必须有唯一编号、对象、比较组、样本或对象数、轴和单位、颜色/线型含义、统计量/阈值、面板说明及阅读边界。图题、完整图、图注必须相邻。</li>
-                    <li>方向、单位、统计边界或阴性结果需要单独提醒时使用天蓝色 Note：边框 <code>#5B9BD5</code>，填充 <code>#DDEBF7</code>，标签 <code>#2F75B5</code>。Note 只由真实结果触发，不放运行状态或泛化套话。</li>
+                    <li>方向、单位、统计边界或阴性结果需要单独提醒时使用天蓝色 Note：边框 <code>#5B9BD5</code>，填充 <code>#DDEBF7</code>，标签 <code>#2F75B5</code>。Note 只由真实结果触发，不放运行状态或泛化套话；它使用独立 callout 组件。</li>
+                    <li>Figure source 不是 Note：图片段落保持透明，只放一张完整源图，不带 Note 的底色、边框、图标或缩进。</li>
                     <li>模板中的结果表、公开输出表、版本表和图件位置固定；表格重复表头且数据行不可拆分，长图注不与图分离。</li>
                     <li>报告默认放在 <code>output/report/</code>，DOCX 为默认交付格式；PDF/HTML 只能是同一逻辑报告的派生格式，不复制正文到 <code>result/</code>。</li>
                     <li>报告只读已声明的结果表、图件和版本记录，不重读原始输入、不重算统计、不临时重画未声明图。缺事实、缺列或缺图时停止发布，不能用 <code>NA</code>、错误文字或占位图填空。</li>
