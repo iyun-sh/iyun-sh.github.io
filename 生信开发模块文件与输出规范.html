@@ -172,8 +172,8 @@
             <h1>生信开发模块文件与输出规范</h1>
             <p>v2.2 将源码组织、五阶段执行、配置、结果、报告和验收写成一套可直接落地的规则。模块的计算、作图和报告必须分开实现；<code>full</code> 只负责按顺序串联它们。</p>
             <div class="pill-row">
-                <span class="pill primary">init → calculate → plot → report</span>
-                <span class="pill warn">full 串联四阶段</span>
+                <span class="pill primary">init 独立配置初始化</span>
+                <span class="pill warn">full 串联三阶段</span>
                 <span class="pill accent">plot 复用 calculate 结果</span>
                 <span class="pill primary">report 复用表和图</span>
                 <span class="pill warn">结果平铺、编号稳定</span>
@@ -228,12 +228,21 @@
 ├── CHANGELOG.md                   # 版本变更
 ├── module_contract.yaml           # 公开命令和产物合同
 ├── config/
-│   └── module.config.yaml         # 唯一配置模板（也可统一选用 INI）
+│   └── module.config.example.ini  # 源码内唯一配置模板
 ├── scripts/
-│   ├── init.R | init.py
-│   ├── calculate.R | calculate.py
-│   ├── plot.R | plot.py
-│   └── report.R | report.py
+│   ├── calculate/                 # 计算阶段，可含多个脚本
+│   │   ├── main.R | main.py
+│   │   └── ...                     # 按分析点、方法或步骤继续拆分
+│   ├── plot/                      # 作图阶段，可含多个脚本
+│   │   ├── main.R | main.py
+│   │   └── ...
+│   ├── report/                    # 报告阶段，可含多个脚本
+│   │   ├── generate_report.R | generate_report.py
+│   │   └── ...
+│   ├── shared/                    # 多阶段共用的输入、合同和工具
+│   ├── methods/                   # 多方法后端（有多方法时）
+│   ├── runtime/                   # 运行记录、缓存和发布辅助
+│   └── resources/                 # 模块随附且可公开的资源
 ├── report_templates/
 │   └── report_template.docx       # 正式报告模板
 ├── doc/
@@ -241,7 +250,7 @@
 ├── schemas/                       # 有稳定数据结构时保留
 └── demo/data/                     # 只放受控演示输入</pre>
                 <ul class="rule-list">
-                    <li><code>full</code> 是入口编排，不另写一份重复的算法实现；它依次调用 <code>init</code>、<code>calculate</code>、<code>plot</code>、<code>report</code>。</li>
+                    <li><code>init</code> 不需要独立业务脚本目录：它把源码模板直接生成到 <code>-c</code> 指定的配置文件。<code>full</code> 是入口编排，不另写一份重复的算法实现，只依次调用 <code>calculate</code>、<code>plot</code>、<code>report</code>。</li>
                     <li>源码根目录不放 <code>log/</code>、<code>cache/</code>、<code>result/</code>、<code>report/</code>、历史输出或运行时配置副本。</li>
                     <li>禁止 <code>.gitkeep</code> 空目录、虚拟环境、<code>new/final/v2</code> 平行实现、注释掉的旧算法和未被调用的兼容层。</li>
                     <li>模板、生成器、配置模板和源码审定记录是正式源码；临时渲染文件、解压目录和一次性审计记录不放在源码目录。</li>
@@ -250,23 +259,23 @@
 
             <section class="card" id="stages">
                 <h2>4. 五阶段与代码分工</h2>
-                <p>每个分析模块都公开同一组阶段名称。阶段可以单独运行，也可以由 <code>full</code> 串联；不适用的阶段必须明确报错并退出，不得用空文件或占位结果假装完成。</p>
-                <p><strong>计算开发</strong>维护 <code>init</code>、<code>calculate</code> 和 <code>plot</code>；<strong>报告开发</strong>维护 <code>report</code> 及报告模板。双方只通过已声明的表、对象和图件交接，<code>full</code> 不增加第三套业务逻辑。</p>
+                <p>每个分析模块都公开同一组阶段名称。<code>init</code> 单独生成配置；分析阶段可以单独运行，也可以由 <code>full</code> 串联；不适用的阶段必须明确报错并退出，不得用空文件或占位结果假装完成。</p>
+                <p><strong>计算开发</strong>维护 <code>calculate</code> 和 <code>plot</code>；<strong>报告开发</strong>维护 <code>report</code> 及报告模板。双方只通过已声明的表、对象和图件交接，<code>full</code> 不增加第三套业务逻辑。</p>
                 <table class="matrix">
                     <thead><tr><th>阶段</th><th>读取</th><th>负责写出</th><th>禁止做的事</th></tr></thead>
                     <tbody>
-                        <tr><td><code>init</code></td><td>配置模板、输入路径、环境</td><td>校验配置、准备输出目录、建立本次运行记录</td><td>不得计算、作图或写报告结果</td></tr>
+                        <tr><td><code>init</code></td><td>源码配置模板</td><td>向 <code>-c</code> 指定的文件直接生成配置</td><td>不得创建配置目录、运行分析或生成运行日志</td></tr>
                         <tr><td><code>calculate</code></td><td>真实输入、分析配置</td><td>计算结果表、模型对象和供后续阶段复用的中间对象</td><td>不得把绘图或报告逻辑混入计算脚本</td></tr>
                         <tr><td><code>plot</code></td><td><code>calculate</code> 已产生并声明的表或对象</td><td>PNG/PDF 等图件</td><td>不得重新计算、改动科学结果或读取未声明临时文件</td></tr>
                         <tr><td><code>report</code></td><td><code>calculate</code> 的结果和 <code>plot</code> 的图件</td><td>正式报告、结果表插入和图题图注</td><td>不得重新读原始数据、重算统计或临时重画图</td></tr>
-                        <tr><td><code>full</code></td><td>同一份输入和配置</td><td>按 <code>init → calculate → plot → report</code> 依次完成全部产物</td><td>不得复制另一套阶段逻辑或改变单阶段语义</td></tr>
+                        <tr><td><code>full</code></td><td>已由 <code>init</code> 准备好的配置和真实输入</td><td>只按 <code>calculate → plot → report</code> 依次完成全部分析产物</td><td>不得重新初始化配置、复制另一套阶段逻辑或改变单阶段语义</td></tr>
                     </tbody>
                 </table>
-                <pre class="code-block">bash run.sh init     --config config/module.config.yaml
-bash run.sh calculate --config config/module.config.yaml
-bash run.sh plot      --config config/module.config.yaml
-bash run.sh report    --config config/module.config.yaml
-bash run.sh full      --config config/module.config.yaml</pre>
+                <pre class="code-block">bash run.sh init      -c module.config.ini
+bash run.sh calculate -c module.config.ini
+bash run.sh plot      -c module.config.ini
+bash run.sh report    -c module.config.ini
+bash run.sh full      -c module.config.ini</pre>
                 <h3>按变更范围选择执行方式</h3>
                 <table class="matrix">
                     <thead><tr><th>变更内容</th><th>需要执行</th></tr></thead>
@@ -282,62 +291,63 @@ bash run.sh full      --config config/module.config.yaml</pre>
             <section class="card" id="config">
                 <h2>5. 配置结构：唯一模板、中文注释、真实生效</h2>
                 <ul class="rule-list">
-                    <li>一个模块只选 INI 或 YAML 一种主格式，<code>config/</code> 只保留一份规范模板；运行时使用的副本写到输出目录的 <code>log/</code>。</li>
+                    <li>推荐使用 INI；一个模块只保留一份 INI 配置模板。<code>init -c FILE</code> 将模板直接生成到 FILE，不创建配置目录；运行时使用的副本写到输出目录的 <code>log/</code>。</li>
                     <li>配置只描述输入、分析、绘图、报告和输出规则，不写本次运行才产生的统计结果、时间戳或临时文件列表。</li>
                     <li>每个键都必须被实际生产路径读取并产生可观察影响；未知键、非法行、越界值、互斥项和不支持枚举立即失败。</li>
                     <li>优先级固定为：命令行显式值 ＞ 用户配置 ＞ 模块默认值；运行时不得反写用户模板。</li>
                     <li>路径字段相对配置文件解析；跨脚本传递前先标准化。每个公开键都要有测试证明它真实接线。</li>
                 </ul>
-                <h3>推荐的 YAML 分区</h3>
-                <pre class="code-block">module:
-  # 模块名称；字符串；必须与公开入口和报告标题一致。
-  name: differential_expression
-  # 模块版本；语义化版本；接口变更时升版本。
-  version: 1.0.0
-input:
-  # 表达矩阵路径；相对本配置文件；必须存在。
-  expression: data/expression.tsv
-  # 分组表路径；sample 必须与表达矩阵列一一对应。
-  groups: data/group.tsv
-analysis:
-  # 分析方法；枚举值由模块合同声明。
-  method: DESeq2
-  # 显著性阈值；数值；范围 (0, 1)。
-  p_value_cutoff: 0.05
-  # 随机种子；无随机步骤时删除该键。
-  seed: 20260903
-plot:
-  volcano:
-    # 图幅；数值；单位 inch；范围 4–20。
-    width: 8
-    height: 6
-    # 静态图格式；逐项列出，不使用 both 哨兵。
-    formats: [png, pdf]
-report:
-  # 正式模板；相对模块源码根目录。
-  template: report_templates/report_template.docx
-output:
-  # 运行输出根目录；命令行可显式覆盖。
-  root: output</pre>
-                <p>INI 使用同样的分区和键名，例如 <code>[analysis]</code>、<code>[plot.volcano]</code>、<code>[report]</code>。注释必须紧邻配置项，写清用途、类型、默认值、单位、边界、依赖和修改影响；键名、函数名、变量名和包名保留标准英文标识，说明文字用简体中文。</p>
+                <h3>推荐的 INI 分区</h3>
+                <pre class="code-block">[module]
+# 模块名称；字符串；必须与公开入口和报告标题一致。
+name = differential_expression
+# 模块版本；语义化版本；接口变更时升版本。
+version = 1.0.0
+
+[input]
+# 表达矩阵路径；相对本配置文件；必须存在。
+expression = data/expression.tsv
+# 分组表路径；sample 必须与表达矩阵列一一对应。
+groups = data/group.tsv
+
+[analysis]
+# 分析方法；枚举值由模块合同声明。
+method = DESeq2
+# 显著性阈值；数值；范围 (0, 1)。
+p_value_cutoff = 0.05
+# 随机种子；无随机步骤时删除该键。
+seed = 20260903
+
+[plot.volcano]
+# 图幅；数值；单位 inch；范围 4–20。
+width = 8
+height = 6
+# 静态图格式；逐项列出，不使用 both 哨兵。
+formats = png,pdf
+
+[report]
+# 正式模板；相对模块源码根目录。
+template = report_templates/report_template.docx
+
+[output]
+# 运行输出根目录；命令行可显式覆盖。
+root = output</pre>
+                <p>每个配置项的注释必须紧邻该项，写清用途、类型、默认值、单位、边界、依赖和修改影响；键名、函数名、变量名和包名保留标准英文标识，说明文字用简体中文。若确需 YAML，仍使用完全相同的分区，不同时维护两份模板。</p>
             </section>
 
             <section class="card" id="output">
                 <h2>6. 运行目录与结果文件</h2>
                 <pre class="code-block">output/
-├── .run_id                         # 本次运行标识，内容为 YYYYMMDD_HHMM 或秒级值
+├── .run_id                         # calculate/plot/report/full 运行时生成
 ├── result/                         # 用户正式业务结果，文件直接平铺
 ├── report/                         # 正式报告；确有报告时生成
 ├── cache/                          # 后续阶段真实复用的中间对象
 │   └── calculate/                  # calculate 写出、plot/report 读取
 └── log/
     ├── run_record.json             # 命令、参数、输入、输出、版本和状态
-    ├── init.log                    # 仅执行该阶段时生成
-    ├── calculate.log
-    ├── plot.log
-    ├── report.log
-    ├── full.log
-    └── module.config.yaml          # 本次实际使用的配置副本</pre>
+    ├── <stage>.log                 # 只生成实际执行阶段的一个日志
+    └── module.config.ini           # 本次实际使用的配置副本</pre>
+                <p><code>init</code> 只生成 <code>-c</code> 指定的配置文件，不创建 <code>output/</code>、<code>log/</code> 或 <code>.run_id</code>。执行 <code>calculate</code>、<code>plot</code> 或 <code>report</code> 时只生成对应的 <code>calculate.log</code>、<code>plot.log</code> 或 <code>report.log</code>；执行 <code>full</code> 时只生成 <code>full.log</code>，不额外生成三个阶段日志。配置副本随该次分析日志保存。</p>
                 <h3>结果目录的固定写法</h3>
                 <pre class="code-block">result/
 ├── 01.DEG_all.csv
@@ -358,7 +368,7 @@ output:
                 <table class="matrix">
                     <thead><tr><th>对象</th><th>格式</th><th>示例</th></tr></thead>
                     <tbody>
-                        <tr><td>脚本</td><td>功能名加扩展名</td><td><code>scripts/calculate.R</code>、<code>scripts/plot.py</code></td></tr>
+                        <tr><td>脚本</td><td>按阶段目录和功能命名</td><td><code>scripts/calculate/main.R</code>、<code>scripts/plot/volcano.py</code></td></tr>
                         <tr><td>日志</td><td><code>&lt;stage&gt;.log</code></td><td><code>calculate.log</code>、<code>full.log</code></td></tr>
                         <tr><td>结果</td><td><code>两位数字.业务描述.扩展名</code></td><td><code>01.DEG_all.csv</code>、<code>02.volcano.pdf</code></td></tr>
                         <tr><td>报告</td><td>模块或业务含义加扩展名</td><td><code>report/module_report.docx</code></td></tr>
@@ -438,13 +448,30 @@ output/report/
                 <h2>9. 代码要求</h2>
                 <h3>错误处理与命名</h3>
                 <table class="matrix">
-                    <thead><tr><th>项目</th><th>要求</th></tr></thead>
+                    <thead><tr><th>错误类型</th><th>必须直接输出的内容</th><th>退出码（辅助）</th></tr></thead>
                     <tbody>
-                        <tr><td>退出码</td><td><code>0</code> 成功；<code>1</code> 一般运行错误；<code>2</code> 输入或配置校验失败；<code>3</code> 依赖/环境异常。</td></tr>
-                        <tr><td>Shell</td><td>使用 <code>#!/usr/bin/env bash</code> 和 <code>set -euo pipefail</code>；变量加引号；临时文件配合 <code>trap</code> 清理。</td></tr>
-                        <tr><td>R</td><td>关键步骤用 <code>tryCatch</code>；记录错误后以非零状态退出；临时资源用 <code>on.exit</code> 清理。</td></tr>
-                        <tr><td>Python</td><td>入口用 <code>try/except</code>；记录异常后 <code>sys.exit</code>；禁止 <code>except: pass</code>。</td></tr>
-                        <tr><td>命名</td><td>R/Python 函数和变量使用 <code>snake_case</code>，类名使用 PascalCase，常量使用 UPPER_SNAKE_CASE；禁止拼音和无意义缩写。</td></tr>
+                        <tr><td><code>INPUT_ERROR</code></td><td>错误类型、具体文件/字段、实际值或缺失项、修复方向；同时写 stderr 和当前阶段日志。</td><td><code>2</code></td></tr>
+                        <tr><td><code>CONFIG_ERROR</code></td><td>错误类型、配置文件、section/key、实际值、允许范围或依赖关系；不能只写“配置失败”。</td><td><code>2</code></td></tr>
+                        <tr><td><code>DEPENDENCY_ERROR</code></td><td>错误类型、程序/包/版本、检测到的版本、要求的版本和处理建议。</td><td><code>3</code></td></tr>
+                        <tr><td><code>RUNTIME_ERROR</code></td><td>错误类型、阶段、失败操作、异常内容、输入/参数证据和建议的下一步。</td><td><code>1</code></td></tr>
+                        <tr><td><code>OUTPUT_ERROR</code></td><td>错误类型、目标文件、缺失或不符合的列/类型/格式及实际观察值。</td><td><code>1</code></td></tr>
+                        <tr><td><code>EVIDENCE_ERROR</code></td><td>错误类型、缺失或不一致的官方定义/源码/执行证据、具体位置和需要补齐的材料。</td><td><code>2</code></td></tr>
+                        <tr><td><code>DECISION_REQUIRED</code></td><td>错误类型、冲突双方、影响范围和待人工决定的选项；决定前停止后续阶段。</td><td><code>2</code></td></tr>
+                    </tbody>
+                </table>
+                <p>退出码只供上游程序判断，不能代替人类可读错误。每次失败都要先输出“错误类型 + 具体内容”，再输出退出码；机器记录同时保存 <code>error_type</code>、<code>message</code>、<code>stage</code>、<code>evidence</code> 和可执行修复建议。</p>
+                <pre class="code-block">错误类型: INPUT_ERROR
+错误内容: [calculate] 找不到输入文件；字段=input.expression；路径=data/expression.tsv
+修复建议: 检查路径是否相对 module.config.ini，确认文件存在且为 UTF-8
+退出码: 2</pre>
+                <h3>语言实现要求</h3>
+                <table class="matrix">
+                    <thead><tr><th>语言</th><th>必须做到</th></tr></thead>
+                    <tbody>
+                        <tr><td>Shell</td><td>使用 <code>#!/usr/bin/env bash</code>、<code>set -euo pipefail</code>；变量加引号；临时文件用 <code>trap</code> 清理。</td></tr>
+                        <tr><td>R</td><td>关键步骤用 <code>tryCatch</code>；记录错误类型和内容后以非零状态退出；资源用 <code>on.exit</code> 清理。</td></tr>
+                        <tr><td>Python</td><td>入口用 <code>try/except</code>；记录错误类型和内容后 <code>sys.exit</code>；不得吞掉异常。</td></tr>
+                        <tr><td>命名</td><td>R/Python 函数和变量用 <code>snake_case</code>，类名用 PascalCase，常量用 UPPER_SNAKE_CASE；不用拼音和无意义缩写。</td></tr>
                     </tbody>
                 </table>
                 <h3>科学和绘图实现</h3>
